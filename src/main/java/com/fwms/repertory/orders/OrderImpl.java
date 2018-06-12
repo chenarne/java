@@ -277,7 +277,7 @@ public class OrderImpl implements OrderLogic, Initializable {
             }
             rec.put("ORDER_OUTBOUNDS",recs_outbound);
 
-            String sql00 ="SELECT pro.PRO_DW,pro.PRO_TYPE_ID,pro.PRO_TYPE,pd.* FROM " + orderProductTable + " pd INNER JOIN "+productTable+" pro ON PRO.PRO_ID=pd.PRO_ID WHERE pd.ORDER_ID='"+ORDER_ID+"' and pd.DELETE_TIME IS NULL ORDER BY CREATE_TIME DESC";
+            String sql00 ="SELECT pro.PRO_DW,pro.PRO_TYPE_ID,pro.PRO_TYPE,pd.* FROM " + orderProductTable + " pd INNER JOIN "+productTable+" pro ON pro.PRO_ID=pd.PRO_ID WHERE pd.ORDER_ID='"+ORDER_ID+"' and pd.DELETE_TIME IS NULL ORDER BY CREATE_TIME DESC";
             RecordSet recs_products = se.executeRecordSet(sql00, null);
             RecordSet allDw = GlobalLogics.getBaseLogic().getAllDW();
             int all_count = 0;int all_has = 0;
