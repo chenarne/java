@@ -253,7 +253,7 @@ public class JettyServer {
         if (!pidDir.exists()) {
             FileUtils.forceMkdir(pidDir);
         }
-        ProcessUtils.writeProcessId(pidDirStr + "/"+ config.getString("server.pid.fileName","lechun_server.pid"));
+        ProcessUtils.writeProcessId(pidDirStr + "/"+ config.getString("server.pid.fileName","fwms_server.pid"));
         System.out.println("server start begin...");
         run();
 
