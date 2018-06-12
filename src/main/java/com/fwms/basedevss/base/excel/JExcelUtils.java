@@ -1,0 +1,1228 @@
+package com.fwms.basedevss.base.excel;
+
+import com.fwms.basedevss.base.data.Record;
+import com.fwms.basedevss.base.util.DateUtils;
+import jxl.*;
+import jxl.format.Alignment;
+import jxl.format.Colour;
+import jxl.write.*;
+
+import java.io.*;
+import java.util.*;
+
+
+public class JExcelUtils {
+
+    WritableWorkbook workbook;
+    WritableSheet sheet;
+    String path, sheetName;
+
+    /**
+     * 初始化工作表
+     *
+     * @param filePath 文件路径
+     * @param fileName 文件名字
+     */
+    public WritableSheet creatSheet(String filePath, String fileName) {
+
+        this.path = filePath;
+        this.sheetName = fileName;
+        try {
+            OutputStream os = new FileOutputStream(path);//输出流指定文件路径
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet(sheetName, 0); //添加第一个工作表
+            initialSheetSetting(sheet,12);//初始化表格属性(公共方法)
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return sheet;
+    }
+
+    /**
+     * 初始化表格属性
+     *
+     * @param sheet
+     */
+    public void initialSheetSetting(WritableSheet sheet,int COLUMN_WIDTH) {
+        try {
+//            CellView navCellView = new CellView();
+//            navCellView.setAutosize(true); //设置自动大小
+//            navCellView.setSize(18);
+            sheet.getSettings().setDefaultColumnWidth(COLUMN_WIDTH); //设置列的默认宽度
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 插入公式
+     *
+     * @param sheet
+     * @param col
+     * @param row
+     * @param formula
+     * @param format
+     */
+    public void insertFormula(WritableSheet sheet, Integer col, Integer row, String formula, WritableCellFormat format) {
+        try {
+            Formula f = new Formula(col, row, formula, format);
+            sheet.addCell(f);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 插入一行数据
+     *
+     * @param sheet  工作表
+     * @param row    行号
+     * @param data   内容
+     * @param format 风格
+     */
+    public void insertRowData(WritableSheet sheet, Integer row, List data, WritableCellFormat format) {
+        try {
+            Label label;
+            for (int i = 0; i < data.size(); i++) {
+                label = new Label(i, row, data.get(i)+"", format);
+                sheet.addCell(label);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 插入单元格数据
+     *
+     * @param sheet
+     * @param col
+     * @param row
+     * @param data
+     */
+    public void insertOneCellData(WritableSheet sheet, Integer col, Integer row, Object data, WritableCellFormat format) {
+
+        try {
+            if (data instanceof Double) {
+                jxl.write.Number labelNF = new jxl.write.Number(col, row, (Double) data, format);
+                sheet.addCell(labelNF);
+            } else if (data instanceof java.lang.Boolean) {
+
+                jxl.write.Boolean labelB = new jxl.write.Boolean(col, row, (java.lang.Boolean) data, format);
+                sheet.addCell(labelB);
+            } else if (data instanceof Date) {
+                DateTime labelDT = new DateTime(col, row, (Date) data, format);
+                sheet.addCell(labelDT);
+                setCellComments(labelDT, "这是个创建表的日期说明！"); //给单元格加注释(公共方法)
+            } else {
+                Label label = new Label(col, row, data.toString(), format);
+                sheet.addCell(label);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 合并单元格，并插入数据
+     *
+     * @param sheet
+     * @param col_start
+     * @param row_start
+     * @param col_end
+     * @param row_end
+     * @param data
+     * @param format
+     */
+    public void mergeCellsAndInsertData(WritableSheet sheet, Integer col_start, Integer row_start, Integer col_end, Integer row_end, Object data, WritableCellFormat format) {
+        try {
+            sheet.mergeCells(col_start, row_start, col_end, row_end);//左上角到右下角
+            insertOneCellData(sheet, col_start, row_start, data, format);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
+     * 给单元格加注释
+     *
+     * @param label    ：lable对象
+     * @param comments ：注释内容
+     */
+    public void setCellComments(Object label, String comments) {
+        WritableCellFeatures cellFeatures = new WritableCellFeatures();
+        cellFeatures.setComment(comments);
+        if (label instanceof jxl.write.Number) {
+            jxl.write.Number num = (jxl.write.Number) label;
+            num.setCellFeatures(cellFeatures);
+        } else if (label instanceof jxl.write.Boolean) {
+            jxl.write.Boolean bool = (jxl.write.Boolean) label;
+            bool.setCellFeatures(cellFeatures);
+        } else if (label instanceof DateTime) {
+            DateTime dt = (DateTime) label;
+            dt.setCellFeatures(cellFeatures);
+        } else {
+            Label _label = (Label) label;
+            _label.setCellFeatures(cellFeatures);
+        }
+    }
+    /**
+     * 读取excel
+     *
+     * @param inputFile
+     * @param inputFileSheetIndex
+     * @throws Exception
+     */
+    public static ArrayList<String> readDataFromExcel(InputStream inputFile, int inputFileSheetIndex) {
+
+        ArrayList<String> list = new ArrayList<String>();
+        Workbook book = null;
+        Cell cell = null;
+        WorkbookSettings setting = new WorkbookSettings();
+        Locale locale = new Locale("zh", "CN"); //本地
+        setting.setLocale(locale);
+        setting.setEncoding("ISO-8859-1");   //设置字符集编码
+
+        try {
+            book = Workbook.getWorkbook(inputFile, setting);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Sheet sheet = book.getSheet(inputFileSheetIndex);
+        for (int rowIndex = 0; rowIndex < sheet.getRows(); rowIndex++) {//行
+            for (int colIndex = 0; colIndex < sheet.getColumns(); colIndex++) {//列
+                cell = sheet.getCell(colIndex, rowIndex);
+                list.add(cell.getContents());
+            }
+        }
+        book.close();
+        return list;
+    }
+    /**
+     * 读取excel
+     *
+     * @param inputFile
+     * @param inputFileSheetIndex
+     * @throws Exception
+     */
+    public static ArrayList<String> readDataFromExcel(File inputFile, int inputFileSheetIndex) {
+
+        ArrayList<String> list = new ArrayList<String>();
+        Workbook book = null;
+        Cell cell = null;
+        WorkbookSettings setting = new WorkbookSettings();
+        Locale locale = new Locale("zh", "CN"); //本地
+        setting.setLocale(locale);
+        setting.setEncoding("ISO-8859-1");   //设置字符集编码
+
+        try {
+            book = Workbook.getWorkbook(inputFile, setting);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Sheet sheet = book.getSheet(inputFileSheetIndex);
+        for (int rowIndex = 0; rowIndex < sheet.getRows(); rowIndex++) {//行
+            for (int colIndex = 0; colIndex < sheet.getColumns(); colIndex++) {//列
+                cell = sheet.getCell(colIndex, rowIndex);
+                list.add(cell.getContents());
+            }
+        }
+        book.close();
+        return list;
+    }
+
+    /**
+     * excel 数据为2列 ,返回key value形式的map
+     * @param inputFile
+     * @param inputFileSheetIndex
+     * @return
+     * @throws Exception
+     */
+    public Map<String,String> readMapFromExcel(File inputFile, int inputFileSheetIndex) throws Exception {
+
+        Map<String,String> map = new HashMap<String,String>();
+        Workbook book = null;
+        Cell cell = null;
+        WorkbookSettings setting = new WorkbookSettings();
+        Locale locale = new Locale("zh", "CN"); //本地
+        setting.setLocale(locale);
+        setting.setEncoding("ISO-8859-1");   //设置字符集编码
+
+        try {
+            book = Workbook.getWorkbook(inputFile, setting);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Sheet sheet = book.getSheet(inputFileSheetIndex);
+        for (int rowIndex = 0; rowIndex < sheet.getRows(); rowIndex++) {//行
+            Cell[] cells  = sheet.getRow(rowIndex);
+            if(cells.length!=2)
+                throw new Exception("columns is not 2");
+
+            map.put(cells[0].getContents(),cells[1].getContents());
+        }
+        book.close();
+        return map;
+    }
+
+    /**
+     * 得到数据表头格式
+     *
+     * @return
+     */
+    public WritableCellFormat getTitleCellFormat() {
+        WritableCellFormat wcf = null;
+        try {
+            // 字体样式(字体,大小,是否粗体,是否斜体)
+            WritableFont wf = new WritableFont(WritableFont.TIMES, 11, WritableFont.BOLD, false);
+            wcf = new WritableCellFormat(wf);//实例化文字格式化
+            // 对齐方式
+            wcf.setAlignment(Alignment.LEFT);   //水平
+            wcf.setVerticalAlignment(VerticalAlignment.CENTRE); //垂直
+        } catch (WriteException e) {
+            e.printStackTrace();
+        }
+        return wcf;
+    }
+
+//这里用新的表头的样式
+    public WritableCellFormat getTitleCellFormatNew() {
+        WritableCellFormat wcf = null;
+        try {
+            // 字体样式(字体,大小,是否粗体,是否斜体)
+            WritableFont wf = new WritableFont(WritableFont.TAHOMA, 16, WritableFont.BOLD, false);
+            wcf = new WritableCellFormat(wf);//实例化文字格式化
+            // 对齐方式
+            wcf.setBorder(Border.ALL, BorderLineStyle.THIN, Colour.BLACK);//用网格线
+            wcf.setAlignment(Alignment.CENTRE);   //水平
+            wcf.setVerticalAlignment(VerticalAlignment.CENTRE); //垂直
+        } catch (WriteException e) {
+            e.printStackTrace();
+        }
+        return wcf;
+    }
+    //这里用新的表头的样式
+    public WritableCellFormat getTitleCellFormatNewSub(int FONT_SIZE,Colour colour) {
+        WritableCellFormat wcf = null;
+        try {
+            // 字体样式(字体,大小,是否粗体,是否斜体)
+            WritableFont wf = new WritableFont(WritableFont.TIMES, FONT_SIZE, WritableFont.BOLD, false);
+            wcf = new WritableCellFormat(wf);//实例化文字格式化
+
+            // 对齐方式
+            wcf.setAlignment(Alignment.LEFT);   //水平
+            wcf.setBackground(colour);
+            wcf.setVerticalAlignment(VerticalAlignment.CENTRE); //垂直
+
+        } catch (WriteException e) {
+            e.printStackTrace();
+        }
+        return wcf;
+    }
+    /**
+     * 得到数据格式(默认左对齐)
+     *
+     * @return
+     */
+    public WritableCellFormat getDataCellFormat(CellType type,int FONT_SIZE,Colour colour,boolean BOLD) {
+        WritableCellFormat wcf = null;
+        try {
+            // 字体样式
+            if (type == CellType.NUMBER || type == CellType.NUMBER_FORMULA) {//数字
+                NumberFormat nf = new NumberFormat("#.00");   //保留小数点后两位
+                wcf = new WritableCellFormat(nf);
+            } else if (type == CellType.DATE || type == CellType.DATE_FORMULA) {//日期
+                DateFormat df = new DateFormat("yyyy-MM-dd hh:mm:ss"); //时间显示格式
+                wcf = new WritableCellFormat(df);
+            } else {
+                if (BOLD){
+                    WritableFont wf = new WritableFont(WritableFont.TIMES, FONT_SIZE, WritableFont.BOLD, false);//字体样式(字体,大小,是否粗体,是否斜体)
+                    wcf = new WritableCellFormat(wf);
+                }else{
+                    WritableFont wf = new WritableFont(WritableFont.TIMES, FONT_SIZE, WritableFont.NO_BOLD, false);//字体样式(字体,大小,是否粗体,是否斜体)
+                    wcf = new WritableCellFormat(wf);
+                }
+
+            }
+            wcf.setBackground(colour);
+            wcf.setBorder(Border.ALL, BorderLineStyle.THIN, Colour.BLACK);
+            // 对齐方式
+            wcf.setAlignment(Alignment.LEFT);
+            wcf.setVerticalAlignment(VerticalAlignment.CENTRE);
+
+            wcf.setWrap(true);//自动换行
+        } catch (WriteException e) {
+            e.printStackTrace();
+        }
+
+        return wcf;
+    }
+
+    /**
+     * 得到数据格式(重载)
+     *
+     * @return
+     */
+    public WritableCellFormat getDataCellFormat(CellType type, Alignment align) {
+        WritableCellFormat wcf = null;
+        try {
+            // 字体样式
+            if (type == CellType.NUMBER || type == CellType.NUMBER_FORMULA) {//数字
+                NumberFormat nf = new NumberFormat("#.00");   //保留小数点后两位
+                wcf = new WritableCellFormat(nf);
+            } else if (type == CellType.DATE || type == CellType.DATE_FORMULA) {//日期
+                DateFormat df = new DateFormat("yyyy-MM-dd hh:mm:ss"); //时间显示格式
+                wcf = new WritableCellFormat(df);
+            } else {
+                WritableFont wf = new WritableFont(WritableFont.TIMES, 12, WritableFont.NO_BOLD, false);//字体样式(字体,大小,是否粗体,是否斜体)
+                wcf = new WritableCellFormat(wf);
+            }
+            // 对齐方式
+            wcf.setAlignment(align);
+            wcf.setVerticalAlignment(VerticalAlignment.CENTRE);
+
+            wcf.setWrap(true);//自动换行
+        } catch (WriteException e) {
+            e.printStackTrace();
+        }
+
+        return wcf;
+    }
+
+    /**
+     * 创建目录
+     *
+     * @param destDirName 目录路径
+     */
+    public static void createDir(String destDirName) {
+        File dir = new File(destDirName);
+        //如果目录不存在则创建目录
+        if (!dir.exists()) {
+
+            if (!destDirName.endsWith(File.separator))
+                destDirName = destDirName + File.separator;
+
+            // 创建单个目录
+            if (dir.mkdirs()) {
+                System.out.println("创建目录" + destDirName + "成功！");
+
+            } else {
+                System.out.println("创建目录" + destDirName + "成功！");
+            }
+        }
+
+    }
+
+
+    /**
+     * 生成并关闭工作簿
+     */
+    public void writeAndClose() {
+        try {
+            workbook.write();
+            workbook.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (WriteException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 生成Excel文件(适合一个标题,剩余全是数据)
+     *
+     * @param
+     * @param sheetName  工作表名称
+     * @param dataTitles 数据标题
+     */
+
+    public byte[] createExcelBuffer(String sheetName, List dataTitles, List datas) {
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet(sheetName, 0); //添加第一个工作表
+            initialSheetSetting(sheet,12);//初始化表格属性(公共方法)
+
+            // 添加数据标题
+            insertRowData(sheet, 0, dataTitles, getTitleCellFormat());
+
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data =new ArrayList();
+                if(datas.get(i) instanceof Record)
+                {
+                    Record r=(Record)datas.get(i);
+
+                    for(String s:r.getColumns())
+                    {
+                        data.add(r.getString(s));
+                    }
+
+                }
+                else {
+                    data = (List) datas.get(i);
+                }
+                insertRowData(sheet, i + 1, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            }
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+
+    public byte[] createExcelBufferNoTitleXSJZ_TB(String TITLE1,String START_TIME,String END_TIME,String sheetName,List datas) {
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet(sheetName, 0); //添加第一个工作表
+            sheet.getSettings().setShowGridLines(true);
+            initialSheetSetting(sheet,15);//初始化表格属性(公共方法)
+            //合并单元格，
+            // 第一个参数：要合并的单元格最左上角的列号，
+            // 第二个参数：要合并的单元格最左上角的行号，
+            // 第三个参数：要合并的单元格最右角的列号，
+            // 第四个参数：要合并的单元格最右下角的行号，
+            // 添加数据标题
+            Label label = new Label(0, 0, TITLE1, getTitleCellFormatNew());
+            sheet.addCell(label);
+            sheet.mergeCells(0,0,6,0);
+//            // 添加副标题
+//            Label label_sub0 = new Label(0, 1, "打印日期:"+ DateUtils.now().substring(0,10), getDataCellFormat(CellType.STRING_FORMULA));
+//            sheet.addCell(label_sub0);
+            // 添加副标题
+            Label label_sub1 = new Label(0, 1, "记账周期:"+ START_TIME+"至"+END_TIME, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            sheet.addCell(label_sub1);
+            // 添加副标题
+            Label label_sub2 = new Label(4, 1, "单号:", getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            sheet.addCell(label_sub2);
+
+            sheet.mergeCells(0,1,3,1);
+//            sheet.mergeCells(2,1,3,1);
+            sheet.mergeCells(4,1,6,1);
+
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data = (List) datas.get(i);
+                insertRowData(sheet, i + 2, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            }
+
+            CellView cellView = new CellView();
+            cellView.setAutosize(true); //设置自动大小
+            sheet.setColumnView(1, cellView);//根据内容自动设置列宽
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    //导出月薪酬记录
+    public byte[] createExcelBufferSalaryMonthReportUserAll(String TITLE,String sheetName,List datas) {
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet(sheetName, 0); //添加第一个工作表
+            sheet.getSettings().setShowGridLines(true);
+            initialSheetSetting(sheet,12);//初始化表格属性(公共方法)
+
+            sheet.setRowView(0, 800, false);
+
+            Label label = new Label(0, 0, TITLE, getTitleCellFormatNew());
+            sheet.addCell(label);
+            sheet.mergeCells(0,0,45,0);
+
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data = (List) datas.get(i);
+                if (i==0){
+                    insertRowData(sheet, i + 1, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,true));
+                }else{
+                    if (data.get(0).toString().equals("Total:")){
+                        insertRowData(sheet, i + 1, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.YELLOW,false));
+                    }else {
+                        insertRowData(sheet, i + 1, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+                    }
+                }
+
+            }
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    //导出各快递公司提货记录
+    public byte[] creategenInnovSoldHistoryTH(String TITLE,String sheetName,List datas) {
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet(sheetName, 0); //添加第一个工作表
+            sheet.getSettings().setShowGridLines(true);
+            initialSheetSetting(sheet,12);//初始化表格属性(公共方法)
+
+            sheet.setRowView(0, 800, false);
+
+            Label label = new Label(0, 0, TITLE, getTitleCellFormatNew());
+            sheet.addCell(label);
+            sheet.mergeCells(0,0,17,0);
+
+            sheet.setColumnView( 0 , 10 );
+            sheet.setColumnView( 1 , 20 );
+            sheet.setColumnView( 2 , 24 );
+            sheet.setColumnView( 3 , 24 );
+            sheet.setColumnView( 4 , 10 );
+            sheet.setColumnView( 5 , 12 );
+            sheet.setColumnView( 6 , 10 );
+            sheet.setColumnView( 7 , 10 );
+            sheet.setColumnView( 8 , 10 );
+            sheet.setColumnView( 9 , 54 );
+            sheet.setColumnView( 10 , 20 );
+            sheet.setColumnView( 11 , 12 );
+            sheet.setColumnView( 12 , 12 );
+            sheet.setColumnView( 13 , 50 );
+            sheet.setColumnView( 14 , 70 );
+            sheet.setColumnView( 15 , 6 );
+            sheet.setColumnView( 16 , 30 );
+            sheet.setColumnView( 17 , 30 );
+
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data = (List) datas.get(i);
+                insertRowData(sheet, i + 1, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            }
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    //导出各快递公司提货记录
+    public byte[] creategenInnovSoldHistoryTHNew(String TITLE,String sheetName,List datas) {
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet(sheetName, 0); //添加第一个工作表
+            sheet.getSettings().setShowGridLines(true);
+            initialSheetSetting(sheet,12);//初始化表格属性(公共方法)
+
+            sheet.setRowView(0, 800, false);
+
+            Label label = new Label(0, 0, TITLE, getTitleCellFormatNew());
+            sheet.addCell(label);
+            sheet.mergeCells(0, 0, 24, 0);
+
+            sheet.setColumnView(0, 10);
+            sheet.setColumnView(1, 20);
+            sheet.setColumnView(2, 24);
+            sheet.setColumnView(3, 24);
+            sheet.setColumnView(4, 36);
+            sheet.setColumnView(5, 12);
+            sheet.setColumnView(6, 14);
+            sheet.setColumnView( 7 , 10 );
+            sheet.setColumnView( 8 , 10 );
+            sheet.setColumnView( 9 , 10 );
+            sheet.setColumnView( 10 , 54 );
+            sheet.setColumnView( 11 , 18 );
+            sheet.setColumnView( 12 , 12 );
+            sheet.setColumnView( 13 , 12 );
+            sheet.setColumnView( 14 , 70 );
+            sheet.setColumnView( 15 , 6 );
+            sheet.setColumnView( 16 , 6 );
+            sheet.setColumnView( 17 , 6 );
+            sheet.setColumnView( 18 , 30 );
+            sheet.setColumnView( 19 , 30 );
+            sheet.setColumnView( 20 , 24 );
+            sheet.setColumnView( 21 , 10 );
+            sheet.setColumnView( 22 , 24 );
+            sheet.setColumnView( 23 , 24 );
+            sheet.setColumnView( 24 , 18 );
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data = (List) datas.get(i);
+                insertRowData(sheet, i + 1, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            }
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public byte[] createFiles(String TITLE,String sheetName,List datas) {
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet(sheetName, 0); //添加第一个工作表
+            sheet.getSettings().setShowGridLines(true);
+            initialSheetSetting(sheet,12);//初始化表格属性(公共方法)
+
+            sheet.setRowView(0, 800, false);
+
+            Label label = new Label(0, 0, TITLE, getTitleCellFormatNew());
+            sheet.addCell(label);
+            sheet.mergeCells(0, 0, 13, 0);
+
+            sheet.setColumnView(0, 30);
+            sheet.setColumnView(1, 12);
+            sheet.setColumnView(2, 12);
+            sheet.setColumnView(3, 60);
+            sheet.setColumnView(4, 12);
+            sheet.setColumnView(5, 10);
+            sheet.setColumnView(6, 24);
+            sheet.setColumnView( 7 , 100 );
+            sheet.setColumnView( 8 , 8 );
+            sheet.setColumnView( 9 , 8 );
+            sheet.setColumnView( 10 , 8 );
+            sheet.setColumnView( 11 , 12 );
+            sheet.setColumnView( 12 , 12 );
+            sheet.setColumnView( 13 , 50 );
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data = (List) datas.get(i);
+                insertRowData(sheet, i + 1, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            }
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    //导出各快递公司提货记录
+    public byte[] creategenInnovSoldHistoryTHNewOrderOnly(String TITLE,String sheetName,List datas) {
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet(sheetName, 0); //添加第一个工作表
+            sheet.getSettings().setShowGridLines(true);
+            initialSheetSetting(sheet, 12);//初始化表格属性(公共方法)
+
+            sheet.setRowView(0, 800, false);
+
+            Label label = new Label(0, 0, TITLE, getTitleCellFormatNew());
+            sheet.addCell(label);
+            sheet.mergeCells(0, 0, 20, 0);
+
+            sheet.setColumnView(0, 10);
+            sheet.setColumnView(1, 20);
+            sheet.setColumnView( 2 , 24 );
+            sheet.setColumnView( 3 , 24 );
+            sheet.setColumnView( 5 , 12 );
+            sheet.setColumnView( 6 , 14 );
+            sheet.setColumnView( 7 , 10 );
+            sheet.setColumnView( 8 , 10 );
+            sheet.setColumnView( 9 , 10 );
+            sheet.setColumnView( 10 , 54 );
+            sheet.setColumnView( 11 , 18 );
+            sheet.setColumnView( 12 , 12 );
+            sheet.setColumnView( 13 , 12 );
+            sheet.setColumnView( 14 , 70 );
+            sheet.setColumnView( 15 , 6 );
+            sheet.setColumnView( 16 , 6 );
+            sheet.setColumnView( 17 , 6 );
+            sheet.setColumnView( 18 , 30 );
+            sheet.setColumnView( 19 , 30 );
+            sheet.setColumnView( 20 , 24 );
+            sheet.setColumnView( 21 , 10 );
+            sheet.setColumnView( 22 , 24 );
+
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data = (List) datas.get(i);
+                insertRowData(sheet, i + 1, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            }
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    //导出各快递公司提货记录
+    public byte[] creategenInnovOrderHistory(String TITLE,String sheetName,List datas) {
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet(sheetName, 0); //添加第一个工作表
+            sheet.getSettings().setShowGridLines(true);
+            initialSheetSetting(sheet, 12);//初始化表格属性(公共方法)
+
+            sheet.setRowView(0, 800, false);
+
+            Label label = new Label(0, 0, TITLE, getTitleCellFormatNew());
+            sheet.addCell(label);
+            sheet.mergeCells(0, 0, 21, 0);
+
+            sheet.setColumnView(0, 10);
+            sheet.setColumnView(1, 20);
+            sheet.setColumnView( 2 , 24 );
+            sheet.setColumnView( 3 , 24 );
+            sheet.setColumnView( 4 , 12 );
+            sheet.setColumnView( 5 , 14 );
+            sheet.setColumnView( 6 , 10 );
+            sheet.setColumnView( 7 , 10 );
+            sheet.setColumnView( 8 , 10 );
+            sheet.setColumnView( 9 , 54 );
+            sheet.setColumnView( 10 , 18 );
+            sheet.setColumnView( 11 , 12 );
+            sheet.setColumnView( 12 , 12 );
+            sheet.setColumnView( 13 , 70 );
+            sheet.setColumnView( 14 , 6 );
+            sheet.setColumnView( 15 , 6 );
+            sheet.setColumnView( 16 , 6 );
+            sheet.setColumnView( 17 , 6 );
+            sheet.setColumnView( 18 , 30 );
+            sheet.setColumnView( 19 , 24 );
+            sheet.setColumnView( 20 , 10 );
+            sheet.setColumnView( 21 , 24 );
+
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data = (List) datas.get(i);
+                insertRowData(sheet, i + 1, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            }
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    public byte[] creategenInnovWlyc(String TITLE,String sheetName,List datas) {
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet(sheetName, 0); //添加第一个工作表
+            sheet.getSettings().setShowGridLines(true);
+            initialSheetSetting(sheet, 12);//初始化表格属性(公共方法)
+
+            sheet.setRowView(0, 800, false);
+
+            Label label = new Label(0, 0, TITLE, getTitleCellFormatNew());
+            sheet.addCell(label);
+            sheet.mergeCells(0, 0, 15, 0);
+
+            sheet.setColumnView(0, 10);
+            sheet.setColumnView(1, 20);
+            sheet.setColumnView( 2 , 24 );
+            sheet.setColumnView( 3 , 24 );
+            sheet.setColumnView( 4 , 12 );
+            sheet.setColumnView( 5 , 14 );
+            sheet.setColumnView( 6 , 10 );
+            sheet.setColumnView( 7 , 10 );
+            sheet.setColumnView( 8 , 10 );
+            sheet.setColumnView( 9 , 30 );
+            sheet.setColumnView( 10 , 16 );
+            sheet.setColumnView( 11 , 16 );
+            sheet.setColumnView( 12 , 16 );
+            sheet.setColumnView( 13 , 16 );
+            sheet.setColumnView( 14 , 24 );
+            sheet.setColumnView( 15 , 54 );
+
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data = (List) datas.get(i);
+                insertRowData(sheet, i + 1, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            }
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    public byte[] creategenInnovSendDeliverMail(String TITLE,String sheetName,List datas) {
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet(sheetName, 0); //添加第一个工作表
+            sheet.getSettings().setShowGridLines(true);
+            initialSheetSetting(sheet, 12);//初始化表格属性(公共方法)
+
+            sheet.setRowView(0, 800, false);
+
+            Label label = new Label(0, 0, TITLE, getTitleCellFormatNew());
+            sheet.addCell(label);
+            sheet.mergeCells(0, 0, 22, 0);
+
+            sheet.setColumnView(0, 10);
+            sheet.setColumnView( 1 , 20 );
+            sheet.setColumnView( 2 , 24 );
+            sheet.setColumnView( 3 , 24 );
+            sheet.setColumnView( 4 , 36 );
+            sheet.setColumnView( 5 , 12 );
+            sheet.setColumnView( 6 , 14 );
+            sheet.setColumnView( 7 , 10 );
+            sheet.setColumnView( 8 , 10 );
+            sheet.setColumnView( 9 , 54 );
+            sheet.setColumnView( 10 , 18 );
+            sheet.setColumnView( 11 , 12 );
+            sheet.setColumnView( 12 , 12 );
+            sheet.setColumnView( 13 , 70 );
+            sheet.setColumnView( 14 , 10 );
+            sheet.setColumnView( 15 , 10 );
+            sheet.setColumnView( 16 , 10 );
+            sheet.setColumnView( 17 , 10 );
+            sheet.setColumnView( 18 , 30 );
+            sheet.setColumnView( 19 , 20 );
+            sheet.setColumnView( 20 , 8 );
+            sheet.setColumnView( 21 , 20 );
+
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data = (List) datas.get(i);
+                insertRowData(sheet, i + 1, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            }
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    //导出进销存记录
+    public byte[] createInnovExtension(String TITLE,String sheetName,List datas) {
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet(sheetName, 0); //添加第一个工作表
+            sheet.getSettings().setShowGridLines(true);
+            initialSheetSetting(sheet,12);//初始化表格属性(公共方法)
+
+            sheet.setRowView(0, 800, false);
+
+            Label label = new Label(0, 0, TITLE, getTitleCellFormatNew());
+            sheet.addCell(label);
+            sheet.mergeCells(0,0,29,0);
+
+            sheet.setColumnView( 0 , 18 );
+            sheet.setColumnView( 1 , 8 );
+            sheet.setColumnView( 2 , 28 );
+            sheet.setColumnView( 3 , 46 );
+            sheet.setColumnView( 4 , 28 );
+            sheet.setColumnView( 5 , 10 );
+            sheet.setColumnView( 6 , 10 );
+            sheet.setColumnView( 7 , 10 );
+            sheet.setColumnView( 8 , 50 );
+            sheet.setColumnView( 9 , 8 );
+            sheet.setColumnView( 10 , 8 );
+            sheet.setColumnView( 11 , 8 );
+            sheet.setColumnView( 12 , 8 );
+            sheet.setColumnView( 13 , 20 );
+            sheet.setColumnView( 14 , 8 );
+            sheet.setColumnView( 15 , 12 );
+            sheet.setColumnView( 16 , 12 );
+            sheet.setColumnView( 17 , 12 );
+            sheet.setColumnView( 18 , 8 );
+            sheet.setColumnView( 19 , 30 );
+            sheet.setColumnView( 20 , 36 );
+            sheet.setColumnView( 21 , 14 );
+
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data = (List) datas.get(i);
+                insertRowData(sheet, i + 1, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            }
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    public byte[] createInnovJxc(String TITLE,String sheetName,List datas) {
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet(sheetName, 0); //添加第一个工作表
+            sheet.getSettings().setShowGridLines(true);
+            initialSheetSetting(sheet, 12);//初始化表格属性(公共方法)
+
+            sheet.setRowView(0, 800, false);
+
+            Label label = new Label(0, 0, TITLE, getTitleCellFormatNew());
+            sheet.addCell(label);
+            sheet.mergeCells(0, 0, 19, 0);
+
+            sheet.setColumnView( 0 , 24 );
+            sheet.setColumnView( 1 , 12 );
+            sheet.setColumnView( 2 , 16 );
+            sheet.setColumnView( 3 , 12 );
+            sheet.setColumnView( 4 , 20 );
+            sheet.setColumnView( 5 , 12 );
+            sheet.setColumnView( 6 , 12 );
+            sheet.setColumnView( 7 , 12 );
+            sheet.setColumnView( 8 , 12 );
+            sheet.setColumnView( 9 , 12 );
+            sheet.setColumnView( 10 , 12 );
+            sheet.setColumnView( 11 , 12 );
+            sheet.setColumnView( 12 , 12 );
+            sheet.setColumnView( 13 , 12 );
+            sheet.setColumnView( 14 , 12 );
+            sheet.setColumnView( 15 , 12 );
+            sheet.setColumnView( 16 , 12 );
+            sheet.setColumnView( 17 , 12 );
+            sheet.setColumnView( 18 , 12 );
+            sheet.setColumnView( 19 , 12 );
+
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data = (List) datas.get(i);
+                insertRowData(sheet, i + 1, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            }
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    public byte[] createExcelBufferNoTitle(String TITLE1,String START_TIME,String END_TIME,String sheetName,List datas) {
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet(sheetName, 0); //添加第一个工作表
+            initialSheetSetting(sheet, 12);//初始化表格属性(公共方法)
+            //合并单元格，
+            // 第一个参数：要合并的单元格最左上角的列号，
+            // 第二个参数：要合并的单元格最左上角的行号，
+            // 第三个参数：要合并的单元格最右角的列号，
+            // 第四个参数：要合并的单元格最右下角的行号，
+            // 添加数据标题
+            Label label = new Label(0, 0, TITLE1, getTitleCellFormatNew());
+            sheet.addCell(label);
+            sheet.mergeCells(0, 0, 11, 0);
+            // 添加副标题
+            Label label_sub0 = new Label(0, 1, "打印时间:"+ DateUtils.now(), getTitleCellFormatNewSub(12,Colour.BLACK));
+            sheet.addCell(label_sub0);
+            // 添加副标题
+            Label label_sub1 = new Label(3, 1, "开始时间:"+ START_TIME, getTitleCellFormatNewSub(12,Colour.BLACK));
+            sheet.addCell(label_sub1);
+            // 添加副标题
+            Label label_sub2 = new Label(7, 1, "截止时间:"+ END_TIME, getTitleCellFormatNewSub(12,Colour.BLACK));
+            sheet.addCell(label_sub2);
+            sheet.mergeCells(0, 1, 2, 1);
+            sheet.mergeCells(3, 1, 6, 1);
+            sheet.mergeCells(7, 1, 11, 1);
+
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data = (List) datas.get(i);
+                insertRowData(sheet, i + 2, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            }
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+
+    public byte[] creategenInnovPerformance(String TITLE,String sheetName,List datas) {
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet(sheetName, 0); //添加第一个工作表
+            sheet.getSettings().setShowGridLines(true);
+            initialSheetSetting(sheet,12);//初始化表格属性(公共方法)
+
+            sheet.setRowView(0, 800, false);
+
+            Label label = new Label(0, 0, TITLE, getTitleCellFormatNew());
+            sheet.addCell(label);
+            sheet.mergeCells(0, 0, 13, 0);
+
+            sheet.setColumnView(0, 12);
+            sheet.setColumnView(1, 12);
+            sheet.setColumnView(2, 12);
+            sheet.setColumnView(3, 12);
+            sheet.setColumnView(4, 12);
+            sheet.setColumnView(5, 10);
+            sheet.setColumnView(6, 10);
+            sheet.setColumnView(7, 10);
+            sheet.setColumnView(8, 10);
+            sheet.setColumnView(9, 10);
+            sheet.setColumnView(10, 10);
+            sheet.setColumnView(11, 10);
+            sheet.setColumnView(12, 10);
+
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data = (List) datas.get(i);
+                insertRowData(sheet, i + 1, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            }
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public  byte[] creategenInnovPackageRecordsExcel(List<List<String>> datas,long num){
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet("每日包装记录", 0); //添加第一个工作表
+            initialSheetSetting(sheet, 12);//初始化表格属性(公共方法)
+            //合并单元格，
+            // 第一个参数：要合并的单元格最左上角的列号，
+            // 第二个参数：要合并的单元格最左上角的行号，
+            // 第三个参数：要合并的单元格最右角的列号，
+            // 第四个参数：要合并的单元格最右下角的行号，
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data = (List) datas.get(i);
+                insertRowData(sheet, i, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+
+                if(i==0){
+                   sheet.mergeCells(0, 0, 0, 1);
+                   sheet.mergeCells(1, 0, 1, 1);
+                   for(int j=0;j<=(num+1);j++){
+                       sheet.mergeCells(2*j+2, 0, 2*j+3, 0);
+                   }
+               }
+            }
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    public  byte[] creategenInnovTakeEstimateRecordsExcel(List<List<String>> datas){
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet("实现提货与预测表", 0); //添加第一个工作表
+            initialSheetSetting(sheet, 12);//初始化表格属性(公共方法)
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data = (List) datas.get(i);
+                insertRowData(sheet, i, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            }
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public byte[] creategenInnovChannelTakeRecordsExcel(List<List<String>> datas){
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();//输出流指定文件路径
+            workbook = Workbook.createWorkbook(os);//创建工作薄
+            sheet = workbook.createSheet("提货", 0); //添加第一个工作表
+            initialSheetSetting(sheet, 12);//初始化表格属性(公共方法)
+            // 插入一行   (公共方法)
+            for (int i = 0; i < datas.size(); i++) {
+                List data = (List) datas.get(i);
+                insertRowData(sheet, i, data, getDataCellFormat(CellType.STRING_FORMULA,11,Colour.BLACK,false));
+            }
+
+            workbook.write();
+            workbook.close();
+
+            byte[] buff = os.toByteArray();
+            os.close();
+            return buff;
+        } catch (Exception e) {
+            return null;
+        }
+
+    }
+}
