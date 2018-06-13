@@ -258,7 +258,7 @@ public class OrderServlet extends WebMethodServlet {
         String PRO_VALUES = qp.checkGetString("PRO_VALUES");
         List<String> ls_p = StringUtils2.splitList(PRO_VALUES, ",", true);
 
-        boolean b = GlobalLogics.getOrderLogic().updateGysOrder(ctx, ORDER_ID, OUT_ORDER_ID, "0", "0", "1", MEMO, JH_TIME, JH_TYPE, JH_ADDR, "0", "0", "0", "0", PARTNER_NO,partner_single.getString("PROVINCE"),partner_single.getString("CITY"),partner_single.getString("AREA"),partner_single.getString("ADDR"),partner_single.getString("PROVINCE_NAME")+partner_single.getString("CITY_NAME")+partner_single.getString("AREA_NAME")+partner_single.getString("ADDR"),partner_single.getString("CONTACT"),partner_single.getString("MOBILE"));
+        boolean b = GlobalLogics.getOrderLogic().updateGysOrder(ctx, ORDER_ID, OUT_ORDER_ID, "0", "0", "1", MEMO, JH_TIME, JH_TYPE, JH_ADDR, "0", "0", "0", "0", PARTNER_NO, partner_single.getString("PROVINCE"), partner_single.getString("CITY"), partner_single.getString("AREA"), partner_single.getString("ADDR"), partner_single.getString("PROVINCE_NAME") + partner_single.getString("CITY_NAME") + partner_single.getString("AREA_NAME") + partner_single.getString("ADDR"), partner_single.getString("CONTACT"), partner_single.getString("MOBILE"));
         if (b) {
             b = GlobalLogics.getOrderLogic().deleteGysOrderProducts(ORDER_ID);
             if (b){
@@ -622,6 +622,19 @@ public class OrderServlet extends WebMethodServlet {
         String KW_ID = qp.getString("KW_ID", "999");
         RecordSet recs  = GlobalLogics.getOrderLogic().getGysOrderDailyGoods(SJ_ID, GYS_ID, F_KW_ID, KW_ID);
         return recs;
+    }
+
+    //获取该供应商全部需打印面单的记录
+    @WebMethod("order/inbound_md_get_all_page_list")
+    public RecordSet inbound_md_get_all_page_list(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, false);
+        String GYS_ID = qp.getString("GYS_ID", "999");
+        String SJ_ID = qp.getString("SJ_ID", "999");
+        String PARTNER_NO = qp.getString("PARTNER_NO", "999");
+        int PRINTED = (int)qp.getInt("PRINTED",999);
+        RecordSet data = GlobalLogics.getOrderLogic().getAllCanPrintMd(ctx, GYS_ID,PRINTED,SJ_ID,PARTNER_NO);
+
+        return data;
     }
 }
 
