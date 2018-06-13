@@ -104,7 +104,14 @@ public class OrderImpl implements OrderLogic, Initializable {
         long n = se.executeUpdate(ls);
         return n > 0;
     }
-
+    public boolean printOrderInbound(String ORDER_ID) {
+        String sql1 = "UPDATE " + gysOrderTable + " SET PRINT_INBOUND=PRINT_INBOUND+1  WHERE ORDER_ID='" + ORDER_ID + "' ";
+        List<String> ls = new ArrayList<String>();
+        ls.add(sql1);
+        SQLExecutor se = getSqlExecutor();
+        long n = se.executeUpdate(ls);
+        return n > 0;
+    }
 
         //获取所有,分页
     public Record getAllGysOrderPageList(Context ctx, String PRO_TYPE_ID, String SJ_ID,String GYS_ID, String START_TIME, String END_TIME, String STATE, int PAY_DONE, int page, int count, String ORDER_ID,String OUT_ORDER_ID, String INBOUND_STATUS_BEGIN, String INBOUND_STATUS_END) {

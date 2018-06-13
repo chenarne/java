@@ -17,6 +17,7 @@ public interface OrderLogic {
     boolean updateGysOrder(Context ctx,String ORDER_ID,String OUT_ORDER_ID, String SEND_PRICE, String OTHER_PRICE, String PAY_TYPE, String MEMO, String JH_TIME, String JH_TYPE, String JH_ADDR, String IFKP, String KP_TYPE, String TAX, String FK_YD,String PARTNER_NO,String PROVINCE,String CITY,String AREA,String ADDR,String FULL_ADDR,String CONTACT,String MOBILE);
     Record getSingleOrderPrint(String ORDER_ID);
     boolean deleteGysOrderProducts(String ORDER_ID);
+    boolean printOrderInbound(String ORDER_ID);
 
     boolean saveOrderPackage(String ORDER_ID,String PACKAGE_CODE);
     boolean saveOrderPackageProduct(String ORDER_ID,String PACKAGE_PRODUCT_ID, String PACKAGE_CODE,String SPEC_ID,String PRO_NAME,int PRO_COUNT);
