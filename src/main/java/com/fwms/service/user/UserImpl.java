@@ -110,6 +110,12 @@ public class UserImpl implements UserLogic, Initializable {
         Record rec = se.executeRecord(sql, null);
         return rec;
     }
+    public Record getSinglePartnerByNoBaseOrder(String PARTNER_NO) {
+        String sql = "SELECT PARTNER_NO,PARTNER_NAME,SJ_ID FROM " + sjPartnerTable + "  WHERE (PARTNER_NO='" + PARTNER_NO + "') ";
+        SQLExecutor se = read_getSqlExecutor();
+        Record rec = se.executeRecord(sql, null);
+        return rec;
+    }
     public RecordSet getUserPartnerByUser(String SJ_ID) {
         String sql = "SELECT * FROM " + sjPartnerTable + "  WHERE (SJ_ID='" + SJ_ID + "') AND DELETE_TIME IS NULL ORDER BY PARTNER_NAME ";
         SQLExecutor se = read_getSqlExecutor();

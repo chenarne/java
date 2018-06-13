@@ -11,10 +11,11 @@ public interface OrderLogic {
     boolean updateOrderVerify(String ORDER_ID,String USER_ID);
 
 
-    boolean saveGysOrder(Context ctx,String USER_ID,String SJ_ID, String ORDER_ID,String OUT_ORDER_ID, String GYS_ID, String GYS_NAME, String SEND_PRICE, String OTHER_PRICE, String PAY_TYPE, String MEMO, String JH_TIME, String JH_TYPE, String JH_ADDR, String IFKP, String KP_TYPE, String TAX, String FK_YD, int isBack,int status,String PARTNER_NO,String KW_ID);
+    boolean saveGysOrder(Context ctx,String USER_ID,String SJ_ID, String ORDER_ID,String OUT_ORDER_ID, String GYS_ID, String GYS_NAME, String SEND_PRICE, String OTHER_PRICE, String PAY_TYPE, String MEMO, String JH_TIME, String JH_TYPE, String JH_ADDR, String IFKP, String KP_TYPE, String TAX, String FK_YD, int isBack,int status,String PARTNER_NO,String KW_ID,String PROVINCE,String CITY,String AREA,String ADDR,String FULL_ADDR,String CONTACT,String MOBILE);
     boolean saveGysOrderPro(Context ctx, String ORDER_ID, String PRO_ID, String PRO_SPEC_ID,String PRO_COUNT, String PRO_PRICE, String TAX_PRICE, String PRO_CODE_NUMBER, String IFSF, String PRO_TYPE, String PRO_TYPE_ID, String PRO_NAME, String totalPrice, String ORDER_ITEM_ID, String WS_PRO_PRICE, String TAX_RATE, String WSTotalPrice);
     Record getSingleOrder(String ORDER_ID);
-    boolean updateGysOrder(Context ctx,String ORDER_ID,String OUT_ORDER_ID, String SEND_PRICE, String OTHER_PRICE, String PAY_TYPE, String MEMO, String JH_TIME, String JH_TYPE, String JH_ADDR, String IFKP, String KP_TYPE, String TAX, String FK_YD,String PARTNER_NO);
+    boolean updateGysOrder(Context ctx,String ORDER_ID,String OUT_ORDER_ID, String SEND_PRICE, String OTHER_PRICE, String PAY_TYPE, String MEMO, String JH_TIME, String JH_TYPE, String JH_ADDR, String IFKP, String KP_TYPE, String TAX, String FK_YD,String PARTNER_NO,String PROVINCE,String CITY,String AREA,String ADDR,String FULL_ADDR,String CONTACT,String MOBILE);
+    Record getSingleOrderPrint(String ORDER_ID);
     boolean deleteGysOrderProducts(String ORDER_ID);
 
     boolean saveOrderPackage(String ORDER_ID,String PACKAGE_CODE);

@@ -151,7 +151,13 @@ public class OrderServlet extends WebMethodServlet {
         Record rec = GlobalLogics.getOrderLogic().getSingleOrderForPackage(ORDER_ID);
         return rec;
     }
-
+    @WebMethod("order/get_single_order_print")
+    public Record get_single_order_print(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, false, true);
+        String ORDER_ID = qp.checkGetString("ORDER_ID");
+        Record rec = GlobalLogics.getOrderLogic().getSingleOrderPrint(ORDER_ID);
+        return rec;
+    }
     @WebMethod("order/verify_order")
     public boolean verify_order(HttpServletRequest req, QueryParams qp) throws IOException {
         Context ctx = PortalContext.getContext(req, qp, false, true);
@@ -177,6 +183,9 @@ public class OrderServlet extends WebMethodServlet {
         String SJ_ID = qp.getString("SJ_ID", "");
         if (SJ_ID.length() <= 0)
             SJ_ID = GlobalLogics.getUser().getSinglePartnerByNo(PARTNER_NO).getString("SJ_ID");
+
+        Record partner_single = GlobalLogics.getUser().getSinglePartnerByNo(PARTNER_NO);
+
         Record partnerKw = GlobalLogics.getUser().getPartnerKw(PARTNER_NO);
         String KW_ID = "";
         if (!partnerKw.isEmpty())
@@ -195,7 +204,8 @@ public class OrderServlet extends WebMethodServlet {
         String PRO_VALUES = qp.checkGetString("PRO_VALUES");
         List<String> ls_p = StringUtils2.splitList(PRO_VALUES, ",", true);
 
-        boolean b = GlobalLogics.getOrderLogic().saveGysOrder(ctx, USER_ID, SJ_ID, ORDER_ID, OUT_ORDER_ID, GYS_ID, GYS_NAME, "0", "0", "1", MEMO, JH_TIME, JH_TYPE, JH_ADDR, "0", "0", "0", "0", 0, OrderConstants.ORDER_STATUS_DEFAULT, PARTNER_NO, KW_ID);
+        boolean b = GlobalLogics.getOrderLogic().saveGysOrder(ctx, USER_ID, SJ_ID, ORDER_ID, OUT_ORDER_ID, GYS_ID, GYS_NAME, "0", "0", "1", MEMO, JH_TIME, JH_TYPE, JH_ADDR, "0", "0", "0", "0", 0, OrderConstants.ORDER_STATUS_DEFAULT, PARTNER_NO, KW_ID,
+                partner_single.getString("PROVINCE"),partner_single.getString("CITY"),partner_single.getString("AREA"),partner_single.getString("ADDR"),partner_single.getString("PROVINCE_NAME")+partner_single.getString("CITY_NAME")+partner_single.getString("AREA_NAME")+partner_single.getString("ADDR"),partner_single.getString("CONTACT"),partner_single.getString("MOBILE"));
         if (b) {
             for (String pro_str : ls_p) {
                 List<String> lp = StringUtils2.splitList(pro_str, "@", true);
@@ -228,17 +238,20 @@ public class OrderServlet extends WebMethodServlet {
     public boolean order_update(HttpServletRequest req, QueryParams qp) throws IOException {
         Context ctx = PortalContext.getContext(req, qp, false, true);
         String ORDER_ID = qp.checkGetString("ORDER_ID"); //用新方式生成采购单ID，废用采购订单外部编号
+        String PARTNER_NO = qp.checkGetString("PARTNER_NO");
+        Record partner_single = GlobalLogics.getUser().getSinglePartnerByNo(PARTNER_NO);
+
         String OUT_ORDER_ID = qp.getString("OUT_ORDER_ID", "");
         String MEMO = qp.getString("MEMO", "");
 
         String JH_TIME = qp.getString("JH_TIME", "");
         String JH_TYPE = qp.getString("JH_TYPE", "");
         String JH_ADDR = qp.getString("JH_ADDR", "");
-        String PARTNER_NO = qp.checkGetString("PARTNER_NO");
+
         String PRO_VALUES = qp.checkGetString("PRO_VALUES");
         List<String> ls_p = StringUtils2.splitList(PRO_VALUES, ",", true);
 
-        boolean b = GlobalLogics.getOrderLogic().updateGysOrder(ctx, ORDER_ID, OUT_ORDER_ID, "0", "0", "1", MEMO, JH_TIME, JH_TYPE, JH_ADDR, "0", "0", "0", "0", PARTNER_NO);
+        boolean b = GlobalLogics.getOrderLogic().updateGysOrder(ctx, ORDER_ID, OUT_ORDER_ID, "0", "0", "1", MEMO, JH_TIME, JH_TYPE, JH_ADDR, "0", "0", "0", "0", PARTNER_NO,partner_single.getString("PROVINCE"),partner_single.getString("CITY"),partner_single.getString("AREA"),partner_single.getString("ADDR"),partner_single.getString("PROVINCE_NAME")+partner_single.getString("CITY_NAME")+partner_single.getString("AREA_NAME")+partner_single.getString("ADDR"),partner_single.getString("CONTACT"),partner_single.getString("MOBILE"));
         if (b) {
             b = GlobalLogics.getOrderLogic().deleteGysOrderProducts(ORDER_ID);
             if (b){

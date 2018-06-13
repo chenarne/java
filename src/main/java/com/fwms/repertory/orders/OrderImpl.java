@@ -193,7 +193,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         Record GYS = GlobalLogics.getUser().getSingleGysBase(rec.getString("GYS_ID"));
         GYS.copyTo(rec);
         String PARTNER_NO = rec.getString("PARTNER_NO");
-        Record partner = GlobalLogics.getUser().getSinglePartnerByNo(PARTNER_NO);
+        Record partner = GlobalLogics.getUser().getSinglePartnerByNoBaseOrder(PARTNER_NO);
         partner.copyTo(rec);
         rec.put("ORDER_PRODUCTS", getOrderProducts(rec.getString("ORDER_ID")));
         rec.put("ORDER_INBOUNDS", getOrderInbound(rec.getString("ORDER_ID")));
@@ -344,16 +344,16 @@ public class OrderImpl implements OrderLogic, Initializable {
         long n = se.executeUpdate(sql);
         return n>0;
     }
-    public boolean saveGysOrder(Context ctx,String USER_ID,String SJ_ID, String ORDER_ID,String OUT_ORDER_ID, String GYS_ID, String GYS_NAME, String SEND_PRICE, String OTHER_PRICE, String PAY_TYPE, String MEMO, String JH_TIME, String JH_TYPE, String JH_ADDR, String IFKP, String KP_TYPE, String TAX, String FK_YD, int isBack,int status,String PARTNER_NO,String KW_ID) {
-        String sql = "INSERT INTO " + gysOrderTable + " (USER_ID,SJ_ID,ORDER_ID, OUT_ORDER_ID,GYS_ID, GYS_NAME,   SEND_PRICE, OTHER_PRICE, PAY_TYPE, MEMO,CREATE_TIME,JH_TIME, JH_TYPE, JH_ADDR, IFKP, KP_TYPE, TAX, FK_YD,CREATE_USER_ID,IS_BACK,STATUS, VERIFY_STATUS,PARTNER_NO, KW_ID) VALUES" +
-                " ('"+USER_ID+"','"+SJ_ID+"','" + ORDER_ID + "','"+OUT_ORDER_ID+"','" + GYS_ID +"','" + GYS_NAME + "','"+SEND_PRICE+"','"+OTHER_PRICE+"','"+PAY_TYPE+"','"+MEMO+"','"+ DateUtils.now()+"','"+JH_TIME+"','"+JH_TYPE+"','"+JH_ADDR+"','"+IFKP+"','"+KP_TYPE+"','"+TAX+"','"+FK_YD+"','"+ctx.getUser_id()+"','"+isBack+"','"+status+"','0','"+PARTNER_NO+"','"+KW_ID+"') ";
+    public boolean saveGysOrder(Context ctx,String USER_ID,String SJ_ID, String ORDER_ID,String OUT_ORDER_ID, String GYS_ID, String GYS_NAME, String SEND_PRICE, String OTHER_PRICE, String PAY_TYPE, String MEMO, String JH_TIME, String JH_TYPE, String JH_ADDR, String IFKP, String KP_TYPE, String TAX, String FK_YD, int isBack,int status,String PARTNER_NO,String KW_ID,String PROVINCE,String CITY,String AREA,String ADDR,String FULL_ADDR,String CONTACT,String MOBILE) {
+        String sql = "INSERT INTO " + gysOrderTable + " (USER_ID,SJ_ID,ORDER_ID, OUT_ORDER_ID,GYS_ID, GYS_NAME,   SEND_PRICE, OTHER_PRICE, PAY_TYPE, MEMO,CREATE_TIME,JH_TIME, JH_TYPE, JH_ADDR, IFKP, KP_TYPE, TAX, FK_YD,CREATE_USER_ID,IS_BACK,STATUS, VERIFY_STATUS,PARTNER_NO, KW_ID,PROVINCE, CITY, AREA, ADDR, FULL_ADDR, CONTACT, MOBILE) VALUES" +
+                " ('"+USER_ID+"','"+SJ_ID+"','" + ORDER_ID + "','"+OUT_ORDER_ID+"','" + GYS_ID +"','" + GYS_NAME + "','"+SEND_PRICE+"','"+OTHER_PRICE+"','"+PAY_TYPE+"','"+MEMO+"','"+ DateUtils.now()+"','"+JH_TIME+"','"+JH_TYPE+"','"+JH_ADDR+"','"+IFKP+"','"+KP_TYPE+"','"+TAX+"','"+FK_YD+"','"+ctx.getUser_id()+"','"+isBack+"','"+status+"','0','"+PARTNER_NO+"','"+KW_ID+"','"+PROVINCE+"','"+CITY+"','"+AREA+"','"+ADDR+"','"+FULL_ADDR+"','"+CONTACT+"','"+MOBILE+"') ";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n>0;
     }
 
-    public boolean updateGysOrder(Context ctx,String ORDER_ID,String OUT_ORDER_ID, String SEND_PRICE, String OTHER_PRICE, String PAY_TYPE, String MEMO, String JH_TIME, String JH_TYPE, String JH_ADDR, String IFKP, String KP_TYPE, String TAX, String FK_YD,String PARTNER_NO) {
-        String sql = "UPDATE " + gysOrderTable + " SET OUT_ORDER_ID='"+OUT_ORDER_ID+"',SEND_PRICE='"+SEND_PRICE+"',OTHER_PRICE='"+OTHER_PRICE+"',PAY_TYPE='"+PAY_TYPE+"',MEMO='"+MEMO+"',JH_TIME='"+JH_TIME+"',JH_TYPE='"+JH_TYPE+"',JH_ADDR='"+JH_ADDR+"',IFKP='"+IFKP+"',KP_TYPE='"+KP_TYPE+"',TAX='"+TAX+"',FK_YD='"+FK_YD+"',PARTNER_NO='"+PARTNER_NO+"' WHERE ORDER_ID='"+ORDER_ID+"'";
+    public boolean updateGysOrder(Context ctx,String ORDER_ID,String OUT_ORDER_ID, String SEND_PRICE, String OTHER_PRICE, String PAY_TYPE, String MEMO, String JH_TIME, String JH_TYPE, String JH_ADDR, String IFKP, String KP_TYPE, String TAX, String FK_YD,String PARTNER_NO,String PROVINCE,String CITY,String AREA,String ADDR,String FULL_ADDR,String CONTACT,String MOBILE) {
+        String sql = "UPDATE " + gysOrderTable + " SET OUT_ORDER_ID='"+OUT_ORDER_ID+"',SEND_PRICE='"+SEND_PRICE+"',OTHER_PRICE='"+OTHER_PRICE+"',PAY_TYPE='"+PAY_TYPE+"',MEMO='"+MEMO+"',JH_TIME='"+JH_TIME+"',JH_TYPE='"+JH_TYPE+"',JH_ADDR='"+JH_ADDR+"',IFKP='"+IFKP+"',KP_TYPE='"+KP_TYPE+"',TAX='"+TAX+"',FK_YD='"+FK_YD+"',PARTNER_NO='"+PARTNER_NO+"',PROVINCE='"+PROVINCE+"',CITY='"+CITY+"',AREA='"+AREA+"',ADDR='"+ADDR+"',FULL_ADDR='"+FULL_ADDR+"',CONTACT='"+CONTACT+"',MOBILE='"+MOBILE+"' WHERE ORDER_ID='"+ORDER_ID+"'";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n>0;
@@ -395,10 +395,10 @@ public class OrderImpl implements OrderLogic, Initializable {
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         if (n>0){
-            RecordSet allPros = se.executeRecordSet("SELECT * FROM "+packageProductTable+" WHERE PACKAGE_CODE='"+PACKAGE_CODE+"'");
+            RecordSet allPros = se.executeRecordSet("SELECT p.*,spec.PRO_SPEC,spec.PRO_COLOR FROM "+packageProductTable+" p INNER JOIN "+productSpecTable+" spec ON spec.SPEC_ID=p.SPEC_ID WHERE p.PACKAGE_CODE='"+PACKAGE_CODE+"'");
             String s = "";
             for (Record r : allPros){
-                s+=r.getString("PRO_NAME")+"("+r.getInt("PRO_COUNT")+")";
+                s+=r.getString("PRO_NAME")+"["+r.getString("PRO_SPEC")+"]"+"("+r.getInt("PRO_COUNT")+")";
             }
             if (s.length()>0)
                 se.executeUpdate("UPDATE "+packageTable+" SET PRO_DETAIL='"+s+"' WHERE PACKAGE_CODE='"+PACKAGE_CODE+"' ");
@@ -411,9 +411,16 @@ public class OrderImpl implements OrderLogic, Initializable {
         String sql00 ="SELECT * FROM " + packageTable + " WHERE ORDER_ID='"+ORDER_ID+"' ORDER BY PACKAGE_CODE ";
         RecordSet recs = se.executeRecordSet(sql00, null);
         for (Record r : recs){
-            RecordSet pd =  se.executeRecordSet("SELECT * FROM " + packageProductTable + " WHERE PACKAGE_CODE='"+r.getString("PACKAGE_CODE")+"'") ;
+            RecordSet pd =  se.executeRecordSet("SELECT p.*,spec.PRO_SPEC,spec.PRO_COLOR FROM " + packageProductTable + " p INNER JOIN "+productSpecTable+" spec ON spec.SPEC_ID=p.SPEC_ID WHERE PACKAGE_CODE='"+r.getString("PACKAGE_CODE")+"'") ;
             r.put("PACKAGE_PRODUCT",pd);
         }
+        return recs;
+    }
+
+    public RecordSet getOrderPackagesPrint(String ORDER_ID) {
+        SQLExecutor se = read_getSqlExecutor();
+        String sql00 ="select PRO_DETAIL,COUNT(*) AS COUNT  from t_sys_order_package where order_id='"+ORDER_ID+"' group by PRO_DETAIL ";
+        RecordSet recs = se.executeRecordSet(sql00, null);
         return recs;
     }
 
@@ -847,6 +854,25 @@ public class OrderImpl implements OrderLogic, Initializable {
 
 
         return recs_spec;
+    }
+
+    public Record getSingleOrderPrint(String ORDER_ID) {
+        String sql ="SELECT * FROM " + gysOrderTable + " WHERE ORDER_ID='"+ORDER_ID+"' ";
+        SQLExecutor se = getSqlExecutor();
+        Record rec = se.executeRecord(sql);
+        if (!rec.isEmpty()) {
+            String PARTNER_NO = rec.getString("PARTNER_NO");
+            Record partner = GlobalLogics.getUser().getSinglePartnerByNoBase(PARTNER_NO);
+            rec.put("PARTNER_INFO",partner);
+            RecordSet all_packages = getOrderPackagesPrint(rec.getString("ORDER_ID"));
+            int allBoxCount = 0;
+            for (Record r : all_packages){
+                allBoxCount += r.getInt("COUNT");
+            }
+            rec.put("ORDER_PACKAGES", all_packages);
+            rec.put("ORDER_PACKAGES_COUNT", allBoxCount);
+        }
+        return rec;
     }
 }
 
