@@ -14,6 +14,7 @@ public interface UserLogic {
     boolean updateGys(String GYS_ID, String USER_ID, String GYS_NAME, String GYS_NAME_SX, String ADDR, String CONTACT_USER, String PHONE, String KEYWORD, String SUPPORT_TYPE, String MEMO, String DISPLAY_NAME, String DISPLAY_NAME_SX);
     //获取某种类型的全部用户
     RecordSet getAllUserAndDeleteByUserType(int USER_TYPE, String DISPLAY_NAME);
+    Record getSinglePartnerByNoBaseOrder(String PARTNER_NO);
 
     boolean adminSavePartner(Context ctx, String SJ_ID, String PARTNER_NO, String PARTNER_NAME,String TRADE, String TYPE, String MOBILE, String CONTACT, String PROVINCE,String CITY,String AREA,String ADDR);
     boolean adminUpdatePartner(String PARTNER_NO, String PARTNER_NAME,String TRADE, String TYPE, String MOBILE, String CONTACT, String PROVINCE,String CITY,String AREA,String ADDR);
