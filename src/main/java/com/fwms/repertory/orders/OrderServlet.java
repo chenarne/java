@@ -174,6 +174,13 @@ public class OrderServlet extends WebMethodServlet {
         return b;
     }
 
+    @WebMethod("order/print_order_inbound")
+    public void print_order_inbound(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, true);
+        String ORDER_ID = qp.checkGetString("ORDER_ID");
+        GlobalLogics.getOrderLogic().printOrderInbound(ORDER_ID);
+    }
+
     @WebMethod("order/order_create")
     public boolean createOrder(HttpServletRequest req, QueryParams qp) throws IOException {
         Context ctx = PortalContext.getContext(req, qp, false, true);
