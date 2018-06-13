@@ -440,7 +440,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.lechun.ServerStart</mainClass>
+                            <mainClass>com.fwms.ServerStart</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
