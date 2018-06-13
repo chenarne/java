@@ -515,6 +515,14 @@ public class UserServlet extends WebMethodServlet {
         return recs;
     }
 
+    @WebMethod("user/sj_get_all_by_gys")
+    public RecordSet sj_get_all_by_gys(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, true);
+        String GYS_ID = qp.checkGetString("GYS_ID");
+        RecordSet recs = GlobalLogics.getUser().getAllGysSj(GYS_ID);
+        return recs;
+    }
+
     @WebMethod("user/gys_delete")
     public boolean gys_delete(HttpServletRequest req, QueryParams qp) throws IOException {
         Context ctx = PortalContext.getContext(req, qp, true, true);
