@@ -18,9 +18,7 @@ public class OrderServiceImpl implements OrderServiceLogic {
 
     //===============面单打印程序==================
     @Override
-    public List<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE> getInboundMdList(String userId,String PRINTED,String SJ_ID,String PARTNER_NO,String INBOUND_TIME
-
-    ){
+    public List<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE> getInboundMdList(String userId,String PRINTED,String SJ_ID,String PARTNER_NO,String INBOUND_TIME){
         Record gys = GlobalLogics.getUser().getGysByUser(userId);
         String GYS_ID = gys.getString("GYS_ID");
         Context ctx = new Context();
@@ -48,9 +46,44 @@ public class OrderServiceImpl implements OrderServiceLogic {
             o.setPARTNER_NO(rec.getString("PARTNER_NO"));
             o.setPACKAGE_CODE(rec.getString("PACKAGE_CODE"));
             o.setPRO_DETAIL(rec.getString("PRO_DETAIL"));
+            ls.add(o);
         }
 
 
+        return ls;
+    }
+
+    @Override
+    public List<WMS_WEBSERVICE_RESULT_SJ> getAllGysSj(String userId){
+        Record gys = GlobalLogics.getUser().getGysByUser(userId);
+        String GYS_ID = gys.getString("GYS_ID");
+        Context ctx = new Context();
+        ctx.setUser_id(userId);
+        RecordSet data = GlobalLogics.getUser().getAllGysSj(GYS_ID);
+
+        List<WMS_WEBSERVICE_RESULT_SJ> ls = new ArrayList<WMS_WEBSERVICE_RESULT_SJ>();
+
+        for (Record rec : data){
+            WMS_WEBSERVICE_RESULT_SJ o = new WMS_WEBSERVICE_RESULT_SJ();
+            o.setSJ_ID(rec.getString("SJ_ID"));
+            o.setSJ_NAME(rec.getString("SJ_NAME"));
+            o.setSJ_NAME_SX(rec.getString("SJ_NAME_SX"));
+            ls.add(o);
+        }
+        return ls;
+    }
+
+    @Override
+    public List<WMS_WEBSERVICE_RESULT_PARTNER> getSjPartner(String SJ_ID){
+        RecordSet data = GlobalLogics.getUser().getSjPartnerBase(SJ_ID);
+        List<WMS_WEBSERVICE_RESULT_PARTNER> ls = new ArrayList<WMS_WEBSERVICE_RESULT_PARTNER>();
+
+        for (Record rec : data){
+            WMS_WEBSERVICE_RESULT_PARTNER o = new WMS_WEBSERVICE_RESULT_PARTNER();
+            o.setPARTNER_NO(rec.getString("PARTNER_NO"));
+            o.setPARTNER_NAME(rec.getString("PARTNER_NAME"));
+            ls.add(o);
+        }
         return ls;
     }
 

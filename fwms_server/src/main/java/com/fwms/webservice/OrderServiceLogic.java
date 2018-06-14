@@ -24,6 +24,12 @@ public interface OrderServiceLogic {
             @WebParam(name = "INBOUND_TIME", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
             String INBOUND_TIME);
 
+    @WebResult(name="getAllGysSj")
+    List<WMS_WEBSERVICE_RESULT_SJ> getAllGysSj(@WebParam(name = "userId", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
+                                               String userId);
+    @WebResult(name="getSjPartner")
+    List<WMS_WEBSERVICE_RESULT_PARTNER> getSjPartner(@WebParam(name = "SJ_ID", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
+                                                     String SJ_ID);
 
     @WebResult(name="updatePackagePrint")
     WMS_WEBSERVICE_RESULT_BOOLEAN updatePackagePrint(

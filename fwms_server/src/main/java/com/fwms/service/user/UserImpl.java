@@ -125,6 +125,12 @@ public class UserImpl implements UserLogic, Initializable {
         }
         return recs;
     }
+    public RecordSet getSjPartnerBase(String SJ_ID) {
+        String sql = "SELECT * FROM " + sjPartnerTable + "  WHERE (SJ_ID='" + SJ_ID + "') AND DELETE_TIME IS NULL ORDER BY PARTNER_NAME ";
+        SQLExecutor se = read_getSqlExecutor();
+        RecordSet recs = se.executeRecordSet(sql, null);
+        return recs;
+    }
 
     public boolean adminDeletePartner(String PARTNER_NO) {
         String sql = "UPDATE " + sjPartnerTable + " SET DELETE_TIME='" + DateUtils.now() + "' WHERE PARTNER_NO='"+PARTNER_NO+"' ";
