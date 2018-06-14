@@ -886,7 +886,7 @@ public class OrderImpl implements OrderLogic, Initializable {
     public RecordSet getAllCanPrintMd(Context ctx, String GYS_ID,int isPrinted,String SJ_ID,String PARTNER_NO,String INBOUND_TIME) {
         SQLExecutor se = read_getSqlExecutor();
         String filter = "";
-        filter += " AND ORDER_ID IN (SELECT ORDER_ID FROM " + gysOrderTable + " WHERE GYS_ID='" + GYS_ID + "' ";
+        filter += " AND o.ORDER_ID IN (SELECT ORDER_ID FROM " + gysOrderTable + " WHERE GYS_ID='" + GYS_ID + "' ";
         if (SJ_ID.length() > 0 && !SJ_ID.equals("999") && !SJ_ID.equals("9") && !SJ_ID.equals("0"))
             filter += " AND SJ_ID='" + SJ_ID + "' ";
         if (INBOUND_TIME.length() > 0 && !INBOUND_TIME.equals("999") && !INBOUND_TIME.equals("9") && !INBOUND_TIME.equals("0"))
@@ -896,17 +896,17 @@ public class OrderImpl implements OrderLogic, Initializable {
         filter += " AND DELETE_TIME IS NULL AND STATUS>='" + OrderConstants.ORDER_STATUS_INBOUNT_CREATE + "') ";
         if (isPrinted != 9 && isPrinted != 999) {
             if (isPrinted==1){
-                filter += " AND PRINT>0";
+                filter += " AND p.PRINT>0";
             }
             if (isPrinted==0){
-                filter += " AND PRINT=0";
+                filter += " AND p.PRINT=0";
             }
         }
 
-        String sql = "SELECT * FROM " + packageTable + " WHERE 1=1 ";
+        String sql = "SELECT o.*,p.PACKAGE_CODE,p.PRINT,p.PRO_DETAIL,p.IN_KW_TIME,p.OUT_KW_TIME FROM " + packageTable + " INNER JOIN "+gysOrderTable+" o ON o.ORDER_ID=p.ORDER_ID WHERE 1=1 ";
         sql+=filter;
 
-        sql += " ORDER BY PACKAGE_CODE ";
+        sql += " ORDER BY p.PACKAGE_CODE ";
         RecordSet recs = se.executeRecordSet(sql, null);
         for (Record rec : recs) {
             RecordSet pd =  se.executeRecordSet("SELECT p.*,spec.PRO_SPEC,spec.PRO_COLOR FROM " + packageProductTable + " p INNER JOIN "+productSpecTable+" spec ON spec.SPEC_ID=p.SPEC_ID WHERE PACKAGE_CODE='"+rec.getString("PACKAGE_CODE")+"'") ;
