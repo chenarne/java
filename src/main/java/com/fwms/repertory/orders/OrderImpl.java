@@ -183,7 +183,8 @@ public class OrderImpl implements OrderLogic, Initializable {
         String ORDER_ID = rec.getString("ORDER_ID");
         Record order = getSingleOrderBase(ORDER_ID);
         order.copyTo(rec);
-
+        Record partner = GlobalLogics.getUser().getSinglePartnerByNo(order.getString("PARTNER_NO"));
+        rec.put("PARTNER_NAME",partner.getString("PARTNER_NAME"));
         Record GYS = GlobalLogics.getUser().getSingleGysBase(rec.getString("GYS_ID"));
         GYS.copyTo(rec);
 
@@ -882,12 +883,14 @@ public class OrderImpl implements OrderLogic, Initializable {
         return rec;
     }
 
-    public RecordSet getAllCanPrintMd(Context ctx, String GYS_ID,int isPrinted,String SJ_ID,String PARTNER_NO) {
+    public RecordSet getAllCanPrintMd(Context ctx, String GYS_ID,int isPrinted,String SJ_ID,String PARTNER_NO,String INBOUND_TIME) {
         SQLExecutor se = read_getSqlExecutor();
         String filter = "";
         filter += " AND ORDER_ID IN (SELECT ORDER_ID FROM " + gysOrderTable + " WHERE GYS_ID='" + GYS_ID + "' ";
         if (SJ_ID.length() > 0 && !SJ_ID.equals("999") && !SJ_ID.equals("9") && !SJ_ID.equals("0"))
             filter += " AND SJ_ID='" + SJ_ID + "' ";
+        if (INBOUND_TIME.length() > 0 && !INBOUND_TIME.equals("999") && !INBOUND_TIME.equals("9") && !INBOUND_TIME.equals("0"))
+            filter += " AND INBOUND_TIME='" + INBOUND_TIME + "' ";
         if (PARTNER_NO.length() > 0 && !PARTNER_NO.equals("999") && !PARTNER_NO.equals("9") && !PARTNER_NO.equals("0"))
             filter += " AND PARTNER_NO='" + PARTNER_NO + "' ";
         filter += " AND DELETE_TIME IS NULL AND STATUS>='" + OrderConstants.ORDER_STATUS_INBOUNT_CREATE + "') ";
@@ -908,6 +911,20 @@ public class OrderImpl implements OrderLogic, Initializable {
         for (Record rec : recs) {
             RecordSet pd =  se.executeRecordSet("SELECT p.*,spec.PRO_SPEC,spec.PRO_COLOR FROM " + packageProductTable + " p INNER JOIN "+productSpecTable+" spec ON spec.SPEC_ID=p.SPEC_ID WHERE PACKAGE_CODE='"+rec.getString("PACKAGE_CODE")+"'") ;
             rec.put("PACKAGE_PRODUCT",pd);
+
+            String KW_ID = rec.getString("KW_ID");
+            Record rec_kw= GlobalLogics.getBaseLogic().getSingleKwBase(KW_ID) ;
+            rec.put("KW_NAME",rec_kw.getString("KW_NAME"));
+            Record rec_kw_parent= GlobalLogics.getBaseLogic().getSingleKwBase(rec_kw.getString("FID")) ;
+            rec.put("PARENT_KW_NAME", rec_kw_parent.getString("KW_NAME"));
+            Record GYS = GlobalLogics.getUser().getSingleGysBase(rec.getString("GYS_ID"));
+            rec.put("GYS_NAME",GYS.getString("GYS_NAME"));
+            String PARTNER_NO_ = rec.getString("PARTNER_NO");
+            Record partner = GlobalLogics.getUser().getSinglePartnerByNo(PARTNER_NO_);
+            rec.put("PARTNER_NAME",partner.getString("PARTNER_NAME"));
+            String SJ_ID_ =  partner.getString("SJ_ID");
+            Record sj = GlobalLogics.getUser().getSingleSjBase(SJ_ID_);
+            rec.put("SJ_NAME",sj.getString("SJ_NAME"));
         }
         return recs;
     }
@@ -933,6 +950,45 @@ public class OrderImpl implements OrderLogic, Initializable {
             rec.put("SJ_NAME",sj.getString("SJ_NAME"));
         }
         return rec;
+    }
+
+
+
+    ///===========webservice 用=============
+    public RecordSet webService_getAllInbound(String KW_ID) {
+        SQLExecutor se = read_getSqlExecutor();
+        String filter = " AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE STATUS>='"+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_INBOUNT_PART+"' AND  AND DELETE_TIME IS NULL AND KW_ID IN (SELECT KW_ID FROM "+kwTable+" WHERE FID='"+KW_ID+"')) ";
+        String sql = "SELECT * FROM " + orderInboundTable + " WHERE DELETE_TIME IS NULL ";
+        sql+=filter;
+        sql += " ORDER BY INBOUND_TIME DESC ";
+        RecordSet recs = se.executeRecordSet(sql, null);
+        for (Record rec : recs) {
+            rec = formatOrderInbound(rec);
+        }
+        return recs;
+    }
+
+    ///===========webservice 用=============
+    public RecordSet webService_getAllOutbound(String KW_ID) {
+        SQLExecutor se = read_getSqlExecutor();
+        String filter = " AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE STATUS>='"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_OUTBOUNT_PART+"' AND  AND DELETE_TIME IS NULL AND KW_ID IN (SELECT KW_ID FROM "+kwTable+" WHERE FID='"+KW_ID+"')) ";
+        String sql = "SELECT * FROM " + orderOutboundTable + " WHERE DELETE_TIME IS NULL ";
+        sql+=filter;
+        sql += " ORDER BY OUTBOUND_TIME DESC ";
+        RecordSet recs = se.executeRecordSet(sql, null);
+        for (Record rec : recs) {
+            rec = formatOrderInbound(rec);
+        }
+        return recs;
+    }
+
+    public boolean webService_printOrderPackage(Context ctx, String PACKAGE_CODE) {
+        String sql1 = "UPDATE " + packageTable + " SET PRINT=PRINT+1  WHERE PACKAGE_CODE='" + PACKAGE_CODE + "' ";
+        List<String> ls = new ArrayList<String>();
+        ls.add(sql1);
+        SQLExecutor se = getSqlExecutor();
+        long n = se.executeUpdate(ls);
+        return n > 0;
     }
 }
 
