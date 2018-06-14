@@ -33,7 +33,7 @@ public interface UserLogic {
     boolean deleteUser(Context ctx, String USER_ID);
     RecordSet getAllUserSel(int USER_TYPE);
     Record getSingleUserStrong(Context ctx, String USER_ID);
-
+    RecordSet getSjPartnerBase(String SJ_ID);
 
     Record getSingleUserSimple(String USER_ID);
 
