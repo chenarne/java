@@ -903,7 +903,7 @@ public class OrderImpl implements OrderLogic, Initializable {
             }
         }
 
-        String sql = "SELECT o.*,p.PACKAGE_CODE,p.PRINT,p.PRO_DETAIL,p.IN_KW_TIME,p.OUT_KW_TIME FROM " + packageTable + " INNER JOIN "+gysOrderTable+" o ON o.ORDER_ID=p.ORDER_ID WHERE 1=1 ";
+        String sql = "SELECT o.*,p.PACKAGE_CODE,p.PRINT,p.PRO_DETAIL,p.IN_KW_TIME,p.OUT_KW_TIME FROM " + packageTable + " p INNER JOIN "+gysOrderTable+" o ON o.ORDER_ID=p.ORDER_ID WHERE 1=1 ";
         sql+=filter;
 
         sql += " ORDER BY p.PACKAGE_CODE ";
