@@ -44,12 +44,12 @@ public interface OrderServiceLogic {
             String package_code,
             @WebParam(name = "userId", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
             String userId);
-    @WebResult(name="updatePackageInbound")
-    List<WMS_WEBSERVICE_RESULT_ORDER_INBOUND> updatePackageInbound(
+    @WebResult(name="getAllPackageInbound")
+    List<WMS_WEBSERVICE_RESULT_ORDER_INBOUND> getAllPackageInbound(
             @WebParam(name = "kw_id", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
             String kw_id);
-    @WebResult(name="updatePackageOutbound")
-    List<WMS_WEBSERVICE_RESULT_ORDER_OUTBOUND> updatePackageOutbound(
+    @WebResult(name="getAllPackageOutbound")
+    List<WMS_WEBSERVICE_RESULT_ORDER_OUTBOUND> getAllPackageOutbound(
             @WebParam(name = "kw_id", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
             String kw_id);
 

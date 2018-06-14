@@ -85,7 +85,7 @@ public class OrderServiceImpl implements OrderServiceLogic {
 
     //获取全部入库通知单
     @Override
-    public List<WMS_WEBSERVICE_RESULT_ORDER_INBOUND> updatePackageInbound(String kwId){
+    public List<WMS_WEBSERVICE_RESULT_ORDER_INBOUND> getAllPackageInbound(String kwId){
 
         RecordSet data = GlobalLogics.getOrderLogic().webService_getAllInbound(kwId);
 
@@ -107,7 +107,7 @@ public class OrderServiceImpl implements OrderServiceLogic {
     }
     //获取全部出库通知单
     @Override
-    public List<WMS_WEBSERVICE_RESULT_ORDER_OUTBOUND> updatePackageOutbound(String kwId){
+    public List<WMS_WEBSERVICE_RESULT_ORDER_OUTBOUND> getAllPackageOutbound(String kwId){
 
         RecordSet data = GlobalLogics.getOrderLogic().webService_getAllOutbound(kwId);
 
