@@ -632,7 +632,8 @@ public class OrderServlet extends WebMethodServlet {
         String SJ_ID = qp.getString("SJ_ID", "999");
         String PARTNER_NO = qp.getString("PARTNER_NO", "999");
         int PRINTED = (int)qp.getInt("PRINTED",999);
-        RecordSet data = GlobalLogics.getOrderLogic().getAllCanPrintMd(ctx, GYS_ID, PRINTED, SJ_ID, PARTNER_NO);
+        String INBOUND_TIME = qp.getString("INBOUND_TIME", "");
+        RecordSet data = GlobalLogics.getOrderLogic().getAllCanPrintMd(ctx, GYS_ID, PRINTED, SJ_ID, PARTNER_NO,INBOUND_TIME);
 
         return data;
     }

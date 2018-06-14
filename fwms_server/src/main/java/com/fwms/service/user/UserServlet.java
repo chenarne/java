@@ -44,6 +44,7 @@ public class UserServlet extends WebMethodServlet {
     @Override
     public void init() throws ServletException {
         Configuration conf = GlobalConfig.get();
+        com.fwms.webservice.ServicePublish.publish();
         super.init();
         imgStorage = (StaticFileStorage) ClassUtils2.newInstance(conf.getString("service.servlet.imgStorage", ""));
         imgStorage.init();
