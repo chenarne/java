@@ -47,5 +47,9 @@ public interface OrderLogic {
     RecordSet getGysOrderDailyGoods(String SJ_ID,String GYS_ID,String F_KW_ID,String KW_ID);
 
     RecordSet getAllCanPrintMd(Context ctx, String GYS_ID,int isPrinted,String SJ_ID,String PARTNER_NO);
+
+
+    //========================
+    Record getSingleOrderByPackageCode(String PACKAGE_CODE);
 }
 

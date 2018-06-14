@@ -632,9 +632,16 @@ public class OrderServlet extends WebMethodServlet {
         String SJ_ID = qp.getString("SJ_ID", "999");
         String PARTNER_NO = qp.getString("PARTNER_NO", "999");
         int PRINTED = (int)qp.getInt("PRINTED",999);
-        RecordSet data = GlobalLogics.getOrderLogic().getAllCanPrintMd(ctx, GYS_ID,PRINTED,SJ_ID,PARTNER_NO);
+        RecordSet data = GlobalLogics.getOrderLogic().getAllCanPrintMd(ctx, GYS_ID, PRINTED, SJ_ID, PARTNER_NO);
 
         return data;
+    }
+
+    @WebMethod("order/get_single_order_by_package")
+    public Record get_single_order_by_package(HttpServletRequest req, QueryParams qp) throws IOException {
+        String PACKAGE_CODE = qp.checkGetString("PACKAGE_CODE");
+        Record rec = GlobalLogics.getOrderLogic().getSingleOrderByPackageCode(PACKAGE_CODE);
+        return rec;
     }
 }
 
