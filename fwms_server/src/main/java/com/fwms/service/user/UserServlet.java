@@ -45,8 +45,8 @@ public class UserServlet extends WebMethodServlet {
     @Override
     public void init() throws ServletException {
         Configuration conf = GlobalConfig.get();
-        ServicePublish.publish();
         super.init();
+        ServicePublish.publish();
         imgStorage = (StaticFileStorage) ClassUtils2.newInstance(conf.getString("service.servlet.imgStorage", ""));
         imgStorage.init();
         imgPattern = conf.getString("service.imgUrlPattern", "http://" + conf.getString("server.host", "localhost") + ":" + GlobalConfig.get().getString("server.web.port", "80") + "/fwms/userPhotoImg/%s");

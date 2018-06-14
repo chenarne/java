@@ -5,23 +5,20 @@ import com.fwms.basedevss.base.data.Record;
 import com.fwms.basedevss.base.data.RecordSet;
 import com.fwms.common.GlobalLogics;
 import com.fwms.webservice.entity.*;
+import org.springframework.stereotype.Service;
 
 import javax.jws.WebParam;
 import javax.jws.WebService;
 import java.util.ArrayList;
 import java.util.List;
 
+@Service
 @WebService
 public class OrderServiceImpl implements OrderServiceLogic {
 
     //===============面单打印程序==================
     @Override
-    public List<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE> getOrder(
-            @WebParam(name="value", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String userId,
-            @WebParam(name="value", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String PRINTED,
-            @WebParam(name="value", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String SJ_ID,
-            @WebParam(name="value", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String PARTNER_NO,
-            @WebParam(name="value", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String INBOUND_TIME
+    public List<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE> getInboundMdList(String userId,String PRINTED,String SJ_ID,String PARTNER_NO,String INBOUND_TIME
 
     ){
         Record gys = GlobalLogics.getUser().getGysByUser(userId);
@@ -59,9 +56,7 @@ public class OrderServiceImpl implements OrderServiceLogic {
 
     //更新面单打印记录
     @Override
-    public WMS_WEBSERVICE_RESULT_BOOLEAN updatePackagePrint(
-            @WebParam(name="value", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String package_code,
-            @WebParam(name="value", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String userId){
+    public WMS_WEBSERVICE_RESULT_BOOLEAN updatePackagePrint(String package_code,String userId){
         WMS_WEBSERVICE_RESULT_BOOLEAN o = new WMS_WEBSERVICE_RESULT_BOOLEAN();
         if (package_code.length()<=0) {
             o.setResult(false);
@@ -90,8 +85,7 @@ public class OrderServiceImpl implements OrderServiceLogic {
 
     //获取全部入库通知单
     @Override
-    public List<WMS_WEBSERVICE_RESULT_ORDER_INBOUND> updatePackageInbound(
-            @WebParam(name="value", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String kwId){
+    public List<WMS_WEBSERVICE_RESULT_ORDER_INBOUND> updatePackageInbound(String kwId){
 
         RecordSet data = GlobalLogics.getOrderLogic().webService_getAllInbound(kwId);
 
@@ -113,8 +107,7 @@ public class OrderServiceImpl implements OrderServiceLogic {
     }
     //获取全部出库通知单
     @Override
-    public List<WMS_WEBSERVICE_RESULT_ORDER_OUTBOUND> updatePackageOutbound(
-            @WebParam(name="value", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String kwId){
+    public List<WMS_WEBSERVICE_RESULT_ORDER_OUTBOUND> updatePackageOutbound(String kwId){
 
         RecordSet data = GlobalLogics.getOrderLogic().webService_getAllOutbound(kwId);
 
@@ -136,8 +129,7 @@ public class OrderServiceImpl implements OrderServiceLogic {
     }
     //更新入库
     @Override
-    public WMS_WEBSERVICE_RESULT_BOOLEAN updatePackageInbound(@WebParam(name="value", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String package_code,
-            @WebParam(name="value", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String userId){
+    public WMS_WEBSERVICE_RESULT_BOOLEAN updatePackageInbound(String package_code,String userId){
         WMS_WEBSERVICE_RESULT_BOOLEAN o = new WMS_WEBSERVICE_RESULT_BOOLEAN();
 
         Context ctx = new Context();
@@ -148,9 +140,7 @@ public class OrderServiceImpl implements OrderServiceLogic {
     }
     //更新出库
     @Override
-    public WMS_WEBSERVICE_RESULT_BOOLEAN updatePackageOutbound(
-            @WebParam(name="value", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String package_code,
-            @WebParam(name="value", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String userId){
+    public WMS_WEBSERVICE_RESULT_BOOLEAN updatePackageOutbound(String package_code,String userId){
         WMS_WEBSERVICE_RESULT_BOOLEAN o = new WMS_WEBSERVICE_RESULT_BOOLEAN();
         if (package_code.length()<=0) {
             o.setResult(false);
@@ -182,7 +172,7 @@ public class OrderServiceImpl implements OrderServiceLogic {
 
     //===============通用的登录程序==================
     @Override
-    public WMS_WEBSERVICE_RESULT_USER packageUserLogin(@WebParam(name="value", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String user_name,String password){
+    public WMS_WEBSERVICE_RESULT_USER packageUserLogin(String user_name,String password){
         WMS_WEBSERVICE_RESULT_USER o = new WMS_WEBSERVICE_RESULT_USER();
         o.setUSER_NAME("");
         o.setDISPLAY_NAME("");
