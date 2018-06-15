@@ -633,7 +633,7 @@ public class OrderServlet extends WebMethodServlet {
         String PARTNER_NO = qp.getString("PARTNER_NO", "999");
         int PRINTED = (int)qp.getInt("PRINTED",999);
         String INBOUND_TIME = qp.getString("INBOUND_TIME", "");
-        RecordSet data = GlobalLogics.getOrderLogic().getAllCanPrintMd(ctx, GYS_ID, PRINTED, SJ_ID, PARTNER_NO,INBOUND_TIME);
+        RecordSet data = GlobalLogics.getOrderLogic().getAllCanPrintMd(ctx, GYS_ID, PRINTED, SJ_ID, PARTNER_NO, INBOUND_TIME);
 
         return data;
     }
@@ -643,6 +643,12 @@ public class OrderServlet extends WebMethodServlet {
         String PACKAGE_CODE = qp.checkGetString("PACKAGE_CODE");
         Record rec = GlobalLogics.getOrderLogic().getSingleOrderByPackageCode(PACKAGE_CODE);
         return rec;
+    }
+
+    @WebMethod("order/test")
+    public RecordSet test(HttpServletRequest req, QueryParams qp) throws IOException {
+        RecordSet data = GlobalLogics.getOrderLogic().webService_getAllInbound("");
+        return  data;
     }
 }
 
