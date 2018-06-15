@@ -238,6 +238,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         return rec;
     }
     public Record getSinglePackage(String PACKAGE_CODE) {
+        PACKAGE_CODE = PACKAGE_CODE.replace("'","");
         String sql ="SELECT * FROM " + packageTable + " WHERE PACKAGE_CODE='"+PACKAGE_CODE+"' ";
         SQLExecutor se = getSqlExecutor();
         Record rec = se.executeRecord(sql);
@@ -681,6 +682,8 @@ public class OrderImpl implements OrderLogic, Initializable {
     public boolean confirmInbound(Context ctx,String PACKAGE_CODE) {
         SQLExecutor se = getSqlExecutor();
         Record single_package = getSinglePackage(PACKAGE_CODE);
+        if (single_package.isEmpty())
+            return false;
         String ORDER_ID = single_package.getString("ORDER_ID");
         String nowTime = DateUtils.now();
         String sql = "UPDATE "+packageTable+" SET IN_KW_TIME='"+nowTime+"',IN_KW_USER_ID='"+ctx.getUser_id()+"' WHERE PACKAGE_CODE='"+PACKAGE_CODE+"' ";
@@ -757,6 +760,8 @@ public class OrderImpl implements OrderLogic, Initializable {
     public boolean confirmOutbound(Context ctx,String PACKAGE_CODE) {
         SQLExecutor se = getSqlExecutor();
         Record single_package = getSinglePackage(PACKAGE_CODE);
+        if (single_package.isEmpty())
+            return false;
         String ORDER_ID = single_package.getString("ORDER_ID");
         String nowTime = DateUtils.now();
         String sql = "UPDATE "+packageTable+" SET OUT_KW_TIME='"+nowTime+"',OUT_KW_USER_ID='"+ctx.getUser_id()+"' WHERE PACKAGE_CODE='"+PACKAGE_CODE+"' ";
