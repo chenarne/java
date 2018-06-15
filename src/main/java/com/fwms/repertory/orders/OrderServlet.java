@@ -647,7 +647,7 @@ public class OrderServlet extends WebMethodServlet {
 
     @WebMethod("order/test")
     public RecordSet test(HttpServletRequest req, QueryParams qp) throws IOException {
-        RecordSet data = GlobalLogics.getOrderLogic().webService_getAllInbound("");
+        RecordSet data = GlobalLogics.getOrderLogic().webService_getInboundPackage("DH_20180611_001");
         return  data;
     }
 }

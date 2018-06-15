@@ -59,5 +59,7 @@ public interface OrderLogic {
     RecordSet webService_getAllInbound(String KW_ID);
     RecordSet webService_getAllOutbound(String KW_ID);
     boolean webService_printOrderPackage(Context ctx, String PACKAGE_CODE);
+    RecordSet webService_getInboundPackage(String INBOUND_ID);
+    RecordSet webService_getOutboundPackage(String OUTBOUND_ID);
 }
 

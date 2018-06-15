@@ -65,4 +65,10 @@ public interface OrderServiceLogic {
             String user_name,
             @WebParam(name = "password", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
             String password);
+    @WebResult(name="getScanInboundList")
+    List<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE> getScanInboundList(
+            @WebParam(name = "user_name", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String INBOUND_ID);
+    @WebResult(name="getScanOutboundList")
+    List<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE> getScanOutboundList(
+            @WebParam(name = "user_name", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String OUTBOUND_ID);
 }
