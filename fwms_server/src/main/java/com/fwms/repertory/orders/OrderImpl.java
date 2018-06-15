@@ -957,7 +957,12 @@ public class OrderImpl implements OrderLogic, Initializable {
     ///===========webservice 用=============
     public RecordSet webService_getAllInbound(String KW_ID) {
         SQLExecutor se = read_getSqlExecutor();
-        String filter = " AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE STATUS>='"+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_INBOUNT_PART+"' AND  AND DELETE_TIME IS NULL AND KW_ID IN (SELECT KW_ID FROM "+kwTable+" WHERE FID='"+KW_ID+"')) ";
+        String filter = " AND ORDER_ID IN ";
+        filter += " ( ";
+        filter += " SELECT ORDER_ID FROM "+gysOrderTable+" WHERE STATUS>='"+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_INBOUNT_PART+"' AND  AND DELETE_TIME IS NULL  ";
+        if (KW_ID.length() > 0 && !KW_ID.equals("999") && !KW_ID.equals("9") && !KW_ID.equals("0"))
+            filter += " AND KW_ID IN (SELECT KW_ID FROM " + kwTable + " WHERE FID='" + KW_ID + "') ";
+        filter += " )  ";
         String sql = "SELECT * FROM " + orderInboundTable + " WHERE DELETE_TIME IS NULL ";
         sql+=filter;
         sql += " ORDER BY INBOUND_TIME DESC ";
@@ -971,7 +976,12 @@ public class OrderImpl implements OrderLogic, Initializable {
     ///===========webservice 用=============
     public RecordSet webService_getAllOutbound(String KW_ID) {
         SQLExecutor se = read_getSqlExecutor();
-        String filter = " AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE STATUS>='"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_OUTBOUNT_PART+"' AND  AND DELETE_TIME IS NULL AND KW_ID IN (SELECT KW_ID FROM "+kwTable+" WHERE FID='"+KW_ID+"')) ";
+        String filter = " AND ORDER_ID IN ";
+        filter += " ( ";
+        filter += " SELECT ORDER_ID FROM "+gysOrderTable+" WHERE STATUS>='"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_OUTBOUNT_PART+"' AND  AND DELETE_TIME IS NULL  ";
+        if (KW_ID.length() > 0 && !KW_ID.equals("999") && !KW_ID.equals("9") && !KW_ID.equals("0"))
+            filter += " AND KW_ID IN (SELECT KW_ID FROM " + kwTable + " WHERE FID='" + KW_ID + "') ";
+        filter += " )  ";
         String sql = "SELECT * FROM " + orderOutboundTable + " WHERE DELETE_TIME IS NULL ";
         sql+=filter;
         sql += " ORDER BY OUTBOUND_TIME DESC ";
