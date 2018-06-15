@@ -1000,5 +1000,60 @@ public class OrderImpl implements OrderLogic, Initializable {
         long n = se.executeUpdate(ls);
         return n > 0;
     }
+
+
+
+    public RecordSet webService_getInboundPackage(String INBOUND_ID) {
+        SQLExecutor se = read_getSqlExecutor();
+        String sql = "SELECT o.*,p.PACKAGE_CODE,p.PRINT,p.PRO_DETAIL,p.IN_KW_TIME,p.OUT_KW_TIME FROM " + packageTable + " p INNER JOIN "+gysOrderTable+" o ON o.ORDER_ID=p.ORDER_ID WHERE 1=1 ";
+        sql+=" AND p.IN_KW_TIME='' AND p.OUT_KW_TIME='' ";
+        sql+=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+orderInboundTable+" WHERE INBOUND_ID='"+INBOUND_ID+"') ";
+
+
+        sql += " ORDER BY p.PACKAGE_CODE ";
+        RecordSet recs = se.executeRecordSet(sql, null);
+        for (Record rec : recs) {
+//            String KW_ID = rec.getString("KW_ID");
+//            Record rec_kw= GlobalLogics.getBaseLogic().getSingleKwBase(KW_ID) ;
+//            rec.put("KW_NAME",rec_kw.getString("KW_NAME"));
+//            Record rec_kw_parent= GlobalLogics.getBaseLogic().getSingleKwBase(rec_kw.getString("FID")) ;
+//            rec.put("PARENT_KW_NAME", rec_kw_parent.getString("KW_NAME"));
+//            Record GYS = GlobalLogics.getUser().getSingleGysBase(rec.getString("GYS_ID"));
+//            rec.put("GYS_NAME",GYS.getString("GYS_NAME"));
+//            String PARTNER_NO_ = rec.getString("PARTNER_NO");
+//            Record partner = GlobalLogics.getUser().getSinglePartnerByNo(PARTNER_NO_);
+//            rec.put("PARTNER_NAME",partner.getString("PARTNER_NAME"));
+//            String SJ_ID_ =  partner.getString("SJ_ID");
+//            Record sj = GlobalLogics.getUser().getSingleSjBase(SJ_ID_);
+//            rec.put("SJ_NAME",sj.getString("SJ_NAME"));
+        }
+        return recs;
+    }
+
+    public RecordSet webService_getOutboundPackage(String OUTBOUND_ID) {
+        SQLExecutor se = read_getSqlExecutor();
+        String sql = "SELECT o.*,p.PACKAGE_CODE,p.PRINT,p.PRO_DETAIL,p.IN_KW_TIME,p.OUT_KW_TIME FROM " + packageTable + " p INNER JOIN "+gysOrderTable+" o ON o.ORDER_ID=p.ORDER_ID WHERE 1=1 ";
+        sql+=" AND p.IN_KW_TIME!='' AND p.OUT_KW_TIME='' ";
+        sql+=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+orderOutboundTable+" WHERE OUTBOUND_ID='"+OUTBOUND_ID+"') ";
+
+        sql += " ORDER BY p.PACKAGE_CODE ";
+        RecordSet recs = se.executeRecordSet(sql, null);
+        for (Record rec : recs) {
+//            String KW_ID = rec.getString("KW_ID");
+//            Record rec_kw= GlobalLogics.getBaseLogic().getSingleKwBase(KW_ID) ;
+//            rec.put("KW_NAME",rec_kw.getString("KW_NAME"));
+//            Record rec_kw_parent= GlobalLogics.getBaseLogic().getSingleKwBase(rec_kw.getString("FID")) ;
+//            rec.put("PARENT_KW_NAME", rec_kw_parent.getString("KW_NAME"));
+//            Record GYS = GlobalLogics.getUser().getSingleGysBase(rec.getString("GYS_ID"));
+//            rec.put("GYS_NAME",GYS.getString("GYS_NAME"));
+//            String PARTNER_NO_ = rec.getString("PARTNER_NO");
+//            Record partner = GlobalLogics.getUser().getSinglePartnerByNo(PARTNER_NO_);
+//            rec.put("PARTNER_NAME",partner.getString("PARTNER_NAME"));
+//            String SJ_ID_ =  partner.getString("SJ_ID");
+//            Record sj = GlobalLogics.getUser().getSingleSjBase(SJ_ID_);
+//            rec.put("SJ_NAME",sj.getString("SJ_NAME"));
+        }
+        return recs;
+    }
 }
 
