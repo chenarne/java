@@ -959,7 +959,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         SQLExecutor se = read_getSqlExecutor();
         String filter = " AND ORDER_ID IN ";
         filter += " ( ";
-        filter += " SELECT ORDER_ID FROM "+gysOrderTable+" WHERE STATUS>='"+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_INBOUNT_PART+"' AND  AND DELETE_TIME IS NULL  ";
+        filter += " SELECT ORDER_ID FROM "+gysOrderTable+" WHERE STATUS>='"+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_INBOUNT_PART+"' AND DELETE_TIME IS NULL  ";
         if (KW_ID.length() > 0 && !KW_ID.equals("999") && !KW_ID.equals("9") && !KW_ID.equals("0"))
             filter += " AND KW_ID IN (SELECT KW_ID FROM " + kwTable + " WHERE FID='" + KW_ID + "') ";
         filter += " )  ";
@@ -978,7 +978,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         SQLExecutor se = read_getSqlExecutor();
         String filter = " AND ORDER_ID IN ";
         filter += " ( ";
-        filter += " SELECT ORDER_ID FROM "+gysOrderTable+" WHERE STATUS>='"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_OUTBOUNT_PART+"' AND  AND DELETE_TIME IS NULL  ";
+        filter += " SELECT ORDER_ID FROM "+gysOrderTable+" WHERE STATUS>='"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_OUTBOUNT_PART+"' AND DELETE_TIME IS NULL  ";
         if (KW_ID.length() > 0 && !KW_ID.equals("999") && !KW_ID.equals("9") && !KW_ID.equals("0"))
             filter += " AND KW_ID IN (SELECT KW_ID FROM " + kwTable + " WHERE FID='" + KW_ID + "') ";
         filter += " )  ";
