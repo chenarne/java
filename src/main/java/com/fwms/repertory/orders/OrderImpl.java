@@ -407,8 +407,10 @@ public class OrderImpl implements OrderLogic, Initializable {
             RecordSet allPros = se.executeRecordSet("SELECT p.*,spec.PRO_SPEC,spec.PRO_COLOR FROM "+packageProductTable+" p INNER JOIN "+productSpecTable+" spec ON spec.SPEC_ID=p.SPEC_ID WHERE p.PACKAGE_CODE='"+PACKAGE_CODE+"'");
             String s = "";
             for (Record r : allPros){
-                s+=r.getString("PRO_NAME")+"["+r.getString("PRO_SPEC")+"]"+"("+r.getInt("PRO_COUNT")+")";
+                s+=r.getString("PRO_NAME")+"["+r.getString("PRO_SPEC")+"]"+"("+r.getInt("PRO_COUNT")+")"+",";
             }
+            if (s.length()>0)
+                s = s.substring(0,s.length()-1);
             if (s.length()>0)
                 se.executeUpdate("UPDATE "+packageTable+" SET PRO_DETAIL='"+s+"' WHERE PACKAGE_CODE='"+PACKAGE_CODE+"' ");
         }
