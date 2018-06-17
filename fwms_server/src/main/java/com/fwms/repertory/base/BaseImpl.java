@@ -114,7 +114,7 @@ public class BaseImpl implements BaseLogic, Initializable {
         return n>0;
     }
 
-    public Record getDW(String DW_SX) {
+    public Record getDWBYSX(String DW_SX) {
         String sql = "SELECT * FROM " + dwTable + "  WHERE DW_SX='"+DW_SX+"'";
         SQLExecutor se = read_getSqlExecutor();
         Record rec = se.executeRecordSet(sql, null).getFirstRecord();
@@ -255,10 +255,10 @@ public class BaseImpl implements BaseLogic, Initializable {
         return rec;
     }
 
-    public boolean saveUserProduct(String GYS_ID, String PRO_ID, String PRO_CODE, String PRO_TYPE, String PRO_TYPE_ID, String PRO_NAME, String PRO_NAME_SX, String MEMO,int TRANSPORT_TYPE,String PRO_DW) {
+    public boolean saveUserProduct(String GYS_ID, String PRO_ID, String PRO_CODE, String PRO_TYPE, String PRO_TYPE_ID, String PRO_NAME, String PRO_NAME_SX, String MEMO,int TRANSPORT_TYPE,String PRO_DW,String PRO_DW_NAME) {
         SQLExecutor se = getSqlExecutor();
-        String sql = "INSERT INTO " + productTable + " (PRO_ID, PRO_CODE, PRO_TYPE,  PRO_TYPE_ID,  PRO_NAME, PRO_NAME_SX, MEMO,TRANSPORT_TYPE, PRO_DW,GYS_ID) VALUES" +
-                " (" + PRO_ID + ",'" + PRO_CODE + "','" + PRO_TYPE + "','" + PRO_TYPE_ID + "','" + PRO_NAME + "','" + PRO_NAME_SX + "','" + MEMO + "','"+TRANSPORT_TYPE+"','"+PRO_DW+"','"+GYS_ID+"') ";
+        String sql = "INSERT INTO " + productTable + " (PRO_ID, PRO_CODE, PRO_TYPE,  PRO_TYPE_ID,  PRO_NAME, PRO_NAME_SX, MEMO,TRANSPORT_TYPE, PRO_DW,GYS_ID,PRO_DW_NAME) VALUES" +
+                " (" + PRO_ID + ",'" + PRO_CODE + "','" + PRO_TYPE + "','" + PRO_TYPE_ID + "','" + PRO_NAME + "','" + PRO_NAME_SX + "','" + MEMO + "','"+TRANSPORT_TYPE+"','"+PRO_DW+"','"+GYS_ID+"','"+PRO_DW_NAME+"') ";
 
         String sql2 = "INSERT INTO  " + gysWlTable + " (GYS_ID,PRO_ID) VALUES ('" + GYS_ID + "','" + PRO_ID + "')";
         List<String> ls = new ArrayList<String>();
@@ -268,8 +268,8 @@ public class BaseImpl implements BaseLogic, Initializable {
         return m > 0;
     }
 
-    public boolean updateProduct(String PRO_ID,String PRO_CODE,String PRO_TYPE, String PRO_TYPE_ID, String PRO_NAME,String PRO_NAME_SX,String MEMO,int TRANSPORT_TYPE,String PRO_DW) {
-        String sql = "UPDATE " + productTable + " SET PRO_CODE='" + PRO_CODE + "',PRO_TYPE='" + PRO_TYPE + "',PRO_TYPE_ID='"+PRO_TYPE_ID+"',PRO_NAME='"+PRO_NAME+"',PRO_NAME_SX='"+PRO_NAME_SX+"',MEMO='"+MEMO+"',TRANSPORT_TYPE='"+TRANSPORT_TYPE+"',PRO_DW='"+PRO_DW+"' WHERE PRO_ID='"+PRO_ID+"' ";
+    public boolean updateProduct(String PRO_ID,String PRO_CODE,String PRO_TYPE, String PRO_TYPE_ID, String PRO_NAME,String PRO_NAME_SX,String MEMO,int TRANSPORT_TYPE,String PRO_DW,String PRO_DW_NAME) {
+        String sql = "UPDATE " + productTable + " SET PRO_CODE='" + PRO_CODE + "',PRO_TYPE='" + PRO_TYPE + "',PRO_TYPE_ID='"+PRO_TYPE_ID+"',PRO_NAME='"+PRO_NAME+"',PRO_NAME_SX='"+PRO_NAME_SX+"',MEMO='"+MEMO+"',TRANSPORT_TYPE='"+TRANSPORT_TYPE+"',PRO_DW='"+PRO_DW+"',PRO_DW_NAME='"+PRO_DW_NAME+"' WHERE PRO_ID='"+PRO_ID+"' ";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n>0;
@@ -287,16 +287,16 @@ public class BaseImpl implements BaseLogic, Initializable {
     }
 
 
-    public boolean saveProductSpec(String PRO_ID,String SPEC_ID,String PRO_CODE,String PRO_SPEC, String PRO_COLOR, String PRO_PRICE,String PRO_PRICE_1,String PRO_NAME,String PRO_NAME_SX,int PERIOD,String MEMO,String BAR_CODE) {
-        String sql = "INSERT INTO " + productSpecTable + " (PRO_ID, SPEC_ID,PRO_CODE, PRO_SPEC,  PRO_COLOR,PRO_PRICE, PRO_PRICE_1, PRO_NAME, PRO_NAME_SX,PERIOD, MEMO,BAR_CODE) VALUES" +
-                " ("+PRO_ID+",'"+SPEC_ID+"','" + PRO_CODE + "','" + PRO_SPEC + "','"+PRO_COLOR+"','"+PRO_PRICE+"','"+PRO_PRICE_1+"','"+PRO_NAME+"','"+PRO_NAME_SX+"','"+PERIOD+"','"+MEMO+"','"+BAR_CODE+"') ";
+    public boolean saveProductSpec(String PRO_ID,String SPEC_ID,String PRO_CODE,String PRO_SPEC, String PRO_COLOR, String PRO_PRICE,String PRO_PRICE_1,String PRO_NAME,String PRO_NAME_SX,int PERIOD,String MEMO,String BAR_CODE,String PRO_DW_NAME,int SINGLE_BOX) {
+        String sql = "INSERT INTO " + productSpecTable + " (PRO_ID, SPEC_ID,PRO_CODE, PRO_SPEC,  PRO_COLOR,PRO_PRICE, PRO_PRICE_1, PRO_NAME, PRO_NAME_SX,PERIOD, MEMO,BAR_CODE,PRO_DW_NAME,SINGLE_BOX) VALUES" +
+                " ("+PRO_ID+",'"+SPEC_ID+"','" + PRO_CODE + "','" + PRO_SPEC + "','"+PRO_COLOR+"','"+PRO_PRICE+"','"+PRO_PRICE_1+"','"+PRO_NAME+"','"+PRO_NAME_SX+"','"+PERIOD+"','"+MEMO+"','"+BAR_CODE+"','"+PRO_DW_NAME+"','"+SINGLE_BOX+"') ";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n>0;
     }
 
-    public boolean updateProductSpec(String SPEC_ID,String PRO_CODE,String PRO_SPEC, String PRO_COLOR, String PRO_PRICE,String PRO_PRICE_1,String PRO_NAME,String PRO_NAME_SX,int PERIOD,String MEMO,String BAR_CODE) {
-        String sql = "UPDATE " + productSpecTable + " SET PRO_CODE='" + PRO_CODE + "',PRO_SPEC='" + PRO_SPEC + "',PRO_COLOR='"+PRO_COLOR+"',PRO_PRICE='"+PRO_PRICE+"',PRO_PRICE_1='"+PRO_PRICE_1+"',PRO_NAME='"+PRO_NAME+"',PRO_NAME_SX='"+PRO_NAME_SX+"',PERIOD='"+PERIOD+"',MEMO='"+MEMO+"',BAR_CODE='"+BAR_CODE+"' WHERE SPEC_ID='"+SPEC_ID+"'";
+    public boolean updateProductSpec(String SPEC_ID,String PRO_CODE,String PRO_SPEC, String PRO_COLOR, String PRO_PRICE,String PRO_PRICE_1,String PRO_NAME,String PRO_NAME_SX,int PERIOD,String MEMO,String BAR_CODE,int SINGLE_BOX) {
+        String sql = "UPDATE " + productSpecTable + " SET PRO_CODE='" + PRO_CODE + "',PRO_SPEC='" + PRO_SPEC + "',PRO_COLOR='"+PRO_COLOR+"',PRO_PRICE='"+PRO_PRICE+"',PRO_PRICE_1='"+PRO_PRICE_1+"',PRO_NAME='"+PRO_NAME+"',PRO_NAME_SX='"+PRO_NAME_SX+"',PERIOD='"+PERIOD+"',MEMO='"+MEMO+"',BAR_CODE='"+BAR_CODE+"',SINGLE_BOX='"+SINGLE_BOX+"' WHERE SPEC_ID='"+SPEC_ID+"'";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n>0;
@@ -318,14 +318,19 @@ public class BaseImpl implements BaseLogic, Initializable {
         Record rec = se.executeRecord(sql, null);
         if (!rec.isEmpty()) {
             rec.put("PRO_SPEC",getAllProSpec(PRO_ID)) ;
-            Record dw = getDW(rec.getString("PRO_DW"));
-            rec.put("PRO_DW_NAME",dw.getString("DW"));
+//            Record dw = getDWBYSX(rec.getString("PRO_DW"));
+//            rec.put("PRO_DW_NAME",dw.getString("DW"));
         }
 
 
         return rec;
     }
-
+    public Record getSingleProBase(String PRO_ID) {
+        SQLExecutor se = read_getSqlExecutor();
+        String sql = "SELECT * FROM " + productTable + " WHERE PRO_ID='"+PRO_ID+"' ";
+        Record rec = se.executeRecord(sql, null);
+        return rec;
+    }
     public RecordSet getAllProSpec(String PRO_ID) {
         SQLExecutor se = read_getSqlExecutor();
         String sql = "SELECT * FROM " + productSpecTable + " WHERE PRO_ID='"+PRO_ID+"' AND DELETE_TIME IS NULL ORDER BY SORT,PRO_NAME";
@@ -337,11 +342,11 @@ public class BaseImpl implements BaseLogic, Initializable {
         SQLExecutor se = read_getSqlExecutor();
         String sql = "SELECT g.*,p.* FROM " + productTable + " p INNER JOIN "+ gysNewTable +" g ON g.GYS_ID=p.GYS_ID WHERE p.GYS_ID='"+GYS_ID+"' AND p.DELETE_TIME IS NULL ORDER BY p.SORT,p.PRO_NAME";
         RecordSet recs = se.executeRecordSet(sql, null);
-        RecordSet allDw = getAllDW();
+//        RecordSet allDw = getAllDW();
         for (Record rec : recs){
             rec.put("PRO_SPEC",getAllProSpec(rec.getString("PRO_ID"))) ;
-            Record dw = allDw.findEq("DW_SX",rec.getString("PRO_DW"));
-            rec.put("PRO_DW_NAME",dw.getString("DW"));
+//            Record dw = allDw.findEq("DW_SX",rec.getString("PRO_DW"));
+//            rec.put("PRO_DW_NAME",dw.getString("DW"));
         }
         return recs;
     }
@@ -352,13 +357,13 @@ public class BaseImpl implements BaseLogic, Initializable {
         if (GYS_ID.length()>0 && !GYS_ID.equals("999") && !GYS_ID.equals("9") && !GYS_ID.equals("0"))
             sql = "SELECT u.GYS_ID,p.*,pro.PRO_DW,pro.TRANSPORT_TYPE,pro.PRO_CODE AS BIG_PRO_CODE,pro.PRO_TYPE_ID,pro.PRO_TYPE FROM " + productSpecTable + " p INNER JOIN "+ gysWlTable +" u ON p.PRO_ID=u.PRO_ID INNER JOIN "+productTable+" pro ON pro.PRO_ID=p.PRO_ID WHERE u.GYS_ID='"+GYS_ID+"' AND p.DELETE_TIME IS NULL AND pro.DELETE_TIME IS NULL ORDER BY SORT,PRO_NAME";
         else
-            sql = "SELECT p.*,pro.PRO_DW,pro.TRANSPORT_TYPE,pro.PRO_CODE AS BIG_PRO_CODE,pro.PRO_TYPE_ID,pro.PRO_TYPE FROM " + productSpecTable + " p INNER JOIN "+productTable+" pro ON pro.PRO_ID=p.PRO_ID WHERE p.DELETE_TIME IS NULL AND pro.DELETE_TIME IS NULL ORDER BY SORT,PRO_NAME";
+            sql = "SELECT p.*,pro.PRO_DW,pro.PRO_DW_NAME,pro.TRANSPORT_TYPE,pro.PRO_CODE AS BIG_PRO_CODE,pro.PRO_TYPE_ID,pro.PRO_TYPE FROM " + productSpecTable + " p INNER JOIN "+productTable+" pro ON pro.PRO_ID=p.PRO_ID WHERE p.DELETE_TIME IS NULL AND pro.DELETE_TIME IS NULL ORDER BY SORT,PRO_NAME";
         RecordSet recs = se.executeRecordSet(sql, null);
-        RecordSet allDw = getAllDW();
-        for (Record rec : recs){
-            Record dw = allDw.findEq("DW_SX",rec.getString("PRO_DW"));
-            rec.put("PRO_DW_NAME",dw.getString("DW"));
-        }
+//        RecordSet allDw = getAllDW();
+//        for (Record rec : recs){
+//            Record dw = allDw.findEq("DW_SX",rec.getString("PRO_DW"));
+//            rec.put("PRO_DW_NAME",dw.getString("DW"));
+//        }
         return recs;
     }
 

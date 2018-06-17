@@ -286,13 +286,13 @@ public class OrderImpl implements OrderLogic, Initializable {
             }
             rec.put("ORDER_OUTBOUNDS",recs_outbound);
 
-            String sql00 ="SELECT pro.PRO_DW,pro.PRO_TYPE_ID,pro.PRO_TYPE,pd.* FROM " + orderProductTable + " pd INNER JOIN "+productTable+" pro ON pro.PRO_ID=pd.PRO_ID WHERE pd.ORDER_ID='"+ORDER_ID+"' and pd.DELETE_TIME IS NULL ORDER BY CREATE_TIME DESC";
+            String sql00 ="SELECT pro.PRO_DW,pro.PRO_DW_NAME,pro.PRO_TYPE_ID,pro.PRO_TYPE,pd.* FROM " + orderProductTable + " pd INNER JOIN "+productTable+" pro ON pro.PRO_ID=pd.PRO_ID WHERE pd.ORDER_ID='"+ORDER_ID+"' and pd.DELETE_TIME IS NULL ORDER BY CREATE_TIME DESC";
             RecordSet recs_products = se.executeRecordSet(sql00, null);
-            RecordSet allDw = GlobalLogics.getBaseLogic().getAllDW();
+//            RecordSet allDw = GlobalLogics.getBaseLogic().getAllDW();
             int all_count = 0;int all_has = 0;
             for (Record product : recs_products){
-                Record dw = allDw.findEq("DW_SX",product.getString("PRO_DW"));
-                product.put("PRO_DW_NAME",dw.getString("DW"));
+//                Record dw = allDw.findEq("DW_SX",product.getString("PRO_DW"));
+//                product.put("PRO_DW_NAME",dw.getString("DW"));
                 Record PRODUCT_SPEC = GlobalLogics.getBaseLogic().getSingleProSpec(product.getString("PRO_SPEC_ID"));
                 PRODUCT_SPEC.copyTo(product);
                 //再查,已经装箱了多少了
@@ -315,12 +315,12 @@ public class OrderImpl implements OrderLogic, Initializable {
 
     public RecordSet getOrderProducts(String ORDER_ID) {
         SQLExecutor se = read_getSqlExecutor();
-        String sql00 ="SELECT pro.PRO_DW,pro.PRO_TYPE_ID,pro.PRO_TYPE,pd.* FROM " + orderProductTable + " pd INNER JOIN "+productTable+" pro ON pro.PRO_ID=pd.PRO_ID WHERE pd.ORDER_ID='"+ORDER_ID+"' and pd.DELETE_TIME IS NULL ORDER BY CREATE_TIME DESC";
+        String sql00 ="SELECT pro.PRO_DW,pro.PRO_DW_NAME,pro.PRO_TYPE_ID,pro.PRO_TYPE,pd.* FROM " + orderProductTable + " pd INNER JOIN "+productTable+" pro ON pro.PRO_ID=pd.PRO_ID WHERE pd.ORDER_ID='"+ORDER_ID+"' and pd.DELETE_TIME IS NULL ORDER BY CREATE_TIME DESC";
         RecordSet recs_products = se.executeRecordSet(sql00, null);
-        RecordSet allDw = GlobalLogics.getBaseLogic().getAllDW();
+//        RecordSet allDw = GlobalLogics.getBaseLogic().getAllDW();
         for (Record product : recs_products){
-            Record dw = allDw.findEq("DW_SX",product.getString("PRO_DW"));
-            product.put("PRO_DW_NAME",dw.getString("DW"));
+//            Record dw = allDw.findEq("DW_SX",product.getString("PRO_DW"));
+//            product.put("PRO_DW_NAME",dw.getString("DW"));
             Record PRODUCT_SPEC = GlobalLogics.getBaseLogic().getSingleProSpec(product.getString("PRO_SPEC_ID"));
             PRODUCT_SPEC.copyTo(product);
         }
@@ -404,10 +404,10 @@ public class OrderImpl implements OrderLogic, Initializable {
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         if (n>0){
-            RecordSet allPros = se.executeRecordSet("SELECT p.*,spec.PRO_SPEC,spec.PRO_COLOR FROM "+packageProductTable+" p INNER JOIN "+productSpecTable+" spec ON spec.SPEC_ID=p.SPEC_ID WHERE p.PACKAGE_CODE='"+PACKAGE_CODE+"'");
+            RecordSet allPros = se.executeRecordSet("SELECT p.*,spec.PRO_SPEC,spec.PRO_COLOR,spec.PRO_DW_NAME FROM "+packageProductTable+" p INNER JOIN "+productSpecTable+" spec ON spec.SPEC_ID=p.SPEC_ID WHERE p.PACKAGE_CODE='"+PACKAGE_CODE+"'");
             String s = "";
             for (Record r : allPros){
-                s+=r.getString("PRO_NAME")+"["+r.getString("PRO_SPEC")+"]"+"("+r.getInt("PRO_COUNT")+")"+",";
+                s+=r.getString("PRO_NAME")+" ["+r.getString("PRO_SPEC")+"] "+"( "+r.getInt("PRO_COUNT")+ " " + r.getInt("PRO_DW_NAME") + " )"+",";
             }
             if (s.length()>0)
                 s = s.substring(0,s.length()-1);
