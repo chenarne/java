@@ -11,11 +11,18 @@ import com.fwms.basedevss.base.web.webmethod.WebMethod;
 import com.fwms.basedevss.base.web.webmethod.WebMethodServlet;
 import com.fwms.common.GlobalLogics;
 import com.fwms.common.PortalContext;
+import jxl.Cell;
+import jxl.Sheet;
+import jxl.Workbook;
+import jxl.read.biff.BiffException;
+import org.apache.commons.fileupload.FileItem;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BaseServlet extends WebMethodServlet {
     @Override
@@ -69,7 +76,7 @@ public class BaseServlet extends WebMethodServlet {
     public Record sx_get_dw(HttpServletRequest req, QueryParams qp) throws UnsupportedEncodingException {
         Context ctx = PortalContext.getContext(req, qp, true, true);
         String DW_SX = qp.getString("DW_SX", "");
-        return GlobalLogics.getBaseLogic().getDW(DW_SX);
+        return GlobalLogics.getBaseLogic().getDWBYSX(DW_SX);
     }
 
     @WebMethod("base/kw_get_all_by_level")
@@ -178,8 +185,8 @@ public class BaseServlet extends WebMethodServlet {
         String MEMO = qp.getString("MEMO", "");
         String DW = qp.getString("DW", "");
         int TRANSPORT_TYPE = (int)qp.getInt("TRANSPORT_TYPE", 2);
-
-        boolean b= GlobalLogics.getBaseLogic().saveUserProduct(GYS_ID,PRO_ID, PRO_CODE, PRO_TYPE, PRO_TYPE_ID, PRO_NAME, PRO_NAME_SX, MEMO,TRANSPORT_TYPE,DW);
+        String DW_NAME = GlobalLogics.getBaseLogic().getDWBYSX(DW).getString("DW");
+        boolean b= GlobalLogics.getBaseLogic().saveUserProduct(GYS_ID,PRO_ID, PRO_CODE, PRO_TYPE, PRO_TYPE_ID, PRO_NAME, PRO_NAME_SX, MEMO,TRANSPORT_TYPE,DW,DW_NAME);
         return b;
     }
 
@@ -196,7 +203,8 @@ public class BaseServlet extends WebMethodServlet {
         String MEMO = qp.getString("MEMO", "");
         String DW = qp.getString("DW", "");
         int TRANSPORT_TYPE = (int)qp.getInt("TRANSPORT_TYPE", 2);
-        boolean b= GlobalLogics.getBaseLogic().updateProduct(PRO_ID, PRO_CODE, PRO_TYPE, PRO_TYPE_ID, PRO_NAME, PRO_NAME_SX, MEMO, TRANSPORT_TYPE, DW);
+        String DW_NAME = GlobalLogics.getBaseLogic().getDWBYSX(DW).getString("DW");
+        boolean b= GlobalLogics.getBaseLogic().updateProduct(PRO_ID, PRO_CODE, PRO_TYPE, PRO_TYPE_ID, PRO_NAME, PRO_NAME_SX, MEMO, TRANSPORT_TYPE, DW, DW_NAME);
         return b;
     }
 
@@ -244,6 +252,7 @@ public class BaseServlet extends WebMethodServlet {
     public boolean pro_spec_create(HttpServletRequest req, QueryParams qp) throws IOException {
         Context ctx = PortalContext.getContext(req, qp, true, true);
         String PRO_ID = qp.checkGetString("PRO_ID");
+        Record p = GlobalLogics.getBaseLogic().getSingleProBase(PRO_ID);
         String SPEC_ID = String.valueOf(RandomUtils.generateId());
 
         String PRO_CODE = qp.getString("PRO_CODE", "");
@@ -254,11 +263,11 @@ public class BaseServlet extends WebMethodServlet {
         String PRO_NAME = qp.getString("PRO_NAME", "");
         String PRO_NAME_SX = qp.getString("PRO_NAME_SX", "");
         int PERIOD = (int)qp.getInt("PERIOD", 1);
-
+        int SINGLE_BOX = (int)qp.getInt("SINGLE_BOX", 0);
         String BAR_CODE = qp.getString("BAR_CODE", "");
         String MEMO = qp.getString("MEMO", "");
 
-        boolean b= GlobalLogics.getBaseLogic().saveProductSpec(PRO_ID, SPEC_ID, PRO_CODE, PRO_SPEC, PRO_COLOR, PRO_PRICE, PRO_PRICE_1, PRO_NAME, PRO_NAME_SX, PERIOD, MEMO, BAR_CODE);
+        boolean b= GlobalLogics.getBaseLogic().saveProductSpec(PRO_ID, SPEC_ID, PRO_CODE, PRO_SPEC, PRO_COLOR, PRO_PRICE, PRO_PRICE_1, PRO_NAME, PRO_NAME_SX, PERIOD, MEMO, BAR_CODE,p.getString("PRO_DW_NAME"),SINGLE_BOX);
         return b;
     }
 
@@ -275,11 +284,11 @@ public class BaseServlet extends WebMethodServlet {
         String PRO_NAME = qp.getString("PRO_NAME", "");
         String PRO_NAME_SX = qp.getString("PRO_NAME_SX", "");
         int PERIOD = (int)qp.getInt("PERIOD", 1);
-//        int TRANSPORT_TYPE = (int)qp.getInt("TRANSPORT_TYPE", 2);
+        int SINGLE_BOX = (int)qp.getInt("SINGLE_BOX", 0);
         String BAR_CODE = qp.getString("BAR_CODE", "");
         String MEMO = qp.getString("MEMO", "");
 
-        boolean b= GlobalLogics.getBaseLogic().updateProductSpec(SPEC_ID, PRO_CODE, PRO_SPEC, PRO_COLOR, PRO_PRICE, PRO_PRICE_1, PRO_NAME, PRO_NAME_SX, PERIOD, MEMO, BAR_CODE);
+        boolean b= GlobalLogics.getBaseLogic().updateProductSpec(SPEC_ID, PRO_CODE, PRO_SPEC, PRO_COLOR, PRO_PRICE, PRO_PRICE_1, PRO_NAME, PRO_NAME_SX, PERIOD, MEMO, BAR_CODE, SINGLE_BOX);
         return b;
     }
 

@@ -13,11 +13,22 @@ import com.fwms.basedevss.base.web.webmethod.WebMethodServlet;
 import com.fwms.common.Constants;
 import com.fwms.common.GlobalLogics;
 import com.fwms.common.PortalContext;
+import jxl.Cell;
+import jxl.Sheet;
+import jxl.Workbook;
+import jxl.read.biff.BiffException;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.lang.StringUtils;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class OrderServlet extends WebMethodServlet {
@@ -644,6 +655,102 @@ public class OrderServlet extends WebMethodServlet {
         Record rec = GlobalLogics.getOrderLogic().getSingleOrderByPackageCode(PACKAGE_CODE);
         return rec;
     }
+
+    @WebMethod("order/order_excel_insert")
+    public Record order_excel_insert_new(HttpServletRequest req, QueryParams qp) throws UnsupportedEncodingException, BiffException {
+        Context ctx = PortalContext.getContext(req, qp, true, false);
+        FileItem file_item = qp.getFile("Filedata");
+        String GYS_ID = qp.checkGetString("GYS_ID");
+
+        Record return_rec = new Record();
+
+        if (file_item != null && file_item.getSize() > 0) {
+            return_rec = importOrder(ctx, file_item, GYS_ID,return_rec);
+        }
+        return return_rec;
+    }
+
+    private Record importOrder(Context ctx,FileItem file_item,String GYS_ID,Record return_rec) throws BiffException {
+        Workbook wb = null;
+        try {
+            // 构造Workbook（工作薄）对象
+            wb = Workbook.getWorkbook(file_item.getInputStream());
+        } catch (BiffException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (wb == null) {
+            return_rec.put("ERROR_TYPE", "1");
+            return_rec.put("ERRORS", "1");
+            return_rec.put("ERROR_MSG", "file type error");
+            return return_rec;
+        }
+
+        Sheet[] sheet = wb.getSheets();
+        int rowNum = 0;
+        int err_all = 0;
+
+        List<String> ls_err_addr = new ArrayList<String>();
+        List<String> ls_err_user = new ArrayList<String>();
+        List<String> ls_err_date = new ArrayList<String>();
+        List<String> ls_err_money = new ArrayList<String>();
+        List<String> ls_err_pro = new ArrayList<String>();
+        List<String> ls_err_pack = new ArrayList<String>();
+        List<String> ls_err_double = new ArrayList<String>();
+        List<String> ls_err_memo = new ArrayList<String>();
+        List<String> ls_success = new ArrayList<String>();
+
+        RecordSet recs_check_error_out = new RecordSet();
+        RecordSet recs_save_error_out = new RecordSet();
+
+        if (sheet != null && sheet.length > 0) {
+            for (int i = 0; i < 1; i++) {
+
+                String sheetName = sheet[i].getName();//这里是获取sheet的名称
+                rowNum = sheet[i].getRows();
+                //从第一行开始导入,0行是title
+                for (int j = 1; j < rowNum; j++) {
+                    Cell[] cells = sheet[i].getRow(j);
+                    int ERR_ = 0;
+
+                    String DW = "";
+                    try {
+                        DW = cells[0].getContents().trim();
+                    } catch (Exception e) {
+                        ERR_ += 1;
+                    }
+                    String DW_SX = "";
+                    try {
+                        DW_SX = cells[1].getContents().trim();
+                    } catch (Exception e) {
+                        ERR_ += 1;
+                    }
+
+                    err_all += ERR_;
+                    if (ERR_ == 0) {
+                       GlobalLogics.getBaseLogic().saveDw(DW_SX,DW);
+                    }
+                }
+            }
+        }
+
+        return_rec.put("ERROR_TYPE", "2");
+        return_rec.put("ERRORS", err_all);
+        return_rec.put("ERROR_MSG", "data error");
+        return_rec.put("DATA", recs_check_error_out);
+        return_rec.put("ERR_MONEY", StringUtils.join(ls_err_money, ","));
+        return_rec.put("ERR_ADDR", StringUtils.join(ls_err_addr, ","));
+        return_rec.put("ERR_USER", StringUtils.join(ls_err_user, ","));
+        return_rec.put("ERR_DATE", StringUtils.join(ls_err_date, ","));
+        return_rec.put("ERR_PRO", StringUtils.join(ls_err_pro, ","));
+        return_rec.put("ERR_PACK", StringUtils.join(ls_err_pack, ","));
+        return_rec.put("ERR_DOUBLE", StringUtils.join(ls_err_double, ","));
+        return_rec.put("ERR_MEMO", StringUtils.join(ls_err_memo, ","));
+        return return_rec;
+    }
+
 
     @WebMethod("order/test")
     public RecordSet test(HttpServletRequest req, QueryParams qp) throws IOException {
