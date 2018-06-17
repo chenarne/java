@@ -272,6 +272,8 @@ public class BaseImpl implements BaseLogic, Initializable {
         String sql = "UPDATE " + productTable + " SET PRO_CODE='" + PRO_CODE + "',PRO_TYPE='" + PRO_TYPE + "',PRO_TYPE_ID='"+PRO_TYPE_ID+"',PRO_NAME='"+PRO_NAME+"',PRO_NAME_SX='"+PRO_NAME_SX+"',MEMO='"+MEMO+"',TRANSPORT_TYPE='"+TRANSPORT_TYPE+"',PRO_DW='"+PRO_DW+"',PRO_DW_NAME='"+PRO_DW_NAME+"' WHERE PRO_ID='"+PRO_ID+"' ";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
+        if (n>0)
+            se.executeUpdate("UPDATE " + productSpecTable + " SET PRO_DW_NAME='"+PRO_DW_NAME+"' WHERE PRO_ID='" + PRO_ID + "' ");
         return n>0;
     }
 
