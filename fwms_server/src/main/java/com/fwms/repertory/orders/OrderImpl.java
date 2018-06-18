@@ -104,6 +104,19 @@ public class OrderImpl implements OrderLogic, Initializable {
         long n = se.executeUpdate(ls);
         return n > 0;
     }
+
+    public boolean deletePackageAll(String ORDER_ID) {
+        String sql1 = "DELETE FROM " + packageProductTable + "  WHERE ORDER_ID='" + ORDER_ID + "' ";
+        String sql2 = "DELETE FROM " + packageTable + "  WHERE ORDER_ID='" + ORDER_ID + "' ";
+        List<String> ls = new ArrayList<String>();
+        ls.add(sql1);
+        ls.add(sql2);
+
+        SQLExecutor se = getSqlExecutor();
+        long n = se.executeUpdate(ls);
+        return n > 0;
+    }
+
     public boolean printOrderInbound(String ORDER_ID) {
         String sql1 = "UPDATE " + gysOrderTable + " SET PRINT_INBOUND=PRINT_INBOUND+1  WHERE ORDER_ID='" + ORDER_ID + "' ";
         List<String> ls = new ArrayList<String>();
@@ -327,6 +340,13 @@ public class OrderImpl implements OrderLogic, Initializable {
         return recs_products;
     }
 
+    public RecordSet getOrderProductsSpec(String ORDER_ID) {
+        SQLExecutor se = getSqlExecutor();
+        String sql00 ="SELECT pro.PRO_SPEC_ID,pro.PRO_COUNT,p.SPEC_ID,p.SINGLE_BOX FROM " + orderProductTable + " pro INNER JOIN "+productSpecTable+" p ON p.SPEC_ID=pro.PRO_SPEC_ID WHERE pro.ORDER_ID='"+ORDER_ID+"' and pro.DELETE_TIME IS NULL ";
+        RecordSet recs_products = se.executeRecordSet(sql00, null);
+        return recs_products;
+    }
+
     public RecordSet getOrderInbound(String ORDER_ID) {
         SQLExecutor se = read_getSqlExecutor();
         String sql00 ="SELECT * FROM " + orderInboundTable + " WHERE ORDER_ID='"+ORDER_ID+"' ORDER BY CREATE_TIME DESC";
@@ -407,7 +427,7 @@ public class OrderImpl implements OrderLogic, Initializable {
             RecordSet allPros = se.executeRecordSet("SELECT p.*,spec.PRO_SPEC,spec.PRO_COLOR,spec.PRO_DW_NAME FROM "+packageProductTable+" p INNER JOIN "+productSpecTable+" spec ON spec.SPEC_ID=p.SPEC_ID WHERE p.PACKAGE_CODE='"+PACKAGE_CODE+"'");
             String s = "";
             for (Record r : allPros){
-                s+=r.getString("PRO_NAME")+" ["+r.getString("PRO_SPEC")+"] "+"( "+r.getInt("PRO_COUNT")+ " " + r.getInt("PRO_DW_NAME") + " )"+",";
+                s+=r.getString("PRO_NAME")+" ["+r.getString("PRO_SPEC")+"] "+"( "+r.getInt("PRO_COUNT")+ " " + r.getString("PRO_DW_NAME") + " )"+",";
             }
             if (s.length()>0)
                 s = s.substring(0,s.length()-1);
@@ -422,7 +442,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         String sql00 ="SELECT * FROM " + packageTable + " WHERE ORDER_ID='"+ORDER_ID+"' ORDER BY PACKAGE_CODE ";
         RecordSet recs = se.executeRecordSet(sql00, null);
         for (Record r : recs){
-            RecordSet pd =  se.executeRecordSet("SELECT p.*,spec.PRO_SPEC,spec.PRO_COLOR FROM " + packageProductTable + " p INNER JOIN "+productSpecTable+" spec ON spec.SPEC_ID=p.SPEC_ID WHERE PACKAGE_CODE='"+r.getString("PACKAGE_CODE")+"'") ;
+            RecordSet pd =  se.executeRecordSet("SELECT p.*,spec.PRO_SPEC,spec.PRO_COLOR,spec.PRO_DW_NAME FROM " + packageProductTable + " p INNER JOIN "+productSpecTable+" spec ON spec.SPEC_ID=p.SPEC_ID WHERE PACKAGE_CODE='"+r.getString("PACKAGE_CODE")+"'") ;
             r.put("PACKAGE_PRODUCT",pd);
         }
         return recs;
@@ -1045,7 +1065,7 @@ public class OrderImpl implements OrderLogic, Initializable {
 
         sql += " ORDER BY p.PACKAGE_CODE ";
         RecordSet recs = se.executeRecordSet(sql, null);
-        for (Record rec : recs) {
+//        for (Record rec : recs) {
 //            String KW_ID = rec.getString("KW_ID");
 //            Record rec_kw= GlobalLogics.getBaseLogic().getSingleKwBase(KW_ID) ;
 //            rec.put("KW_NAME",rec_kw.getString("KW_NAME"));
@@ -1059,8 +1079,24 @@ public class OrderImpl implements OrderLogic, Initializable {
 //            String SJ_ID_ =  partner.getString("SJ_ID");
 //            Record sj = GlobalLogics.getUser().getSingleSjBase(SJ_ID_);
 //            rec.put("SJ_NAME",sj.getString("SJ_NAME"));
-        }
+//        }
         return recs;
+    }
+
+
+    public RecordSet getOrderPackageStatus(String ORDER_ID) {
+        SQLExecutor se = read_getSqlExecutor();
+        String sql00 ="SELECT * FROM " + orderProductTable + " WHERE ORDER_ID='"+ORDER_ID+"' ";
+        RecordSet recs0 = se.executeRecordSet(sql00, null);
+
+        for (Record r0 : recs0){
+            //已经装了多少
+            String sql2 = "SELECT SUM(PRO_COUNT) AS PRO_COUNT FROM "+packageProductTable+" WHERE ORDER_ID='"+ORDER_ID+"' AND SPEC_ID='"+r0.getString("PRO_SPEC_ID")+"' ";
+            Record h =  se.executeRecord(sql2, null);
+            int hasCount = h.isEmpty()?0:(int)h.getInt("PRO_COUNT");
+            r0.put("HAS_PACKAGE_COUNT",hasCount);
+        }
+        return recs0;
     }
 }
 

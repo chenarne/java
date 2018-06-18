@@ -45,9 +45,9 @@ public interface OrderLogic {
 
     RecordSet getNowRepoPackage(String SJ_ID,String GYS_ID,String F_KW_ID,String KW_ID);
     RecordSet getGysOrderDailyGoods(String SJ_ID,String GYS_ID,String F_KW_ID,String KW_ID);
-
+    boolean deletePackageAll(String ORDER_ID);
     RecordSet getAllCanPrintMd(Context ctx, String GYS_ID,int isPrinted,String SJ_ID,String PARTNER_NO,String INBOUND_TIME);
-
+    RecordSet getOrderPackageStatus(String ORDER_ID);
 
     //========================
     Record getSingleOrderByPackageCode(String PACKAGE_CODE);
@@ -61,5 +61,7 @@ public interface OrderLogic {
     boolean webService_printOrderPackage(Context ctx, String PACKAGE_CODE);
     RecordSet webService_getInboundPackage(String INBOUND_ID);
     RecordSet webService_getOutboundPackage(String OUTBOUND_ID);
+
+    RecordSet getOrderProductsSpec(String ORDER_ID);
 }
 

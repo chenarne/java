@@ -273,8 +273,10 @@ public class BaseServlet extends WebMethodServlet {
     }
 
     @WebMethod("base/pro_spec_update")
-    public boolean pro_spec_update(HttpServletRequest req, QueryParams qp) throws IOException {
+    public Record pro_spec_update(HttpServletRequest req, QueryParams qp) throws IOException {
         Context ctx = PortalContext.getContext(req, qp, true, true);
+        Record out_rec = new Record();
+
         String SPEC_ID = qp.checkGetString("SPEC_ID");
 
         String PRO_CODE = qp.getString("PRO_CODE", "");
@@ -289,8 +291,27 @@ public class BaseServlet extends WebMethodServlet {
         String BAR_CODE = qp.getString("BAR_CODE", "");
         String MEMO = qp.getString("MEMO", "");
 
+        Record old_spec = GlobalLogics.getBaseLogic().getSingleProSpec(SPEC_ID);
+        if (old_spec.getInt("SINGLE_BOX") != SINGLE_BOX){
+              if (SINGLE_BOX==1){ //原来是0,不单独成箱的,查一下有没有 SPEC 存在,存在了就不允许改
+                  RecordSet exists = GlobalLogics.getBaseLogic().existsSpecFullBoxThisGys(SPEC_ID);
+                  if (exists.size()>0){
+                      out_rec.put("STATUS",0);
+                      out_rec.put("MESSAGE","已经存在合箱的规则了,必须先删除合箱规则中的此货品,才能改成“单独成箱” ");
+                      return out_rec;
+                  }
+              }
+        }
+
         boolean b= GlobalLogics.getBaseLogic().updateProductSpec(SPEC_ID, PRO_CODE, PRO_SPEC, PRO_COLOR, PRO_PRICE, PRO_PRICE_1, PRO_NAME, PRO_NAME_SX, PERIOD, MEMO, BAR_CODE, SINGLE_BOX);
-        return b;
+        if (b){
+            out_rec.put("STATUS",1);
+            out_rec.put("MESSAGE","保存成功");
+        }else{
+            out_rec.put("STATUS",0);
+            out_rec.put("MESSAGE","保存失败 ");
+        }
+        return out_rec;
     }
 
     @WebMethod("base/get_single_user_pro_spec")
