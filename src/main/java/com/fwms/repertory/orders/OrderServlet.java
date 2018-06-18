@@ -751,6 +751,113 @@ public class OrderServlet extends WebMethodServlet {
         return return_rec;
     }
 
+    @WebMethod("order/order_auto_package")
+    public Record order_auto_package(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, false, true);
+        String ORDER_ID = qp.checkGetString("ORDER_ID");
+        String GYS_ID = qp.checkGetString("GYS_ID");
+        Record out_rec = new Record();
+        return orderAutoPackageProduct(ORDER_ID,GYS_ID,out_rec);
+    }
+
+    public  Record orderAutoPackageProduct(String ORDER_ID,String GYS_ID,Record out_rec){
+        //先把所有的装箱,全部删除
+        GlobalLogics.getOrderLogic().deletePackageAll(ORDER_ID);
+
+        RecordSet orderProduct = GlobalLogics.getOrderLogic().getOrderProductsSpec(ORDER_ID);
+
+        RecordSet singleBoxPro = new RecordSet();
+        RecordSet fullBoxPro = new RecordSet();
+
+        for (Record p : orderProduct){
+            if (p.getInt("SINGLE_BOX")==1){
+                singleBoxPro.add(p);
+            } else{
+                fullBoxPro.add(p);
+            }
+        }
+
+        for (Record r : singleBoxPro){
+            int PRO_COUNT = (int)r.getInt("PRO_COUNT");
+            String SPEC_ID = r.getString("SPEC_ID");
+            for (int i=1;i<=PRO_COUNT;i++){
+                String newPackageCode = GlobalLogics.getOrderLogic().getNowPackageCode(ORDER_ID);
+                boolean b = GlobalLogics.getOrderLogic().saveOrderPackage(ORDER_ID, newPackageCode);
+                if (b) {
+                    Record pro_spec = GlobalLogics.getBaseLogic().getSingleProSpec(SPEC_ID);
+                    boolean c = GlobalLogics.getOrderLogic().saveOrderPackageProduct(ORDER_ID, String.valueOf(RandomUtils.generateId()),
+                            newPackageCode, SPEC_ID, pro_spec.getString("PRO_NAME"), 1);
+                }else{
+                    out_rec.put("status",0);
+                    out_rec.put("message","自动装箱数据失败,或者不完整,请手动装箱");
+                    return out_rec;
+                }
+            }
+        }
+        if (fullBoxPro.size()>0){
+            //获取这个供应商所有的规则
+            RecordSet recs_rules= GlobalLogics.getBaseLogic().getAllSpecFullBox(GYS_ID);
+
+            //再找,这些商品,哪些可以合一个箱子的
+            for (Record rule : recs_rules){
+                RecordSet ALL_FULL_BOX = RecordSet.fromJson(rule.getString("ALL_FULL_BOX"));
+                RecordSet t =  new RecordSet();
+                for (Record f : fullBoxPro){
+                    Record find = ALL_FULL_BOX.findEq("SPEC_ID",f.getString("SPEC_ID"));
+                    if (!find.isEmpty()){
+                        t.add(f);
+                    }
+                }
+                if (t.size()>0){
+                    //t 里面的,全部装一个箱子
+                    String newPackageCode = GlobalLogics.getOrderLogic().getNowPackageCode(ORDER_ID);
+                    boolean b = GlobalLogics.getOrderLogic().saveOrderPackage(ORDER_ID, newPackageCode);
+                    if (b) {
+                        for (Record t0 : t) {
+
+                            Record pro_spec = GlobalLogics.getBaseLogic().getSingleProSpec(t0.getString("SPEC_ID"));
+                            boolean c = GlobalLogics.getOrderLogic().saveOrderPackageProduct(ORDER_ID, String.valueOf(RandomUtils.generateId()),
+                                    newPackageCode, t0.getString("SPEC_ID"), pro_spec.getString("PRO_NAME"), (int)t0.getInt("PRO_COUNT"));
+                        }
+                    }
+                }
+            }
+        }
+
+        //最后看,还剩哪些没有自动装箱的,就全部放在一个箱子里面
+        //或者提出数来
+        RecordSet package_status = GlobalLogics.getOrderLogic().getOrderPackageStatus(ORDER_ID);
+        int all_count = 0;
+        int all_has = 0;
+        RecordSet final_recs = new RecordSet();
+        for (Record p : package_status) {
+            all_count += p.getInt("PRO_COUNT");
+            all_has += p.getInt("HAS_PACKAGE_COUNT");
+            if (p.getInt("PRO_COUNT")-p.getInt("HAS_PACKAGE_COUNT")>0) {
+                final_recs.add(p);
+            }
+        }
+        if (all_count-all_has<=0){
+            out_rec.put("status",1);
+            out_rec.put("message","全部自动装箱完毕");
+        }else{
+            out_rec.put("status",0);
+            out_rec.put("message","部分货品自动装箱完毕,但仍有部分商品因未设置合箱规则,暂时未自动装箱,请手动装箱");
+
+            //t 里面的,全部装一个箱子
+            String newPackageCode = GlobalLogics.getOrderLogic().getNowPackageCode(ORDER_ID);
+            boolean b = GlobalLogics.getOrderLogic().saveOrderPackage(ORDER_ID, newPackageCode);
+            if (b) {
+                for (Record t0 : final_recs) {
+                    Record pro_spec = GlobalLogics.getBaseLogic().getSingleProSpec(t0.getString("PRO_SPEC_ID"));
+                    boolean c = GlobalLogics.getOrderLogic().saveOrderPackageProduct(ORDER_ID, String.valueOf(RandomUtils.generateId()),
+                            newPackageCode, t0.getString("PRO_SPEC_ID"), pro_spec.getString("PRO_NAME"), (int)t0.getInt("PRO_COUNT"));
+                }
+            }
+
+        }
+        return out_rec;
+    }
 
     @WebMethod("order/test")
     public RecordSet test(HttpServletRequest req, QueryParams qp) throws IOException {

@@ -513,6 +513,14 @@ public class BaseImpl implements BaseLogic, Initializable {
         return rec;
     }
 
+    //是否存在被当成合箱的选了
+    public RecordSet existsSpecFullBoxThisGys(String SPEC_ID) {
+        String sql = "SELECT * FROM " + specFullBoxTable + "  WHERE SPEC_ID='"+SPEC_ID+"'";
+        SQLExecutor se = read_getSqlExecutor();
+        RecordSet recs = se.executeRecordSet(sql, null);
+        return recs;
+    }
+
     //这个供应商,有没有选过这个
     public Record existsSpecFullBoxThisGys(String GYS_ID, String SPEC_ID) {
         String sql = "SELECT * FROM " + specFullBoxTable + "  WHERE GYS_ID='"+GYS_ID+"' AND SPEC_ID='"+SPEC_ID+"'";

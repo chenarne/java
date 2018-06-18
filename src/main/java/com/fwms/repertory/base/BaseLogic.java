@@ -84,5 +84,8 @@ public interface BaseLogic {
     RecordSet getAllGysProSpecCanFullBoxUpdate(String GYS_ID,String BOX_ID);
     boolean saveSpecFullBox2( String BOX_ID,String GYS_ID, String SPEC_ID,String PRO_NAME,String PRO_SPEC);
 
+    Record existsSpecFullBoxThisGys(String GYS_ID, String SPEC_ID);
+    RecordSet existsSpecFullBoxThisGys(String SPEC_ID);
+
 }
 
