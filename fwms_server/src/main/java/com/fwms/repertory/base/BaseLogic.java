@@ -73,5 +73,16 @@ public interface BaseLogic {
     RecordSet getAllSonKw(int KF_FLAG, int factId, String FID);
 
     RecordSet getAllKW();
+
+    boolean saveSpecFullBox( String BOX_ID, String GYS_ID,String SPEC_ID,String PRO_NAME,String PRO_SPEC);
+    boolean deleteSpecFullBox( String BOX_ID, String SPEC_ID);
+    Record existsSpecFullBox(String BOX_ID, String SPEC_ID);
+    RecordSet getSingleSpecFullBox(String BOX_ID);
+    RecordSet getAllSpecFullBox(String GYS_ID);
+    boolean deleteSpecFullBoxAll(String BOX_ID);
+    RecordSet getAllGysProSpecCanFullBox(String GYS_ID);
+    RecordSet getAllGysProSpecCanFullBoxUpdate(String GYS_ID,String BOX_ID);
+    boolean saveSpecFullBox2( String BOX_ID,String GYS_ID, String SPEC_ID,String PRO_NAME,String PRO_SPEC);
+
 }
 

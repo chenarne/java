@@ -33,6 +33,7 @@ public class BaseImpl implements BaseLogic, Initializable {
     private String sequenceTable = "t_sys_natural_sequence";
     private String partnerKwTable = "t_sys_partner_kw";
     private String sjPartnerTable = "t_sys_user_partner";
+    private String specFullBoxTable = "t_sys_product_spec_fullbox";
 
     public BaseImpl() {
     }
@@ -368,7 +369,50 @@ public class BaseImpl implements BaseLogic, Initializable {
 //        }
         return recs;
     }
+    //第一次新增的时候用的
+    public RecordSet getAllGysProSpecCanFullBox(String GYS_ID) {
+        SQLExecutor se = read_getSqlExecutor();
+        String sql = "SELECT p.*,pro.PRO_DW,pro.PRO_DW_NAME,pro.TRANSPORT_TYPE,pro.PRO_CODE AS BIG_PRO_CODE,pro.PRO_TYPE_ID,pro.PRO_TYPE FROM " + productSpecTable + " p INNER JOIN "+productTable+" pro ON pro.PRO_ID=p.PRO_ID WHERE p.DELETE_TIME IS NULL AND pro.DELETE_TIME IS NULL AND p.SINGLE_BOX=0 AND pro.GYS_ID='"+GYS_ID+"' ORDER BY SORT,PRO_NAME";
+        RecordSet recs = se.executeRecordSet(sql, null);
+        for (Record r : recs){
+            //看看这个 SPEC_ID,有没有被 供应商 选择过  .不管哪个规则
+            Record HAS = existsSpecFullBoxThisGys(GYS_ID, r.getString("SPEC_ID"));
+            if (HAS.isEmpty()){
+                r.put("HAS",0);
+            }else{
+                r.put("HAS",1);
+            }
+        }
+        return recs;
+    }
+    //第二次修改的时候用的
+    public RecordSet getAllGysProSpecCanFullBoxUpdate(String GYS_ID,String BOX_ID) {
+        SQLExecutor se = read_getSqlExecutor();
+        String sql = "SELECT p.*,pro.PRO_DW,pro.PRO_DW_NAME,pro.TRANSPORT_TYPE,pro.PRO_CODE AS BIG_PRO_CODE,pro.PRO_TYPE_ID,pro.PRO_TYPE FROM " + productSpecTable + " p INNER JOIN "+productTable+" pro ON pro.PRO_ID=p.PRO_ID WHERE p.DELETE_TIME IS NULL AND pro.DELETE_TIME IS NULL AND p.SINGLE_BOX=0 AND pro.GYS_ID='"+GYS_ID+"' ORDER BY SORT,PRO_NAME";
+        RecordSet recs = se.executeRecordSet(sql, null);
+        for (Record r : recs){
+            //看看这个 SPEC_ID,有没有被其他的规则选择过 ,必须是这个供应商的
+            Record OTHER_HAS = existsOtherGzSelThisSpec(GYS_ID, BOX_ID, r.getString("SPEC_ID"));
+            if (OTHER_HAS.isEmpty()){
+                r.put("OTHER_HAS",0);
+                //没有了,这个规则下,自己选中了没有
+                Record MY_HAS = existsSpecFullBox(BOX_ID, r.getString("SPEC_ID"));
+                if (MY_HAS.isEmpty()){
+                    r.put("MY_HAS",0);
+                }else{
+                    r.put("MY_HAS",1);
+                }
+            }else{
+                r.put("OTHER_HAS",1);
+                r.put("MY_HAS",0);
+            }
 
+
+
+
+        }
+        return recs;
+    }
     public Record getSingleProSpec(String SPEC_ID) {
         SQLExecutor se = read_getSqlExecutor();
         String sql = "SELECT * FROM " + productSpecTable + " WHERE SPEC_ID='"+SPEC_ID+"' ";
@@ -436,6 +480,86 @@ public class BaseImpl implements BaseLogic, Initializable {
             }
         }
         return rec;
+    }
+
+
+    public boolean saveSpecFullBox( String BOX_ID,String GYS_ID, String SPEC_ID,String PRO_NAME,String PRO_SPEC) {
+        String sql = "INSERT INTO " + specFullBoxTable + " (BOX_ID,GYS_ID, SPEC_ID,PRO_NAME,PRO_SPEC,CREATE_TIME)" +
+                " VALUES ('"+BOX_ID+"','"+GYS_ID+"','" + SPEC_ID + "','"+PRO_NAME+"','"+PRO_SPEC+"','"+DateUtils.now()+"') ";
+        SQLExecutor se = getSqlExecutor();
+        long n = se.executeUpdate(sql);
+        return n>0;
+    }
+
+    public boolean deleteSpecFullBox( String BOX_ID, String SPEC_ID) {
+        String sql = "DELETE FROM " + specFullBoxTable + " WHERE BOX_ID='"+BOX_ID+"' AND SPEC_ID='"+SPEC_ID+"' ";
+        SQLExecutor se = getSqlExecutor();
+        long n = se.executeUpdate(sql);
+        return n>0;
+    }
+    public boolean deleteSpecFullBoxAll(String BOX_ID) {
+        String sql = "DELETE FROM " + specFullBoxTable + " WHERE BOX_ID='"+BOX_ID+"' ";
+        SQLExecutor se = getSqlExecutor();
+        long n = se.executeUpdate(sql);
+        return n>0;
+    }
+
+
+    //是否存在这个箱规则,这个货品的规则
+    public Record existsSpecFullBox(String BOX_ID, String SPEC_ID) {
+        String sql = "SELECT * FROM " + specFullBoxTable + "  WHERE BOX_ID='"+BOX_ID+"' AND SPEC_ID='"+SPEC_ID+"'";
+        SQLExecutor se = read_getSqlExecutor();
+        Record rec = se.executeRecordSet(sql, null).getFirstRecord();
+        return rec;
+    }
+
+    //这个供应商,有没有选过这个
+    public Record existsSpecFullBoxThisGys(String GYS_ID, String SPEC_ID) {
+        String sql = "SELECT * FROM " + specFullBoxTable + "  WHERE GYS_ID='"+GYS_ID+"' AND SPEC_ID='"+SPEC_ID+"'";
+        SQLExecutor se = read_getSqlExecutor();
+        Record rec = se.executeRecordSet(sql, null).getFirstRecord();
+        return rec;
+    }
+
+
+    //这个供应商,有没有其他规则   选过这个货品
+    public Record existsOtherGzSelThisSpec(String GYS_ID,String BOX_ID, String SPEC_ID) {
+        String sql = "SELECT * FROM " + specFullBoxTable + "  WHERE SPEC_ID='"+SPEC_ID+"' AND GYS_ID='"+GYS_ID+"' AND BOX_ID!='"+BOX_ID+"' ";
+        SQLExecutor se = read_getSqlExecutor();
+        Record rec = se.executeRecordSet(sql, null).getFirstRecord();
+        return rec;
+    }
+
+    public RecordSet getSingleSpecFullBox(String BOX_ID) {
+        String sql = "SELECT * FROM " + specFullBoxTable + "  WHERE BOX_ID='"+BOX_ID+"' ";
+        SQLExecutor se = read_getSqlExecutor();
+        RecordSet recs = se.executeRecordSet(sql, null);
+        return recs;
+    }
+
+    public RecordSet getAllSpecFullBox(String GYS_ID) {
+        String sql = "SELECT BOX_ID,CREATE_TIME FROM " + specFullBoxTable + "  WHERE GYS_ID='"+GYS_ID+"' GROUP BY BOX_ID ";
+        SQLExecutor se = read_getSqlExecutor();
+        RecordSet recs = se.executeRecordSet(sql, null);
+        for (Record r : recs){
+            String  BOX_ID = r.getString("BOX_ID");
+            RecordSet full_box = getSingleSpecFullBox( BOX_ID) ;
+            r.put("ALL_FULL_BOX",full_box);
+        }
+        return recs;
+    }
+
+    public boolean saveSpecFullBox2( String BOX_ID,String GYS_ID, String SPEC_ID,String PRO_NAME,String PRO_SPEC) {
+        Record exists = existsSpecFullBox(BOX_ID,SPEC_ID);
+        if (exists.isEmpty()){
+            String sql = "INSERT INTO " + specFullBoxTable + " (BOX_ID,GYS_ID, SPEC_ID,PRO_NAME,PRO_SPEC,CREATE_TIME)" +
+                    " VALUES ('"+BOX_ID+"','"+GYS_ID+"','" + SPEC_ID + "','"+PRO_NAME+"','"+PRO_SPEC+"','"+DateUtils.now()+"') ";
+            SQLExecutor se = getSqlExecutor();
+            long n = se.executeUpdate(sql);
+            return n>0;
+        }else{
+            return deleteSpecFullBox(BOX_ID,SPEC_ID);
+        }
     }
 }
 
