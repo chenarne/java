@@ -6,6 +6,7 @@ import com.fwms.basedevss.base.context.Context;
 import com.fwms.basedevss.base.data.Record;
 import com.fwms.basedevss.base.data.RecordSet;
 import com.fwms.basedevss.base.util.RandomUtils;
+import com.fwms.basedevss.base.util.StringUtils2;
 import com.fwms.basedevss.base.web.QueryParams;
 import com.fwms.basedevss.base.web.webmethod.WebMethod;
 import com.fwms.basedevss.base.web.webmethod.WebMethodServlet;
@@ -314,6 +315,63 @@ public class BaseServlet extends WebMethodServlet {
         String SJ_ID = qp.checkGetString("SJ_ID");
         RecordSet recs= GlobalLogics.getBaseLogic().getAllPartnerKw(SJ_ID);
         return recs;
+    }
+
+    @WebMethod("base/get_all_full_box")
+    public RecordSet get_all_full_box(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, true);
+        String GYS_ID = qp.checkGetString("GYS_ID");
+        RecordSet recs= GlobalLogics.getBaseLogic().getAllSpecFullBox(GYS_ID);
+        return recs;
+    }
+
+    @WebMethod("base/full_box_delete")
+    public boolean full_box_delete(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, true);
+        String BOX_ID = qp.checkGetString("BOX_ID");
+        boolean b= GlobalLogics.getBaseLogic().deleteSpecFullBoxAll(BOX_ID);
+        return b;
+    }
+
+    @WebMethod("base/get_gys_pro_spec_can_full_box_create")
+    public RecordSet get_gys_pro_spec_can_full_box_create(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, true);
+        String GYS_ID = qp.checkGetString("GYS_ID");
+        RecordSet recs= GlobalLogics.getBaseLogic().getAllGysProSpecCanFullBox(GYS_ID);
+        return recs;
+    }
+    @WebMethod("base/get_gys_pro_spec_can_full_box_update")
+    public RecordSet get_gys_pro_spec_can_full_box_update(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, true);
+        String GYS_ID = qp.checkGetString("GYS_ID");
+        String BOX_ID = qp.getString("BOX_ID", "");
+        RecordSet recs= GlobalLogics.getBaseLogic().getAllGysProSpecCanFullBoxUpdate(GYS_ID, BOX_ID);
+        return recs;
+    }
+    @WebMethod("base/full_box_create")
+    public boolean full_box_create(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, true);
+        String GYS_ID = qp.checkGetString("GYS_ID");
+        String PRO_VALUES = qp.checkGetString("PRO_VALUES");
+
+        List<String> ls_p = StringUtils2.splitList(PRO_VALUES, ",", true);
+        String BOX_ID = RandomUtils.generateStrId();
+        for (String SPEC_ID : ls_p) {
+            Record pro_spec = GlobalLogics.getBaseLogic().getSingleProSpec(SPEC_ID);
+            boolean c = GlobalLogics.getBaseLogic().saveSpecFullBox(BOX_ID,GYS_ID,SPEC_ID,pro_spec.getString("PRO_NAME"),pro_spec.getString("PRO_SPEC"));
+        }
+        return true;
+    }
+
+    @WebMethod("base/check_full_box_create")
+    public boolean check_full_box_create(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, true);
+        String GYS_ID = qp.checkGetString("GYS_ID");
+        String BOX_ID = qp.checkGetString("BOX_ID");
+        String SPEC_ID = qp.checkGetString("SPEC_ID");
+        Record pro_spec = GlobalLogics.getBaseLogic().getSingleProSpec(SPEC_ID);
+        boolean c = GlobalLogics.getBaseLogic().saveSpecFullBox2(BOX_ID, GYS_ID, SPEC_ID, pro_spec.getString("PRO_NAME"), pro_spec.getString("PRO_SPEC"));
+        return true;
     }
 }
 
