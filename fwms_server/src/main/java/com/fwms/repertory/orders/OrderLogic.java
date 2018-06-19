@@ -48,7 +48,10 @@ public interface OrderLogic {
     boolean deletePackageAll(String ORDER_ID);
     RecordSet getAllCanPrintMd(Context ctx, String GYS_ID,int isPrinted,String SJ_ID,String PARTNER_NO,String INBOUND_TIME);
     RecordSet getOrderPackageStatus(String ORDER_ID);
-
+    RecordSet getInboundPrintKw(String KW_ID, String START_TIME, String END_TIME);
+    RecordSet getInboundPrintBox(String KW_ID,String START_TIME, String END_TIME);
+    RecordSet getOutboundPrintKw(String KW_ID, String START_TIME, String END_TIME);
+    RecordSet getOutboundPrintBox(String KW_ID,String START_TIME, String END_TIME);
     //========================
     Record getSingleOrderByPackageCode(String PACKAGE_CODE);
 

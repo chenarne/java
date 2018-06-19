@@ -134,6 +134,12 @@ public class BaseImpl implements BaseLogic, Initializable {
         RecordSet recs = se.executeRecordSet(sql, null);
         return recs;
     }
+    public RecordSet getAllKWSel() {
+        String sql = "SELECT * FROM " + kwTable + " WHERE DELETE_TIME IS NULL ";
+        SQLExecutor se = read_getSqlExecutor();
+        RecordSet recs = se.executeRecordSet(sql, null);
+        return recs;
+    }
     public RecordSet getAllKwBaseByLevel(int KF_FLAG,int factId) {
         SQLExecutor se = read_getSqlExecutor();
         String sql = "SELECT * FROM " + kwTable + " WHERE LEVEL=1 AND DELETE_TIME IS NULL ";
@@ -358,15 +364,10 @@ public class BaseImpl implements BaseLogic, Initializable {
         SQLExecutor se = read_getSqlExecutor();
         String sql ="";
         if (GYS_ID.length()>0 && !GYS_ID.equals("999") && !GYS_ID.equals("9") && !GYS_ID.equals("0"))
-            sql = "SELECT u.GYS_ID,p.*,pro.PRO_DW,pro.TRANSPORT_TYPE,pro.PRO_CODE AS BIG_PRO_CODE,pro.PRO_TYPE_ID,pro.PRO_TYPE FROM " + productSpecTable + " p INNER JOIN "+ gysWlTable +" u ON p.PRO_ID=u.PRO_ID INNER JOIN "+productTable+" pro ON pro.PRO_ID=p.PRO_ID WHERE u.GYS_ID='"+GYS_ID+"' AND p.DELETE_TIME IS NULL AND pro.DELETE_TIME IS NULL ORDER BY SORT,PRO_NAME";
+            sql = "SELECT p.*,pro.GYS_ID,pro.PRO_DW,pro.PRO_DW_NAME,pro.TRANSPORT_TYPE,pro.PRO_CODE AS BIG_PRO_CODE,pro.PRO_TYPE_ID,pro.PRO_TYPE FROM " + productSpecTable + " p INNER JOIN "+productTable+" pro ON pro.PRO_ID=p.PRO_ID WHERE pro.GYS_ID='"+GYS_ID+"' AND p.DELETE_TIME IS NULL AND pro.DELETE_TIME IS NULL ORDER BY SORT,PRO_NAME";
         else
-            sql = "SELECT p.*,pro.PRO_DW,pro.PRO_DW_NAME,pro.TRANSPORT_TYPE,pro.PRO_CODE AS BIG_PRO_CODE,pro.PRO_TYPE_ID,pro.PRO_TYPE FROM " + productSpecTable + " p INNER JOIN "+productTable+" pro ON pro.PRO_ID=p.PRO_ID WHERE p.DELETE_TIME IS NULL AND pro.DELETE_TIME IS NULL ORDER BY SORT,PRO_NAME";
+            sql = "SELECT p.*,pro.GYS_ID,pro.PRO_DW,pro.PRO_DW_NAME,pro.TRANSPORT_TYPE,pro.PRO_CODE AS BIG_PRO_CODE,pro.PRO_TYPE_ID,pro.PRO_TYPE FROM " + productSpecTable + " p INNER JOIN "+productTable+" pro ON pro.PRO_ID=p.PRO_ID WHERE p.DELETE_TIME IS NULL AND pro.DELETE_TIME IS NULL ORDER BY SORT,PRO_NAME";
         RecordSet recs = se.executeRecordSet(sql, null);
-//        RecordSet allDw = getAllDW();
-//        for (Record rec : recs){
-//            Record dw = allDw.findEq("DW_SX",rec.getString("PRO_DW"));
-//            rec.put("PRO_DW_NAME",dw.getString("DW"));
-//        }
         return recs;
     }
     //第一次新增的时候用的

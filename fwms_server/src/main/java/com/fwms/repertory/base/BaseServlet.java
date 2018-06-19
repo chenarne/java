@@ -330,6 +330,13 @@ public class BaseServlet extends WebMethodServlet {
         return rec;
     }
 
+    @WebMethod("base/get_all_kw_sel")
+    public RecordSet get_all_kw_sel(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, true);
+        RecordSet recs= GlobalLogics.getBaseLogic().getAllKWSel();
+        return recs;
+    }
+
     @WebMethod("base/get_sj_partner_kw")
     public RecordSet get_sj_partner_kw(HttpServletRequest req, QueryParams qp) throws IOException {
         Context ctx = PortalContext.getContext(req, qp, true, true);

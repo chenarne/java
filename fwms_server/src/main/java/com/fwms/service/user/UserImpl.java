@@ -802,16 +802,9 @@ public class UserImpl implements UserLogic, Initializable {
 
     public boolean savePartnerKw(Context ctx, String PARTNER_NO, String KW_ID) {
         SQLExecutor se = getSqlExecutor();
-        if (existsPartnerKw(PARTNER_NO, KW_ID).isEmpty()) {
-            String sql = "INSERT INTO " + partnerKwTable + " (PARTNER_NO, KW_ID)" +
-                    " VALUES ('"+PARTNER_NO+"','" + KW_ID + "') ";
-            long n = se.executeUpdate(sql);
-            return n > 0;
-        }else{
-            String sql = "DELETE FROM " + partnerKwTable + " WHERE PARTNER_NO='" + PARTNER_NO + "' AND KW_ID='"+KW_ID+"'";
-            long n = se.executeUpdate(sql);
-            return n > 0;
-        }
+        se.executeUpdate("DELETE FROM " + partnerKwTable + " WHERE PARTNER_NO='" + PARTNER_NO + "' ");
+        se.executeUpdate("INSERT INTO " + partnerKwTable + " (PARTNER_NO, KW_ID) VALUES ('"+PARTNER_NO+"','" + KW_ID + "') ");
+        return true;
     }
     public Record existsPartnerKw(String PARTNER_NO, String KW_ID) {
         String sql = "SELECT * FROM " + partnerKwTable + "  WHERE PARTNER_NO='" + PARTNER_NO + "' AND KW_ID='"+KW_ID+"' ";

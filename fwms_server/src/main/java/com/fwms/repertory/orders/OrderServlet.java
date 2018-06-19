@@ -25,10 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class OrderServlet extends WebMethodServlet {
@@ -855,6 +852,44 @@ public class OrderServlet extends WebMethodServlet {
             out_rec.put("message","自动装箱完毕,部分货品因未设置合箱规则,也做了合箱,请注意");
         }
         return out_rec;
+    }
+
+    @WebMethod("order/get_inbound_print_kw")
+    public RecordSet get_inbound_print_kw(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, false);
+        String KW_ID = qp.checkGetString("KW_ID");
+        String START_TIME = qp.getString("T1", "");
+        String END_TIME = qp.getString("T2", "");
+        RecordSet data = GlobalLogics.getOrderLogic().getInboundPrintKw(KW_ID, START_TIME, END_TIME);
+        return data;
+    }
+    @WebMethod("order/get_inbound_print_box")
+    public RecordSet get_inbound_print_box(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, false);
+        String KW_ID = qp.checkGetString("KW_ID");
+        String START_TIME = qp.getString("T1", "");
+        String END_TIME = qp.getString("T2", "");
+        RecordSet data = GlobalLogics.getOrderLogic().getInboundPrintBox(KW_ID, START_TIME, END_TIME);
+        return data;
+    }
+
+    @WebMethod("order/get_outbound_print_kw")
+    public RecordSet get_outbound_print_kw(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, false);
+        String KW_ID = qp.checkGetString("KW_ID");
+        String START_TIME = qp.getString("T1", "");
+        String END_TIME = qp.getString("T2", "");
+        RecordSet data = GlobalLogics.getOrderLogic().getOutboundPrintKw(KW_ID, START_TIME, END_TIME);
+        return data;
+    }
+    @WebMethod("order/get_outbound_print_box")
+    public RecordSet get_outbound_print_box(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, false);
+        String KW_ID = qp.checkGetString("KW_ID");
+        String START_TIME = qp.getString("T1", "");
+        String END_TIME = qp.getString("T2", "");
+        RecordSet data = GlobalLogics.getOrderLogic().getOutboundPrintBox(KW_ID, START_TIME, END_TIME);
+        return data;
     }
 
     @WebMethod("order/test")
