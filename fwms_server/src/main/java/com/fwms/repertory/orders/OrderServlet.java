@@ -13,19 +13,31 @@ import com.fwms.basedevss.base.web.webmethod.WebMethodServlet;
 import com.fwms.common.Constants;
 import com.fwms.common.GlobalLogics;
 import com.fwms.common.PortalContext;
-import jxl.Cell;
-import jxl.Sheet;
-import jxl.Workbook;
-import jxl.read.biff.BiffException;
+
+import com.fwms.common.TimeUtils;
+import com.microsoft.schemas.office.visio.x2012.main.CellType;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.extractor.ExcelExtractor;
+import org.apache.poi.hssf.usermodel.HSSFDateUtil;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.solr.common.util.DateUtil;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class OrderServlet extends WebMethodServlet {
@@ -220,7 +232,7 @@ public class OrderServlet extends WebMethodServlet {
         List<String> ls_p = StringUtils2.splitList(PRO_VALUES, ",", true);
 
         boolean b = GlobalLogics.getOrderLogic().saveGysOrder(ctx, USER_ID, SJ_ID, ORDER_ID, OUT_ORDER_ID, GYS_ID, GYS_NAME, "0", "0", "1", MEMO, JH_TIME, JH_TYPE, JH_ADDR, "0", "0", "0", "0", 0, OrderConstants.ORDER_STATUS_DEFAULT, PARTNER_NO, KW_ID,
-                partner_single.getString("PROVINCE"),partner_single.getString("CITY"),partner_single.getString("AREA"),partner_single.getString("ADDR"),partner_single.getString("PROVINCE_NAME")+partner_single.getString("CITY_NAME")+partner_single.getString("AREA_NAME")+partner_single.getString("ADDR"),partner_single.getString("CONTACT"),partner_single.getString("MOBILE"));
+                partner_single.getString("PROVINCE"), partner_single.getString("CITY"), partner_single.getString("AREA"), partner_single.getString("ADDR"), partner_single.getString("PROVINCE_NAME") + partner_single.getString("CITY_NAME") + partner_single.getString("AREA_NAME") + partner_single.getString("ADDR"), partner_single.getString("CONTACT"), partner_single.getString("MOBILE"));
         if (b) {
             for (String pro_str : ls_p) {
                 List<String> lp = StringUtils2.splitList(pro_str, "@", true);
@@ -509,7 +521,7 @@ public class OrderServlet extends WebMethodServlet {
         } else {
             COUNT = 20;
         }
-        Record data = GlobalLogics.getOrderLogic().getAllGysOrderPageList(ctx, WL_TYPE, SJ_ID,GYS_ID, START_TIME, END_TIME, STATE, PAY_DONE, PAGE, COUNT, ORDER_ID,OUT_ORDER_ID, INBOUND_STATUS_BEGIN, INBOUND_STATUS_END);
+        Record data = GlobalLogics.getOrderLogic().getAllGysOrderPageList(ctx, WL_TYPE, SJ_ID, GYS_ID, START_TIME, END_TIME, STATE, PAY_DONE, PAGE, COUNT, ORDER_ID, OUT_ORDER_ID, INBOUND_STATUS_BEGIN, INBOUND_STATUS_END);
 
         return data;
     }
@@ -654,7 +666,7 @@ public class OrderServlet extends WebMethodServlet {
     }
 
     @WebMethod("order/order_excel_insert")
-    public Record order_excel_insert_new(HttpServletRequest req, QueryParams qp) throws UnsupportedEncodingException, BiffException {
+    public Record order_excel_insert_new(HttpServletRequest req, QueryParams qp) throws UnsupportedEncodingException {
         Context ctx = PortalContext.getContext(req, qp, true, false);
         FileItem file_item = qp.getFile("Filedata");
         String GYS_ID = qp.checkGetString("GYS_ID");
@@ -667,87 +679,260 @@ public class OrderServlet extends WebMethodServlet {
         return return_rec;
     }
 
-    private Record importOrder(Context ctx,FileItem file_item,String GYS_ID,Record return_rec) throws BiffException {
+    private Record importOrder(Context ctx,FileItem file_item,String GYS_ID,Record return_rec) {
         Workbook wb = null;
         try {
             // 构造Workbook（工作薄）对象
-            wb = Workbook.getWorkbook(file_item.getInputStream());
-        } catch (BiffException e) {
+            wb = WorkbookFactory.create(file_item.getInputStream());
+        }  catch (IOException e) {
             e.printStackTrace();
-        } catch (IOException e) {
+        } catch (InvalidFormatException e) {
             e.printStackTrace();
         }
 
         if (wb == null) {
+            return_rec.put("IMPORTS_STATUS", "0");
             return_rec.put("ERROR_TYPE", "1");
-            return_rec.put("ERRORS", "1");
-            return_rec.put("ERROR_MSG", "file type error");
+            return_rec.put("DATA", new RecordSet());
             return return_rec;
         }
 
-        Sheet[] sheet = wb.getSheets();
-        int rowNum = 0;
-        int err_all = 0;
-
-        List<String> ls_err_addr = new ArrayList<String>();
-        List<String> ls_err_user = new ArrayList<String>();
-        List<String> ls_err_date = new ArrayList<String>();
-        List<String> ls_err_money = new ArrayList<String>();
-        List<String> ls_err_pro = new ArrayList<String>();
-        List<String> ls_err_pack = new ArrayList<String>();
-        List<String> ls_err_double = new ArrayList<String>();
-        List<String> ls_err_memo = new ArrayList<String>();
-        List<String> ls_success = new ArrayList<String>();
-
-        RecordSet recs_check_error_out = new RecordSet();
-        RecordSet recs_save_error_out = new RecordSet();
-
-        if (sheet != null && sheet.length > 0) {
-            for (int i = 0; i < 1; i++) {
-
-                String sheetName = sheet[i].getName();//这里是获取sheet的名称
-                rowNum = sheet[i].getRows();
-                //从第一行开始导入,0行是title
-                for (int j = 1; j < rowNum; j++) {
-                    Cell[] cells = sheet[i].getRow(j);
-                    int ERR_ = 0;
-
-                    String DW = "";
-                    try {
-                        DW = cells[0].getContents().trim();
-                    } catch (Exception e) {
-                        ERR_ += 1;
+        Sheet sheet = getSheetByNum(wb, 0);
+        int lastRowNum = sheet.getLastRowNum();
+        RecordSet data_out = new RecordSet();
+        int ALL_ERR_COUNT = 0;
+        if (sheet != null) {
+            for (int j = 1; j <= lastRowNum; j++) {
+                Record data_check = new Record();
+                String err_str = "";
+                int ERR_COUNT = 0;
+                Row row = sheet.getRow(j);
+                int lastCellNum = row.getLastCellNum();
+                List<String> ls_cells = new ArrayList<String>();
+                for (int k = 0; k <= lastCellNum; k++) {
+                    if (row.getCell(k) != null)  {
+                       String cv = getCellValueByCell(row.getCell(k));
+                        ls_cells.add(Constants.replaceErrStr(cv));
                     }
-                    String DW_SX = "";
-                    try {
-                        DW_SX = cells[1].getContents().trim();
-                    } catch (Exception e) {
-                        ERR_ += 1;
+                    else  {
+                        ls_cells.add(" ");
                     }
+                }
+                String IMPORT_ID =  RandomUtils.generateStrId();
+                data_check.put("IMPORT_ID",IMPORT_ID);
+                String PARTNER_NAME =  ls_cells.get(2);
+                String PARTNER_NO =  "";
+                Record rec_partner = GlobalLogics.getUser().check_partner_name(PARTNER_NAME);
+                if (rec_partner.isEmpty()) {
+                    ERR_COUNT +=1;
+                    err_str += "门店名称-不存在,";
+                }  else{
+                    PARTNER_NO = rec_partner.getString("PARTNER_NO");
+                }
 
-                    err_all += ERR_;
-                    if (ERR_ == 0) {
-                       GlobalLogics.getBaseLogic().saveDw(DW_SX,DW);
+                data_check.put("PARTNER_NAME",PARTNER_NAME);
+                data_check.put("PARTNER_NO",PARTNER_NO);
+
+                String PRO_NAME =  ls_cells.get(3);
+                String PRO_SPEC =  ls_cells.get(4);
+                String SPEC_ID =  "";
+                Record rec_pro_spec = GlobalLogics.getUser().check_pro_name_spec(PRO_NAME, PRO_SPEC);
+                if (rec_pro_spec.isEmpty()) {
+                    ERR_COUNT +=1;
+                    err_str += "货品名称或者规格-不存在,";
+                }else {
+                    SPEC_ID = rec_pro_spec.getString("SPEC_ID");
+                }
+                data_check.put("PRO_NAME",PRO_NAME);
+                data_check.put("PRO_SPEC",PRO_SPEC);
+                data_check.put("SPEC_ID",SPEC_ID);
+
+                String PRO_COUNT =  ls_cells.get(5);
+                int c = 0;
+                try {
+                    c = (int)Double.parseDouble(PRO_COUNT);
+                }catch (Exception e){
+                    ERR_COUNT +=1;
+                    err_str += "货品数量-格式不正确,";
+                }
+                data_check.put("PRO_COUNT",c);
+
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+                String INBOUND_TIME =  ls_cells.get(6);
+                String INBOUND_TIME_ = "";
+                try {
+                    Date ddd = format.parse(INBOUND_TIME);
+                    INBOUND_TIME_ = new SimpleDateFormat("yyyy-MM-dd").format(ddd);
+                }catch (Exception e){
+                    ERR_COUNT +=1;
+                    err_str += "入库日期-格式不正确,";
+                }
+                data_check.put("INBOUND_TIME",INBOUND_TIME_.length()<=0?INBOUND_TIME:INBOUND_TIME_);
+                String JH_TIME =  ls_cells.get(7);
+                String JH_TIME_ = "";
+                try {
+                    Date ddd = format.parse(JH_TIME);
+                    JH_TIME_ = new SimpleDateFormat("yyyy-MM-dd").format(ddd);
+                }catch (Exception e){
+                    ERR_COUNT +=1;
+                    err_str += "交货日期-格式不正确,";
+                }
+                data_check.put("JH_TIME",JH_TIME_.length()<=0?JH_TIME:JH_TIME_);
+
+                String OUT_ORDER_ID =  ls_cells.get(1);
+                if (OUT_ORDER_ID.length()<=0){
+                    ERR_COUNT +=1;
+                    err_str += "外部订单号-不允许为空,";
+                }
+                data_check.put("OUT_ORDER_ID",OUT_ORDER_ID);
+
+
+                //==========整合错误信息===========
+                if (err_str.length()>0)
+                    err_str = err_str.substring(0,err_str.length()-1);
+
+                data_check.put("ERR_COUNT",ERR_COUNT);
+                data_check.put("ERR_STR",err_str);
+                //==========整合错误信息===========
+
+                data_out.add(data_check);
+                ALL_ERR_COUNT += ERR_COUNT;
+            }
+
+        }
+         GlobalLogics.getOrderLogic().deleteAllOrderImport(GYS_ID,ctx.getUser_id());
+        for (Record r : data_out){
+             GlobalLogics.getOrderLogic().saveOrderImport(r.getString("IMPORT_ID"),GYS_ID,ctx.getUser_id(),r.getString("OUT_ORDER_ID")
+                     ,r.getString("PARTNER_NAME"),r.getString("PARTNER_NO"),r.getString("SPEC_ID"),r.getString("PRO_NAME"),r.getString("PRO_SPEC"),(int)r.getInt("PRO_COUNT")
+                     ,r.getString("INBOUND_TIME"),r.getString("JH_TIME"),r.getString("ERR_STR"));
+        }
+        if (ALL_ERR_COUNT==0){
+            return_rec.put("IMPORTS_STATUS", "1");
+            return_rec.put("ERROR_TYPE", "0");
+        } else {
+            return_rec.put("IMPORTS_STATUS", "0");
+            return_rec.put("ERROR_TYPE", "2");
+        }
+        return_rec.put("DATA", data_out);
+        return return_rec;
+    }
+
+    @WebMethod("order/order_excel_insert_really")
+    public Record order_excel_insert_really(HttpServletRequest req, QueryParams qp) throws UnsupportedEncodingException {
+        Context ctx = PortalContext.getContext(req, qp, true, false);
+        String GYS_ID = qp.checkGetString("GYS_ID");
+        Record gys = GlobalLogics.getUser().getSingleGysBase(GYS_ID);
+        TimeUtils tg = new TimeUtils();
+
+        String IMPORT_IDS = qp.checkGetString("IMPORT_IDS");
+
+        Record out_rec = new Record();
+
+        RecordSet recs_imports = GlobalLogics.getOrderLogic().getAllImportsByIDS(IMPORT_IDS);
+
+        //1,首先看,要下多少个订单,根据 PARTNER_NO 和 INBOUND_TIME来筛选
+        List<String> ls_partner = new ArrayList<String>();
+        for (Record r : recs_imports){
+            if (!ls_partner.contains(r.getString("PARTNER_NO")))
+                ls_partner.add(r.getString("PARTNER_NO"));
+        }
+
+        for (String partner_no : ls_partner){
+            Record partner_single = GlobalLogics.getUser().getSinglePartnerByNo(partner_no);
+            String JH_ADDR = partner_single.getString("FULL_ADDR");
+            RecordSet partnerOrders = recs_imports.findsEq("PARTNER_NO", partner_no);
+            Record partnerKw = GlobalLogics.getUser().getPartnerKw(partner_no);
+            List<String> ls_jh_time = new ArrayList<String>();
+            for (Record r : partnerOrders){
+                if (!ls_jh_time.contains(r.getString("JH_TIME")))
+                    ls_jh_time.add(r.getString("JH_TIME"));
+            }
+
+            for (String jhTime : ls_jh_time){
+                RecordSet partnerJhOrders = partnerOrders.findsEq("JH_TIME", jhTime);
+                String ORDER_ID = Constants.newCgCode();
+                boolean b = GlobalLogics.getOrderLogic().saveGysOrder(ctx, ctx.getUser_id(), gys.getString("SJ_ID"), ORDER_ID,
+                        partnerJhOrders.get(0).getString("OUT_ORDER_ID"), GYS_ID, gys.getString("GYS_NAME"), "0", "0", "1", "", jhTime, "供应商送货", JH_ADDR, "0", "0", "0", "0", 0, OrderConstants.ORDER_STATUS_DEFAULT, partner_no, partnerKw.getString("KW_ID"),
+                        partner_single.getString("PROVINCE"), partner_single.getString("CITY"), partner_single.getString("AREA"), partner_single.getString("ADDR"), partner_single.getString("PROVINCE_NAME") + partner_single.getString("CITY_NAME") + partner_single.getString("AREA_NAME") + partner_single.getString("ADDR"), partner_single.getString("CONTACT"), partner_single.getString("MOBILE"));
+                if (b) {
+                    for (Record pro_str : partnerJhOrders) {
+                        String SPEC_ID = pro_str.getString("SPEC_ID");
+                        int PRO_COUNT = (int)pro_str.getInt("PRO_COUNT");
+
+                        Record pro_spec = GlobalLogics.getBaseLogic().getSingleProSpec(SPEC_ID);
+                        String pro_id = pro_spec.getString("PRO_ID");
+                        Record pro = GlobalLogics.getBaseLogic().getSinglePro(pro_id);
+
+                        String PRO_TYPE = pro.getString("PRO_TYPE");
+                        String PRO_TYPE_ID = pro.getString("PRO_TYPE_ID");
+                        String PRO_NAME = pro_spec.getString("PRO_NAME");
+
+
+                        String PRO_CODE_NUMBER = pro_spec.getString("PRO_CODE");
+                        String ORDER_ITEM_ID = RandomUtils.generateStrId();
+
+                        boolean c = GlobalLogics.getOrderLogic().saveGysOrderPro(ctx, ORDER_ID,pro_id, SPEC_ID,
+                                PRO_COUNT+"" , pro_spec.getString("PRO_PRICE")+"", "0",
+                                PRO_CODE_NUMBER,"0",PRO_TYPE, PRO_TYPE_ID,PRO_NAME,"0" , ORDER_ITEM_ID, 0+"", 0+"", "0");
                     }
+                    //审核
+                    GlobalLogics.getOrderLogic().updateOrderVerify(ORDER_ID, ctx.getUser_id());
+                    //装箱
+                    orderAutoPackageProduct(ORDER_ID,GYS_ID,new Record());
+                    //入库通知
+                    String INBOUND_ID = Constants.newInboundCode();
+                    String INBOUND_TIME = partnerJhOrders.get(0).getString("INBOUND_TIME");
+                    if (INBOUND_TIME.length()<=0)  {
+                        INBOUND_TIME = tg.getOtherDaySimple(jhTime, -1);
+                    }
+                    boolean d = GlobalLogics.getOrderLogic().saveInbound(ctx, INBOUND_ID, ORDER_ID, partnerKw.getString("KW_ID"), GYS_ID, gys.getString("GYS_NAME"), INBOUND_TIME);
+                    if (d){
+                        GlobalLogics.getOrderLogic().updateOrderStatusInbound(ctx, ORDER_ID, OrderConstants.ORDER_STATUS_INBOUNT_CREATE, INBOUND_TIME);
+                    }
+                    //删除导入的记录
+                    GlobalLogics.getOrderLogic().deleteAllOrderImport(GYS_ID, ctx.getUser_id());
                 }
             }
         }
 
-        return_rec.put("ERROR_TYPE", "2");
-        return_rec.put("ERRORS", err_all);
-        return_rec.put("ERROR_MSG", "data error");
-        return_rec.put("DATA", recs_check_error_out);
-        return_rec.put("ERR_MONEY", StringUtils.join(ls_err_money, ","));
-        return_rec.put("ERR_ADDR", StringUtils.join(ls_err_addr, ","));
-        return_rec.put("ERR_USER", StringUtils.join(ls_err_user, ","));
-        return_rec.put("ERR_DATE", StringUtils.join(ls_err_date, ","));
-        return_rec.put("ERR_PRO", StringUtils.join(ls_err_pro, ","));
-        return_rec.put("ERR_PACK", StringUtils.join(ls_err_pack, ","));
-        return_rec.put("ERR_DOUBLE", StringUtils.join(ls_err_double, ","));
-        return_rec.put("ERR_MEMO", StringUtils.join(ls_err_memo, ","));
-        return return_rec;
+        out_rec.put("STATUS",1);
+        out_rec.put("MESSAGE","导入订单成功,并自动完成如下操作:\r\n 1,并且已经审核\r\n 2,产生装箱 \r\n 3, 产生入库通知单");
+        return out_rec;
     }
 
+    public static Sheet getSheetByNum(Workbook book,int number){
+        Sheet sheet = null;
+        try {
+            sheet = book.getSheetAt(number);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        return sheet;
+    }
+    private static String getCellValueByCell(Cell cell) {
+        //判断是否为null或空串
+        if (cell==null || cell.toString().trim().equals("")) {
+            return "";
+        }
+        String cellValue = "";
+        int cellType=cell.getCellType();
+        switch (cellType) {
+            case Cell.CELL_TYPE_STRING: //字符串类型
+                cellValue= cell.getStringCellValue().trim();
+                cellValue=StringUtils.isEmpty(cellValue) ? "" : cellValue;
+                break;
+            case Cell.CELL_TYPE_BOOLEAN:  //布尔类型
+                cellValue = String.valueOf(cell.getBooleanCellValue());
+                break;
+            case Cell.CELL_TYPE_NUMERIC: //数值类型
+                cellValue = String.valueOf(cell.getNumericCellValue());
+                break;
+            default: //其它类型，取空串吧
+                cellValue = "";
+                break;
+        }
+        return cellValue;
+    }
     @WebMethod("order/order_auto_package")
     public Record order_auto_package(HttpServletRequest req, QueryParams qp) throws IOException {
         Context ctx = PortalContext.getContext(req, qp, false, true);
