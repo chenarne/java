@@ -426,6 +426,16 @@ public class Constants {
         return date;
     }
 
+    public static String replaceErrStr(String cv){
+        if (cv.equals(""))
+            return cv;
+        cv = cv.replaceAll("'","");
+        cv = cv.replaceAll("\\+","");
+        cv = cv.replaceAll("&","");
+        cv = cv.replaceAll("=","");
+        return cv;
+    }
+
     //标准化EXCEL导入时的各种时间格式
     //2015-02-27 12:33
     //2015-03-17 14:02:30

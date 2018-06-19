@@ -86,5 +86,11 @@ public interface UserLogic {
 
     Record getGysByUser(String USER_ID);
     Record getSjByUser(String USER_ID);
+
+
+
+    //===========================
+    Record check_partner_name(String PARTNER_NAME);
+    Record check_pro_name_spec(String PRO_NAME,String PRO_SPEC);
 }
 

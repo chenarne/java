@@ -11,7 +11,6 @@ import com.fwms.basedevss.base.sql.SQLExecutor;
 import com.fwms.basedevss.base.util.*;
 import com.fwms.common.Constants;
 import com.fwms.common.GlobalLogics;
-import com.fwms.service.user.UserLogic;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +22,8 @@ public class OrderImpl implements OrderLogic, Initializable {
     private ConnectionFactory connectionFactory;
     private String db;
 
-    private String gysOrderTable = "t_sys_order";
+    private String orderTable = "t_sys_order";
+    private String orderImportTable = "t_sys_order_import";
     private String orderProductTable = "t_sys_order_product";
     private String productTable = "t_sys_product";
     private String productSpecTable = "t_sys_product_spec";
@@ -50,7 +50,7 @@ public class OrderImpl implements OrderLogic, Initializable {
 
     @Override
     public void destroy() {
-        this.gysOrderTable = null;
+        this.orderTable = null;
         this.connectionFactory = ConnectionFactory.close(connectionFactory);
         this.db = null;
     }
@@ -63,31 +63,31 @@ public class OrderImpl implements OrderLogic, Initializable {
     }
 
     public boolean deleteOrder(Context ctx, String ORDER_ID) {
-        String sql = "UPDATE  " + gysOrderTable + " SET DELETE_TIME='"+DateUtils.now()+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
+        String sql = "UPDATE  " + orderTable + " SET DELETE_TIME='"+DateUtils.now()+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n>0;
     }
     public boolean updateOrderStatusInbound(Context ctx, String ORDER_ID, int STATUS, String INBOUND_TIME) {
-        String sql = "UPDATE  " + gysOrderTable + " SET STATUS='"+STATUS+"',INBOUND_TIME='"+INBOUND_TIME+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
+        String sql = "UPDATE  " + orderTable + " SET STATUS='"+STATUS+"',INBOUND_TIME='"+INBOUND_TIME+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n>0;
     }
     public boolean updateOrderStatusOutbound(Context ctx, String ORDER_ID,int STATUS,String OUTBOUND_TIME) {
-        String sql = "UPDATE  " + gysOrderTable + " SET STATUS='"+STATUS+"',OUTBOUND_TIME='"+OUTBOUND_TIME+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
+        String sql = "UPDATE  " + orderTable + " SET STATUS='"+STATUS+"',OUTBOUND_TIME='"+OUTBOUND_TIME+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n>0;
     }
     public boolean updateOrderState(String ORDER_ID,int STATE) {
-        String sql ="UPDATE " + gysOrderTable + " SET STATE='"+STATE+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
+        String sql ="UPDATE " + orderTable + " SET STATE='"+STATE+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n>0;
     }
     public boolean updateOrderVerify(String ORDER_ID,String USER_ID) {
-        String sql ="UPDATE " + gysOrderTable + " SET STATUS='"+OrderConstants.ORDER_STATUS_CONFIRMED+"',VERIFY_STATUS='1',VERIFY_USER_ID='"+USER_ID+"',VERIFY_TIME='"+DateUtils.now()+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
+        String sql ="UPDATE " + orderTable + " SET STATUS='"+OrderConstants.ORDER_STATUS_CONFIRMED+"',VERIFY_STATUS='1',VERIFY_USER_ID='"+USER_ID+"',VERIFY_TIME='"+DateUtils.now()+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n>0;
@@ -118,7 +118,7 @@ public class OrderImpl implements OrderLogic, Initializable {
     }
 
     public boolean printOrderInbound(String ORDER_ID) {
-        String sql1 = "UPDATE " + gysOrderTable + " SET PRINT_INBOUND=PRINT_INBOUND+1  WHERE ORDER_ID='" + ORDER_ID + "' ";
+        String sql1 = "UPDATE " + orderTable + " SET PRINT_INBOUND=PRINT_INBOUND+1  WHERE ORDER_ID='" + ORDER_ID + "' ";
         List<String> ls = new ArrayList<String>();
         ls.add(sql1);
         SQLExecutor se = getSqlExecutor();
@@ -152,7 +152,7 @@ public class OrderImpl implements OrderLogic, Initializable {
             filter += " AND ORDER_ID IN (SELECT ORDER_ID FROM "+orderProductTable+" WHERE PRO_ID IN (SELECT PRO_ID FROM "+productTable+" WHERE PRO_TYPE_ID='"+PRO_TYPE_ID+"')) ";
 
 
-        String sql0 = "SELECT COUNT(*) AS COUNT1 FROM " + gysOrderTable + "  WHERE DELETE_TIME IS NULL ";
+        String sql0 = "SELECT COUNT(*) AS COUNT1 FROM " + orderTable + "  WHERE DELETE_TIME IS NULL ";
         sql0+=filter;
 
         int rowNum = (int) se.executeRecord(sql0, null).getInt("COUNT1");
@@ -164,7 +164,7 @@ public class OrderImpl implements OrderLogic, Initializable {
                 page_count = (int) (rowNum / count) + 1;
             }
         }
-        String sql = "SELECT * FROM " + gysOrderTable + " WHERE DELETE_TIME IS NULL ";
+        String sql = "SELECT * FROM " + orderTable + " WHERE DELETE_TIME IS NULL ";
         sql+=filter;
 
         int p = 0;
@@ -236,7 +236,7 @@ public class OrderImpl implements OrderLogic, Initializable {
     }
 
     public Record getSingleOrder(String ORDER_ID) {
-        String sql ="SELECT * FROM " + gysOrderTable + " WHERE ORDER_ID='"+ORDER_ID+"' ";
+        String sql ="SELECT * FROM " + orderTable + " WHERE ORDER_ID='"+ORDER_ID+"' ";
         SQLExecutor se = getSqlExecutor();
         Record rec = se.executeRecord(sql);
         if (!rec.isEmpty()) {
@@ -245,7 +245,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         return rec;
     }
     public Record getSingleOrderBase(String ORDER_ID) {
-        String sql ="SELECT * FROM " + gysOrderTable + " WHERE ORDER_ID='"+ORDER_ID+"' ";
+        String sql ="SELECT * FROM " + orderTable + " WHERE ORDER_ID='"+ORDER_ID+"' ";
         SQLExecutor se = getSqlExecutor();
         Record rec = se.executeRecord(sql);
         return rec;
@@ -258,7 +258,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         return rec;
     }
     public Record getSingleOrderForPackage(String ORDER_ID) {
-        String sql ="SELECT * FROM " + gysOrderTable + " WHERE ORDER_ID='"+ORDER_ID+"' ";
+        String sql ="SELECT * FROM " + orderTable + " WHERE ORDER_ID='"+ORDER_ID+"' ";
         SQLExecutor se = getSqlExecutor();
         Record rec = se.executeRecord(sql);
         if (!rec.isEmpty()) {
@@ -374,7 +374,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         return n>0;
     }
     public boolean saveGysOrder(Context ctx,String USER_ID,String SJ_ID, String ORDER_ID,String OUT_ORDER_ID, String GYS_ID, String GYS_NAME, String SEND_PRICE, String OTHER_PRICE, String PAY_TYPE, String MEMO, String JH_TIME, String JH_TYPE, String JH_ADDR, String IFKP, String KP_TYPE, String TAX, String FK_YD, int isBack,int status,String PARTNER_NO,String KW_ID,String PROVINCE,String CITY,String AREA,String ADDR,String FULL_ADDR,String CONTACT,String MOBILE) {
-        String sql = "INSERT INTO " + gysOrderTable + " (USER_ID,SJ_ID,ORDER_ID, OUT_ORDER_ID,GYS_ID, GYS_NAME,   SEND_PRICE, OTHER_PRICE, PAY_TYPE, MEMO,CREATE_TIME,JH_TIME, JH_TYPE, JH_ADDR, IFKP, KP_TYPE, TAX, FK_YD,CREATE_USER_ID,IS_BACK,STATUS, VERIFY_STATUS,PARTNER_NO, KW_ID,PROVINCE, CITY, AREA, ADDR, FULL_ADDR, CONTACT, MOBILE) VALUES" +
+        String sql = "INSERT INTO " + orderTable + " (USER_ID,SJ_ID,ORDER_ID, OUT_ORDER_ID,GYS_ID, GYS_NAME,   SEND_PRICE, OTHER_PRICE, PAY_TYPE, MEMO,CREATE_TIME,JH_TIME, JH_TYPE, JH_ADDR, IFKP, KP_TYPE, TAX, FK_YD,CREATE_USER_ID,IS_BACK,STATUS, VERIFY_STATUS,PARTNER_NO, KW_ID,PROVINCE, CITY, AREA, ADDR, FULL_ADDR, CONTACT, MOBILE) VALUES" +
                 " ('"+USER_ID+"','"+SJ_ID+"','" + ORDER_ID + "','"+OUT_ORDER_ID+"','" + GYS_ID +"','" + GYS_NAME + "','"+SEND_PRICE+"','"+OTHER_PRICE+"','"+PAY_TYPE+"','"+MEMO+"','"+ DateUtils.now()+"','"+JH_TIME+"','"+JH_TYPE+"','"+JH_ADDR+"','"+IFKP+"','"+KP_TYPE+"','"+TAX+"','"+FK_YD+"','"+ctx.getUser_id()+"','"+isBack+"','"+status+"','0','"+PARTNER_NO+"','"+KW_ID+"','"+PROVINCE+"','"+CITY+"','"+AREA+"','"+ADDR+"','"+FULL_ADDR+"','"+CONTACT+"','"+MOBILE+"') ";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
@@ -382,7 +382,7 @@ public class OrderImpl implements OrderLogic, Initializable {
     }
 
     public boolean updateGysOrder(Context ctx,String ORDER_ID,String OUT_ORDER_ID, String SEND_PRICE, String OTHER_PRICE, String PAY_TYPE, String MEMO, String JH_TIME, String JH_TYPE, String JH_ADDR, String IFKP, String KP_TYPE, String TAX, String FK_YD,String PARTNER_NO,String PROVINCE,String CITY,String AREA,String ADDR,String FULL_ADDR,String CONTACT,String MOBILE) {
-        String sql = "UPDATE " + gysOrderTable + " SET OUT_ORDER_ID='"+OUT_ORDER_ID+"',SEND_PRICE='"+SEND_PRICE+"',OTHER_PRICE='"+OTHER_PRICE+"',PAY_TYPE='"+PAY_TYPE+"',MEMO='"+MEMO+"',JH_TIME='"+JH_TIME+"',JH_TYPE='"+JH_TYPE+"',JH_ADDR='"+JH_ADDR+"',IFKP='"+IFKP+"',KP_TYPE='"+KP_TYPE+"',TAX='"+TAX+"',FK_YD='"+FK_YD+"',PARTNER_NO='"+PARTNER_NO+"',PROVINCE='"+PROVINCE+"',CITY='"+CITY+"',AREA='"+AREA+"',ADDR='"+ADDR+"',FULL_ADDR='"+FULL_ADDR+"',CONTACT='"+CONTACT+"',MOBILE='"+MOBILE+"' WHERE ORDER_ID='"+ORDER_ID+"'";
+        String sql = "UPDATE " + orderTable + " SET OUT_ORDER_ID='"+OUT_ORDER_ID+"',SEND_PRICE='"+SEND_PRICE+"',OTHER_PRICE='"+OTHER_PRICE+"',PAY_TYPE='"+PAY_TYPE+"',MEMO='"+MEMO+"',JH_TIME='"+JH_TIME+"',JH_TYPE='"+JH_TYPE+"',JH_ADDR='"+JH_ADDR+"',IFKP='"+IFKP+"',KP_TYPE='"+KP_TYPE+"',TAX='"+TAX+"',FK_YD='"+FK_YD+"',PARTNER_NO='"+PARTNER_NO+"',PROVINCE='"+PROVINCE+"',CITY='"+CITY+"',AREA='"+AREA+"',ADDR='"+ADDR+"',FULL_ADDR='"+FULL_ADDR+"',CONTACT='"+CONTACT+"',MOBILE='"+MOBILE+"' WHERE ORDER_ID='"+ORDER_ID+"'";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n>0;
@@ -470,7 +470,7 @@ public class OrderImpl implements OrderLogic, Initializable {
 
     public RecordSet getGysOrderDailyReport(String SJ_ID,String GYS_ID,String START_TIME,String END_TIME) {
         SQLExecutor se = getSqlExecutor();
-        String orders_sql = "SELECT ORDER_ID,PARTNER_NO FROM "+gysOrderTable+" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+" AND JH_TIME>='"+START_TIME+"' AND JH_TIME<='"+END_TIME+"'";
+        String orders_sql = "SELECT ORDER_ID,PARTNER_NO FROM "+ orderTable +" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+" AND JH_TIME>='"+START_TIME+"' AND JH_TIME<='"+END_TIME+"'";
         if (GYS_ID.length()>0 && !GYS_ID.equals("999") && !GYS_ID.equals("9") && !GYS_ID.equals("0"))
             orders_sql += " AND GYS_ID='"+GYS_ID+"' ";
         if (SJ_ID.length()>0 && !SJ_ID.equals("999") && !SJ_ID.equals("9") && !SJ_ID.equals("0"))
@@ -491,7 +491,7 @@ public class OrderImpl implements OrderLogic, Initializable {
             Record pro = allSpecPros.findEq("SPEC_ID",PRO_SPEC_ID);
             pro.copyTo(rec);
             //有多少个门店用的这个商品
-            String sql1 = "SELECT DISTINCT(PARTNER_NO) AS PARTNER_NO FROM "+gysOrderTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+orderProductTable+" WHERE PRO_SPEC_ID='"+PRO_SPEC_ID+"' AND DELETE_TIME IS NULL)";
+            String sql1 = "SELECT DISTINCT(PARTNER_NO) AS PARTNER_NO FROM "+ orderTable +" WHERE ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+orderProductTable+" WHERE PRO_SPEC_ID='"+PRO_SPEC_ID+"' AND DELETE_TIME IS NULL)";
             RecordSet order_partners = se.executeRecordSet(sql1);
             int all = 0;
             for (Record p : order_partners) {
@@ -499,7 +499,7 @@ public class OrderImpl implements OrderLogic, Initializable {
                 Record p0 = allPartners.findEq("PARTNER_NO", PARTNER_NO);
                 p0.copyTo(p);
 
-                String sql2 = "SELECT SUM(PRO_COUNT) AS PRO_COUNT FROM "+orderProductTable+" WHERE PRO_SPEC_ID='"+PRO_SPEC_ID+"' AND ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"') AND DELETE_TIME IS NULL";
+                String sql2 = "SELECT SUM(PRO_COUNT) AS PRO_COUNT FROM "+orderProductTable+" WHERE PRO_SPEC_ID='"+PRO_SPEC_ID+"' AND ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"') AND DELETE_TIME IS NULL";
                 Record s = se.executeRecord(sql2);
                 int allSum = s.isEmpty()?0:(int)s.getInt("PRO_COUNT");
                 p.put("PRO_COUNT_SUM",allSum);
@@ -514,7 +514,7 @@ public class OrderImpl implements OrderLogic, Initializable {
     }
     public RecordSet getGysOrderDailyReportDH(String SJ_ID,String GYS_ID,String START_TIME,String END_TIME) {
         SQLExecutor se = getSqlExecutor();
-        String orders_sql = "SELECT ORDER_ID,PARTNER_NO FROM "+gysOrderTable+" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+" AND JH_TIME>='"+START_TIME+"' AND JH_TIME<='"+END_TIME+"'";
+        String orders_sql = "SELECT ORDER_ID,PARTNER_NO FROM "+ orderTable +" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+" AND JH_TIME>='"+START_TIME+"' AND JH_TIME<='"+END_TIME+"'";
         if (GYS_ID.length()>0 && !GYS_ID.equals("999") && !GYS_ID.equals("9") && !GYS_ID.equals("0"))
             orders_sql += " AND GYS_ID='"+GYS_ID+"' ";
         if (SJ_ID.length()>0 && !SJ_ID.equals("999") && !SJ_ID.equals("9") && !SJ_ID.equals("0"))
@@ -530,7 +530,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         RecordSet allSpecPros = GlobalLogics.getBaseLogic().getAllGysProSpec(GYS_ID);
         RecordSet allPartners = GlobalLogics.getUser().getAllUserPartners();
 
-        String sql00 ="SELECT DISTINCT(PARTNER_NO) AS PARTNER_NO FROM " + gysOrderTable + " WHERE ORDER_ID IN ("+ORDER_IDS+") AND DELETE_TIME IS NULL";
+        String sql00 ="SELECT DISTINCT(PARTNER_NO) AS PARTNER_NO FROM " + orderTable + " WHERE ORDER_ID IN ("+ORDER_IDS+") AND DELETE_TIME IS NULL";
         RecordSet recs_partner = se.executeRecordSet(sql00, null);
 
         for (Record rec : recs_partner){
@@ -539,7 +539,7 @@ public class OrderImpl implements OrderLogic, Initializable {
             p0.copyTo(rec);
 
             //有多少个门店用的这个商品
-            String sql1 = "SELECT DISTINCT(PRO_SPEC_ID) AS PRO_SPEC_ID FROM "+orderProductTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"' AND DELETE_TIME IS NULL)";
+            String sql1 = "SELECT DISTINCT(PRO_SPEC_ID) AS PRO_SPEC_ID FROM "+orderProductTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"' AND DELETE_TIME IS NULL)";
             RecordSet recs_spec = se.executeRecordSet(sql1);
             int all = 0;
             for (Record p : recs_spec) {
@@ -547,7 +547,7 @@ public class OrderImpl implements OrderLogic, Initializable {
                 Record pro = allSpecPros.findEq("SPEC_ID",PRO_SPEC_ID);
                 pro.copyTo(p);
 
-                String sql2 = "SELECT SUM(PRO_COUNT) AS PRO_COUNT FROM "+orderProductTable+" WHERE PRO_SPEC_ID='"+PRO_SPEC_ID+"' AND ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"') AND DELETE_TIME IS NULL";
+                String sql2 = "SELECT SUM(PRO_COUNT) AS PRO_COUNT FROM "+orderProductTable+" WHERE PRO_SPEC_ID='"+PRO_SPEC_ID+"' AND ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"') AND DELETE_TIME IS NULL";
                 Record s = se.executeRecord(sql2);
                 int allSum = s.isEmpty()?0:(int)s.getInt("PRO_COUNT");
                 p.put("PRO_COUNT_SUM",allSum);
@@ -563,7 +563,7 @@ public class OrderImpl implements OrderLogic, Initializable {
 
     public RecordSet getGysOrderDailyReport2(String SJ_ID,String GYS_ID,String START_TIME,String END_TIME) {
         SQLExecutor se = getSqlExecutor();
-        String orders_sql = "SELECT ORDER_ID,PARTNER_NO FROM "+gysOrderTable+" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+" AND JH_TIME>='"+START_TIME+"' AND JH_TIME<='"+END_TIME+"'";
+        String orders_sql = "SELECT ORDER_ID,PARTNER_NO FROM "+ orderTable +" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+" AND JH_TIME>='"+START_TIME+"' AND JH_TIME<='"+END_TIME+"'";
         if (GYS_ID.length()>0 && !GYS_ID.equals("999") && !GYS_ID.equals("9") && !GYS_ID.equals("0"))
             orders_sql += " AND GYS_ID='"+GYS_ID+"' ";
         if (SJ_ID.length()>0 && !SJ_ID.equals("999") && !SJ_ID.equals("9") && !SJ_ID.equals("0"))
@@ -584,7 +584,7 @@ public class OrderImpl implements OrderLogic, Initializable {
             Record pro = allSpecPros.findEq("SPEC_ID",PRO_SPEC_ID);
             pro.copyTo(rec);
             //有多少个门店用的这个商品
-            String sql1 = "SELECT DISTINCT(GYS_ID) AS GYS_ID FROM "+gysOrderTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+orderProductTable+" WHERE PRO_SPEC_ID='"+PRO_SPEC_ID+"' AND DELETE_TIME IS NULL)";
+            String sql1 = "SELECT DISTINCT(GYS_ID) AS GYS_ID FROM "+ orderTable +" WHERE ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+orderProductTable+" WHERE PRO_SPEC_ID='"+PRO_SPEC_ID+"' AND DELETE_TIME IS NULL)";
             RecordSet order_gys = se.executeRecordSet(sql1);
             int all = 0;
             for (Record p : order_gys) {
@@ -592,7 +592,7 @@ public class OrderImpl implements OrderLogic, Initializable {
                 Record p0 = allGys.findEq("GYS_ID", GYS_ID_);
                 p0.copyTo(p);
 
-                String sql2 = "SELECT SUM(PRO_COUNT) AS PRO_COUNT FROM "+orderProductTable+" WHERE PRO_SPEC_ID='"+PRO_SPEC_ID+"' AND ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND GYS_ID='"+GYS_ID_+"') AND DELETE_TIME IS NULL";
+                String sql2 = "SELECT SUM(PRO_COUNT) AS PRO_COUNT FROM "+orderProductTable+" WHERE PRO_SPEC_ID='"+PRO_SPEC_ID+"' AND ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE ORDER_ID IN ("+ORDER_IDS+") AND GYS_ID='"+GYS_ID_+"') AND DELETE_TIME IS NULL";
                 Record s = se.executeRecord(sql2);
                 int allSum = s.isEmpty()?0:(int)s.getInt("PRO_COUNT");
                 p.put("PRO_COUNT_SUM",allSum);
@@ -620,7 +620,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         if (END_TIME.length()>0)
             filter += " AND INBOUND_TIME <= '"+END_TIME+"' ";
         if (STATUS != 0 && STATUS != 999)
-            filter += " AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE STATUS='"+STATUS+"' AND STATUS>='"+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+"' AND DELETE_TIME IS NULL) ";
+            filter += " AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE STATUS='"+STATUS+"' AND STATUS>='"+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+"' AND DELETE_TIME IS NULL) ";
         String sql0 = "SELECT COUNT(*) AS COUNT1 FROM " + orderInboundTable + "  WHERE DELETE_TIME IS NULL ";
         sql0+=filter;
 
@@ -714,10 +714,10 @@ public class OrderImpl implements OrderLogic, Initializable {
             String sql2 = "SELECT * FROM " + packageTable + " WHERE IN_KW_TIME='' AND ORDER_ID='"+ORDER_ID+"' ";
             RecordSet notInboundPackage = se.executeRecordSet(sql2);
             if (notInboundPackage.size()>0){
-                String sql3 = "UPDATE "+gysOrderTable+" SET STATUS='"+OrderConstants.ORDER_STATUS_INBOUNT_PART+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
+                String sql3 = "UPDATE "+ orderTable +" SET STATUS='"+OrderConstants.ORDER_STATUS_INBOUNT_PART+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
                 se.executeUpdate(sql3);
             }else{
-                String sql3 = "UPDATE "+gysOrderTable+" SET STATUS='"+OrderConstants.ORDER_STATUS_INBOUNT_FINISHED+"',FINISH_INREPOR_TIME='"+nowTime+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
+                String sql3 = "UPDATE "+ orderTable +" SET STATUS='"+OrderConstants.ORDER_STATUS_INBOUNT_FINISHED+"',FINISH_INREPOR_TIME='"+nowTime+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
                 se.executeUpdate(sql3);
             }
         }
@@ -738,7 +738,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         if (END_TIME.length()>0)
             filter += " AND OUTBOUND_TIME <= '"+END_TIME+"' ";
         if (STATUS != 0 && STATUS != 999)
-            filter += " AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE STATUS='"+STATUS+"' AND STATUS>='"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND DELETE_TIME IS NULL) ";
+            filter += " AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE STATUS='"+STATUS+"' AND STATUS>='"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND DELETE_TIME IS NULL) ";
 
         String sql0 = "SELECT COUNT(*) AS COUNT1 FROM " + orderOutboundTable + "  WHERE DELETE_TIME IS NULL ";
         sql0+=filter;
@@ -792,10 +792,10 @@ public class OrderImpl implements OrderLogic, Initializable {
             String sql2 = "SELECT * FROM " + packageTable + " WHERE OUT_KW_TIME='' AND IN_KW_TIME!='' AND ORDER_ID='"+ORDER_ID+"' ";
             RecordSet notInboundPackage = se.executeRecordSet(sql2);
             if (notInboundPackage.size()>0){
-                String sql3 = "UPDATE "+gysOrderTable+" SET STATUS='"+OrderConstants.ORDER_STATUS_OUTBOUNT_PART+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
+                String sql3 = "UPDATE "+ orderTable +" SET STATUS='"+OrderConstants.ORDER_STATUS_OUTBOUNT_PART+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
                 se.executeUpdate(sql3);
             }else{
-                String sql3 = "UPDATE "+gysOrderTable+" SET STATUS='"+OrderConstants.ORDER_STATUS_OUTBOUNT_FINISHED+"',FINISH_OUTREPOR_TIME='"+nowTime+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
+                String sql3 = "UPDATE "+ orderTable +" SET STATUS='"+OrderConstants.ORDER_STATUS_OUTBOUNT_FINISHED+"',FINISH_OUTREPOR_TIME='"+nowTime+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
                 se.executeUpdate(sql3);
             }
         }
@@ -803,15 +803,15 @@ public class OrderImpl implements OrderLogic, Initializable {
     }
 
     public RecordSet getNowRepoPackage(String SJ_ID,String GYS_ID,String F_KW_ID,String KW_ID) {
-        String sql ="SELECT p.*,g.KW_ID FROM " + packageTable + " p INNER JOIN "+gysOrderTable+" g ON g.ORDER_ID=p.ORDER_ID WHERE p.IN_KW_TIME!='' AND p.OUT_KW_TIME='' AND g.DELETE_TIME IS NULL ";
+        String sql ="SELECT p.*,g.KW_ID FROM " + packageTable + " p INNER JOIN "+ orderTable +" g ON g.ORDER_ID=p.ORDER_ID WHERE p.IN_KW_TIME!='' AND p.OUT_KW_TIME='' AND g.DELETE_TIME IS NULL ";
         if (SJ_ID.length()>0 && !SJ_ID.equals("999") && !SJ_ID.equals("9") && !SJ_ID.equals("0"))
-            sql +=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE SJ_ID='"+SJ_ID+"' AND DELETE_TIME IS NULL)";
+            sql +=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE SJ_ID='"+SJ_ID+"' AND DELETE_TIME IS NULL)";
         if (GYS_ID.length()>0 && !GYS_ID.equals("999") && !GYS_ID.equals("9") && !GYS_ID.equals("0"))
-            sql +=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE GYS_ID='"+GYS_ID+"' AND DELETE_TIME IS NULL)";
+            sql +=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE GYS_ID='"+GYS_ID+"' AND DELETE_TIME IS NULL)";
         if (KW_ID.length()>0 && !KW_ID.equals("999") && !KW_ID.equals("9") && !KW_ID.equals("0"))
-            sql +=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE KW_ID='"+KW_ID+"' AND DELETE_TIME IS NULL)";
+            sql +=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE KW_ID='"+KW_ID+"' AND DELETE_TIME IS NULL)";
         if (F_KW_ID.length()>0 && !F_KW_ID.equals("999") && !F_KW_ID.equals("9") && !F_KW_ID.equals("0"))
-            sql +=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE KW_ID IN (SELECT KW_ID FROM "+kwTable+" WHERE FID='"+F_KW_ID+"') AND DELETE_TIME IS NULL)";
+            sql +=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE KW_ID IN (SELECT KW_ID FROM "+kwTable+" WHERE FID='"+F_KW_ID+"') AND DELETE_TIME IS NULL)";
 
         SQLExecutor se = getSqlExecutor();
         RecordSet recs = se.executeRecordSet(sql, null);
@@ -831,17 +831,17 @@ public class OrderImpl implements OrderLogic, Initializable {
 
     public RecordSet getGysOrderDailyGoods(String SJ_ID,String GYS_ID,String F_KW_ID,String KW_ID) {
         SQLExecutor se = getSqlExecutor();
-        String orders_sql = "SELECT ORDER_ID,PARTNER_NO FROM "+gysOrderTable+" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_PART+" AND STATUS<"+OrderConstants.ORDER_STATUS_OUTBOUNT_PART+" ";
+        String orders_sql = "SELECT ORDER_ID,PARTNER_NO FROM "+ orderTable +" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_PART+" AND STATUS<"+OrderConstants.ORDER_STATUS_OUTBOUNT_PART+" ";
 
         String orderFilter = "";
         if (SJ_ID.length()>0 && !SJ_ID.equals("999") && !SJ_ID.equals("9") && !SJ_ID.equals("0"))
-            orderFilter +=" AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE SJ_ID='"+SJ_ID+"' AND DELETE_TIME IS NULL)";
+            orderFilter +=" AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE SJ_ID='"+SJ_ID+"' AND DELETE_TIME IS NULL)";
         if (GYS_ID.length()>0 && !GYS_ID.equals("999") && !GYS_ID.equals("9") && !GYS_ID.equals("0"))
-            orderFilter +=" AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE GYS_ID='"+GYS_ID+"' AND DELETE_TIME IS NULL)";
+            orderFilter +=" AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE GYS_ID='"+GYS_ID+"' AND DELETE_TIME IS NULL)";
         if (KW_ID.length()>0 && !KW_ID.equals("999") && !KW_ID.equals("9") && !KW_ID.equals("0"))
-            orderFilter +=" AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE KW_ID='"+KW_ID+"' AND DELETE_TIME IS NULL)";
+            orderFilter +=" AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE KW_ID='"+KW_ID+"' AND DELETE_TIME IS NULL)";
         if (F_KW_ID.length()>0 && !F_KW_ID.equals("999") && !F_KW_ID.equals("9") && !F_KW_ID.equals("0"))
-            orderFilter +=" AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE KW_ID IN (SELECT KW_ID FROM "+kwTable+" WHERE FID='"+F_KW_ID+"') AND DELETE_TIME IS NULL)";
+            orderFilter +=" AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE KW_ID IN (SELECT KW_ID FROM "+kwTable+" WHERE FID='"+F_KW_ID+"') AND DELETE_TIME IS NULL)";
 
 
         RecordSet allOrders = se.executeRecordSet(orders_sql+orderFilter);
@@ -872,7 +872,7 @@ public class OrderImpl implements OrderLogic, Initializable {
 
             rec.put("ALL_COUNT",allSum);
             //还要看,这些货,存在那些库存的
-            String sql3 = "SELECT KW_ID FROM "+gysOrderTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+packageTable+" WHERE IN_KW_TIME!='' AND OUT_KW_TIME='' ) ";
+            String sql3 = "SELECT KW_ID FROM "+ orderTable +" WHERE ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+packageTable+" WHERE IN_KW_TIME!='' AND OUT_KW_TIME='' ) ";
             sql3 += " AND ORDER_ID IN (SELECT ORDER_ID FROM "+packageProductTable+" WHERE SPEC_ID='"+SPEC_ID+"')";
             sql3 += "  GROUP BY KW_ID";
 
@@ -892,7 +892,7 @@ public class OrderImpl implements OrderLogic, Initializable {
     }
 
     public Record getSingleOrderPrint(String ORDER_ID) {
-        String sql ="SELECT * FROM " + gysOrderTable + " WHERE ORDER_ID='"+ORDER_ID+"' ";
+        String sql ="SELECT * FROM " + orderTable + " WHERE ORDER_ID='"+ORDER_ID+"' ";
         SQLExecutor se = getSqlExecutor();
         Record rec = se.executeRecord(sql);
         if (!rec.isEmpty()) {
@@ -913,7 +913,7 @@ public class OrderImpl implements OrderLogic, Initializable {
     public RecordSet getAllCanPrintMd(Context ctx, String GYS_ID,int isPrinted,String SJ_ID,String PARTNER_NO,String INBOUND_TIME) {
         SQLExecutor se = read_getSqlExecutor();
         String filter = "";
-        filter += " AND o.ORDER_ID IN (SELECT ORDER_ID FROM " + gysOrderTable + " WHERE GYS_ID='" + GYS_ID + "' ";
+        filter += " AND o.ORDER_ID IN (SELECT ORDER_ID FROM " + orderTable + " WHERE GYS_ID='" + GYS_ID + "' ";
         if (SJ_ID.length() > 0 && !SJ_ID.equals("999") && !SJ_ID.equals("9") && !SJ_ID.equals("0"))
             filter += " AND SJ_ID='" + SJ_ID + "' ";
         if (INBOUND_TIME.length() > 0 && !INBOUND_TIME.equals("999") && !INBOUND_TIME.equals("9") && !INBOUND_TIME.equals("0"))
@@ -930,7 +930,7 @@ public class OrderImpl implements OrderLogic, Initializable {
             }
         }
 
-        String sql = "SELECT o.*,p.PACKAGE_CODE,p.PRINT,p.PRO_DETAIL,p.IN_KW_TIME,p.OUT_KW_TIME FROM " + packageTable + " p INNER JOIN "+gysOrderTable+" o ON o.ORDER_ID=p.ORDER_ID WHERE 1=1 ";
+        String sql = "SELECT o.*,p.PACKAGE_CODE,p.PRINT,p.PRO_DETAIL,p.IN_KW_TIME,p.OUT_KW_TIME FROM " + packageTable + " p INNER JOIN "+ orderTable +" o ON o.ORDER_ID=p.ORDER_ID WHERE 1=1 ";
         sql+=filter;
 
         sql += " ORDER BY p.PACKAGE_CODE ";
@@ -958,7 +958,7 @@ public class OrderImpl implements OrderLogic, Initializable {
 
     public Record getSingleOrderByPackageCode(String PACKAGE_CODE) {
         String orderColumns = "o.ORDER_ID,o.OUT_ORDER_ID,o.GYS_ID,o.JH_TIME,o.KW_ID,o.PARTNER_NO,o.FULL_ADDR,o.CONTACT,o.MOBILE,o.INBOUND_TIME";
-        String sql ="SELECT p.PRO_DETAIL,"+orderColumns+" FROM "+packageTable+" p INNER JOIN  " + gysOrderTable + " o ON o.ORDER_ID=p.ORDER_ID WHERE p.PACKAGE_CODE='"+PACKAGE_CODE+"' ";
+        String sql ="SELECT p.PRO_DETAIL,"+orderColumns+" FROM "+packageTable+" p INNER JOIN  " + orderTable + " o ON o.ORDER_ID=p.ORDER_ID WHERE p.PACKAGE_CODE='"+PACKAGE_CODE+"' ";
         SQLExecutor se = getSqlExecutor();
         Record rec = se.executeRecord(sql);
         if (!rec.isEmpty()) {
@@ -986,7 +986,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         SQLExecutor se = read_getSqlExecutor();
         String filter = " AND ORDER_ID IN ";
         filter += " ( ";
-        filter += " SELECT ORDER_ID FROM "+gysOrderTable+" WHERE STATUS>='"+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_INBOUNT_PART+"' AND DELETE_TIME IS NULL  ";
+        filter += " SELECT ORDER_ID FROM "+ orderTable +" WHERE STATUS>='"+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_INBOUNT_PART+"' AND DELETE_TIME IS NULL  ";
         if (KW_ID.length() > 0 && !KW_ID.equals("999") && !KW_ID.equals("9") && !KW_ID.equals("0"))
             filter += " AND KW_ID IN (SELECT KW_ID FROM " + kwTable + " WHERE FID='" + KW_ID + "') ";
         filter += " )  ";
@@ -1005,7 +1005,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         SQLExecutor se = read_getSqlExecutor();
         String filter = " AND ORDER_ID IN ";
         filter += " ( ";
-        filter += " SELECT ORDER_ID FROM "+gysOrderTable+" WHERE STATUS>='"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_OUTBOUNT_PART+"' AND DELETE_TIME IS NULL  ";
+        filter += " SELECT ORDER_ID FROM "+ orderTable +" WHERE STATUS>='"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_OUTBOUNT_PART+"' AND DELETE_TIME IS NULL  ";
         if (KW_ID.length() > 0 && !KW_ID.equals("999") && !KW_ID.equals("9") && !KW_ID.equals("0"))
             filter += " AND KW_ID IN (SELECT KW_ID FROM " + kwTable + " WHERE FID='" + KW_ID + "') ";
         filter += " )  ";
@@ -1032,7 +1032,7 @@ public class OrderImpl implements OrderLogic, Initializable {
 
     public RecordSet webService_getInboundPackage(String INBOUND_ID) {
         SQLExecutor se = read_getSqlExecutor();
-        String sql = "SELECT o.*,p.PACKAGE_CODE,p.PRINT,p.PRO_DETAIL,p.IN_KW_TIME,p.OUT_KW_TIME FROM " + packageTable + " p INNER JOIN "+gysOrderTable+" o ON o.ORDER_ID=p.ORDER_ID WHERE 1=1 ";
+        String sql = "SELECT o.*,p.PACKAGE_CODE,p.PRINT,p.PRO_DETAIL,p.IN_KW_TIME,p.OUT_KW_TIME FROM " + packageTable + " p INNER JOIN "+ orderTable +" o ON o.ORDER_ID=p.ORDER_ID WHERE 1=1 ";
         sql+=" AND p.IN_KW_TIME='' AND p.OUT_KW_TIME='' ";
         sql+=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+orderInboundTable+" WHERE INBOUND_ID='"+INBOUND_ID+"') ";
 
@@ -1059,7 +1059,7 @@ public class OrderImpl implements OrderLogic, Initializable {
 
     public RecordSet webService_getOutboundPackage(String OUTBOUND_ID) {
         SQLExecutor se = read_getSqlExecutor();
-        String sql = "SELECT o.*,p.PACKAGE_CODE,p.PRINT,p.PRO_DETAIL,p.IN_KW_TIME,p.OUT_KW_TIME FROM " + packageTable + " p INNER JOIN "+gysOrderTable+" o ON o.ORDER_ID=p.ORDER_ID WHERE 1=1 ";
+        String sql = "SELECT o.*,p.PACKAGE_CODE,p.PRINT,p.PRO_DETAIL,p.IN_KW_TIME,p.OUT_KW_TIME FROM " + packageTable + " p INNER JOIN "+ orderTable +" o ON o.ORDER_ID=p.ORDER_ID WHERE 1=1 ";
         sql+=" AND p.IN_KW_TIME!='' AND p.OUT_KW_TIME='' ";
         sql+=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+orderOutboundTable+" WHERE OUTBOUND_ID='"+OUTBOUND_ID+"') ";
 
@@ -1105,7 +1105,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         SQLExecutor se = read_getSqlExecutor();
         String filter = "";
 
-        String sql0 = "SELECT ORDER_ID FROM "+gysOrderTable+" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+" ";
+        String sql0 = "SELECT ORDER_ID FROM "+ orderTable +" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+" ";
         filter += " AND KW_ID='"+KW_ID+"' ";
         if (START_TIME.length()>0)
             filter += " AND INBOUND_TIME >= '"+START_TIME+"' ";
@@ -1125,7 +1125,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         RecordSet allSpecPros = GlobalLogics.getBaseLogic().getAllGysProSpec("");
         RecordSet allPartners = GlobalLogics.getUser().getAllUserPartners();
 
-        String sql00 ="SELECT PARTNER_NO,KW_ID,INBOUND_TIME FROM " + gysOrderTable + " WHERE ORDER_ID IN ("+ORDER_IDS+") AND DELETE_TIME IS NULL GROUP BY PARTNER_NO";
+        String sql00 ="SELECT PARTNER_NO,KW_ID,INBOUND_TIME FROM " + orderTable + " WHERE ORDER_ID IN ("+ORDER_IDS+") AND DELETE_TIME IS NULL GROUP BY PARTNER_NO";
         RecordSet recs_partner = se.executeRecordSet(sql00, null);
 
         Record kw = GlobalLogics.getBaseLogic().getSingleKw(KW_ID);
@@ -1137,7 +1137,7 @@ public class OrderImpl implements OrderLogic, Initializable {
 
             rec.put("KW_NAME",kw.getString("KW_NAME"));
             //有多少个门店用的这个商品
-            String sql1 = "SELECT DISTINCT(PRO_SPEC_ID) AS PRO_SPEC_ID FROM "+orderProductTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"' AND DELETE_TIME IS NULL)";
+            String sql1 = "SELECT DISTINCT(PRO_SPEC_ID) AS PRO_SPEC_ID FROM "+orderProductTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"' AND DELETE_TIME IS NULL)";
             RecordSet recs_spec = se.executeRecordSet(sql1);
             int all = 0;
             for (Record p : recs_spec) {
@@ -1145,7 +1145,7 @@ public class OrderImpl implements OrderLogic, Initializable {
                 Record pro = allSpecPros.findEq("SPEC_ID",PRO_SPEC_ID);
                 pro.copyTo(p);
 
-                String sql2 = "SELECT SUM(PRO_COUNT) AS PRO_COUNT FROM "+orderProductTable+" WHERE PRO_SPEC_ID='"+PRO_SPEC_ID+"' AND ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"') AND DELETE_TIME IS NULL";
+                String sql2 = "SELECT SUM(PRO_COUNT) AS PRO_COUNT FROM "+orderProductTable+" WHERE PRO_SPEC_ID='"+PRO_SPEC_ID+"' AND ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"') AND DELETE_TIME IS NULL";
                 Record s = se.executeRecord(sql2);
                 int allSum = s.isEmpty()?0:(int)s.getInt("PRO_COUNT");
                 p.put("PRO_COUNT_SUM",allSum);
@@ -1162,7 +1162,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         SQLExecutor se = read_getSqlExecutor();
         RecordSet allPartners = GlobalLogics.getUser().getAllUserPartners();
 
-        String sql00 ="SELECT PARTNER_NO,KW_ID,ORDER_ID,INBOUND_TIME FROM " + gysOrderTable + " WHERE STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+" AND OUTBOUND_TIME <= '"+END_TIME+"' AND OUTBOUND_TIME >= '"+START_TIME+"' AND KW_ID='"+KW_ID+"' AND DELETE_TIME IS NULL GROUP BY PARTNER_NO";
+        String sql00 ="SELECT PARTNER_NO,KW_ID,ORDER_ID,INBOUND_TIME FROM " + orderTable + " WHERE STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+" AND OUTBOUND_TIME <= '"+END_TIME+"' AND OUTBOUND_TIME >= '"+START_TIME+"' AND KW_ID='"+KW_ID+"' AND DELETE_TIME IS NULL GROUP BY PARTNER_NO";
         RecordSet recs_partner = se.executeRecordSet(sql00, null);
 
         Record kw = GlobalLogics.getBaseLogic().getSingleKw(KW_ID);
@@ -1186,7 +1186,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         SQLExecutor se = read_getSqlExecutor();
         String filter = "";
 
-        String sql0 = "SELECT ORDER_ID FROM "+gysOrderTable+" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+" ";
+        String sql0 = "SELECT ORDER_ID FROM "+ orderTable +" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+" ";
         filter += " AND KW_ID='"+KW_ID+"' ";
         if (START_TIME.length()>0)
             filter += " AND OUTBOUND_TIME >= '"+START_TIME+"' ";
@@ -1206,7 +1206,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         RecordSet allSpecPros = GlobalLogics.getBaseLogic().getAllGysProSpec("");
         RecordSet allPartners = GlobalLogics.getUser().getAllUserPartners();
 
-        String sql00 ="SELECT PARTNER_NO,KW_ID,OUTBOUND_TIME FROM " + gysOrderTable + " WHERE ORDER_ID IN ("+ORDER_IDS+") AND DELETE_TIME IS NULL GROUP BY PARTNER_NO";
+        String sql00 ="SELECT PARTNER_NO,KW_ID,OUTBOUND_TIME FROM " + orderTable + " WHERE ORDER_ID IN ("+ORDER_IDS+") AND DELETE_TIME IS NULL GROUP BY PARTNER_NO";
         RecordSet recs_partner = se.executeRecordSet(sql00, null);
 
         Record kw = GlobalLogics.getBaseLogic().getSingleKw(KW_ID);
@@ -1218,7 +1218,7 @@ public class OrderImpl implements OrderLogic, Initializable {
 
             rec.put("KW_NAME",kw.getString("KW_NAME"));
             //有多少个门店用的这个商品
-            String sql1 = "SELECT DISTINCT(PRO_SPEC_ID) AS PRO_SPEC_ID FROM "+orderProductTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"' AND DELETE_TIME IS NULL)";
+            String sql1 = "SELECT DISTINCT(PRO_SPEC_ID) AS PRO_SPEC_ID FROM "+orderProductTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"' AND DELETE_TIME IS NULL)";
             RecordSet recs_spec = se.executeRecordSet(sql1);
             int all = 0;
             for (Record p : recs_spec) {
@@ -1226,7 +1226,7 @@ public class OrderImpl implements OrderLogic, Initializable {
                 Record pro = allSpecPros.findEq("SPEC_ID",PRO_SPEC_ID);
                 pro.copyTo(p);
 
-                String sql2 = "SELECT SUM(PRO_COUNT) AS PRO_COUNT FROM "+orderProductTable+" WHERE PRO_SPEC_ID='"+PRO_SPEC_ID+"' AND ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"') AND DELETE_TIME IS NULL";
+                String sql2 = "SELECT SUM(PRO_COUNT) AS PRO_COUNT FROM "+orderProductTable+" WHERE PRO_SPEC_ID='"+PRO_SPEC_ID+"' AND ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"') AND DELETE_TIME IS NULL";
                 Record s = se.executeRecord(sql2);
                 int allSum = s.isEmpty()?0:(int)s.getInt("PRO_COUNT");
                 p.put("PRO_COUNT_SUM",allSum);
@@ -1243,7 +1243,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         SQLExecutor se = read_getSqlExecutor();
         RecordSet allPartners = GlobalLogics.getUser().getAllUserPartners();
 
-        String sql00 ="SELECT PARTNER_NO,KW_ID,ORDER_ID,OUTBOUND_TIME FROM " + gysOrderTable + " WHERE STATUS>="+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+" AND OUTBOUND_TIME <= '"+END_TIME+"' AND OUTBOUND_TIME >= '"+START_TIME+"' AND KW_ID='"+KW_ID+"' AND DELETE_TIME IS NULL GROUP BY PARTNER_NO";
+        String sql00 ="SELECT PARTNER_NO,KW_ID,ORDER_ID,OUTBOUND_TIME FROM " + orderTable + " WHERE STATUS>="+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+" AND OUTBOUND_TIME <= '"+END_TIME+"' AND OUTBOUND_TIME >= '"+START_TIME+"' AND KW_ID='"+KW_ID+"' AND DELETE_TIME IS NULL GROUP BY PARTNER_NO";
         RecordSet recs_partner = se.executeRecordSet(sql00, null);
 
         Record kw = GlobalLogics.getBaseLogic().getSingleKw(KW_ID);
@@ -1261,6 +1261,29 @@ public class OrderImpl implements OrderLogic, Initializable {
             rec.put("PACKAGES_COUNT",allPackage.size());
         }
         return recs_partner;
+    }
+
+
+    public boolean deleteAllOrderImport(String GYS_ID,String USER_ID){
+        SQLExecutor se = getSqlExecutor();
+        String sql = "DELETE FROM "+orderImportTable+" WHERE GYS_ID='"+GYS_ID+"' AND USER_ID='"+USER_ID+"' ";
+        long n = se.executeUpdate(sql);
+        return n>0;
+    }
+
+    public boolean saveOrderImport(String IMPORT_ID,String GYS_ID,String USER_ID,String OUT_ORDER_ID,String PARTNER_NAME,String PARTNER_NO,String SPEC_ID,String PRO_NAME,String PRO_SPEC,int PRO_COUNT,String INBOUND_TIME,String JH_TIME,String ERR_STR){
+        SQLExecutor se = getSqlExecutor();
+        String sql = "INSERT INTO "+orderImportTable+" (IMPORT_ID,GYS_ID, USER_ID, OUT_ORDER_ID, PARTNER_NAME,PARTNER_NO, SPEC_ID, PRO_NAME, PRO_SPEC, PRO_COUNT, INBOUND_TIME, JH_TIME, ERR_STR,CREATE_TIME) ";
+        sql+=" VALUES ('"+IMPORT_ID+"','"+GYS_ID+"','"+USER_ID+"','"+OUT_ORDER_ID+"','"+PARTNER_NAME+"','"+PARTNER_NO+"','"+SPEC_ID+"','"+PRO_NAME+"','"+PRO_SPEC+"','"+PRO_COUNT+"','"+INBOUND_TIME+"','"+JH_TIME+"','"+ERR_STR+"','"+DateUtils.now()+"')";
+        long n = se.executeUpdate(sql);
+        return n>0;
+    }
+
+    public RecordSet getAllImportsByIDS(String IMPORT_IDS) {
+        SQLExecutor se = getSqlExecutor();
+        String sql = "SELECT * FROM " + orderImportTable + " WHERE IMPORT_ID IN (" + Constants.formatString(IMPORT_IDS) + ")";
+        RecordSet recs = se.executeRecordSet(sql);
+        return recs;
     }
 }
 

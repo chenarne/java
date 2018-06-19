@@ -436,6 +436,12 @@ public class UserServlet extends WebMethodServlet {
         String MOBILE = qp.checkGetString("MOBILE");
         String CONTACT = qp.checkGetString("CONTACT");
 
+        PARTNER_NAME = Constants.replaceErrStr(PARTNER_NAME);
+        ADDR = Constants.replaceErrStr(ADDR);
+        CONTACT = Constants.replaceErrStr(CONTACT);
+        MOBILE = Constants.replaceErrStr(MOBILE);
+        TRADE = Constants.replaceErrStr(TRADE);
+
         boolean b = GlobalLogics.getUser().adminSavePartner( ctx,  SJ_ID,  PARTNER_NO,  PARTNER_NAME,  TRADE,  TYPE,  MOBILE,  CONTACT,  PROVINCE,  CITY,  AREA,  ADDR);
         if (!b){
             out_rec.put("status",0);
@@ -464,6 +470,12 @@ public class UserServlet extends WebMethodServlet {
         String TYPE = qp.checkGetString("TYPE");
         String MOBILE = qp.checkGetString("MOBILE");
         String CONTACT = qp.checkGetString("CONTACT");
+
+        PARTNER_NAME = Constants.replaceErrStr(PARTNER_NAME);
+        ADDR = Constants.replaceErrStr(ADDR);
+        CONTACT = Constants.replaceErrStr(CONTACT);
+        MOBILE = Constants.replaceErrStr(MOBILE);
+        TRADE = Constants.replaceErrStr(TRADE);
 
         boolean b = GlobalLogics.getUser().adminUpdatePartner(PARTNER_NO, PARTNER_NAME, TRADE, TYPE, MOBILE, CONTACT, PROVINCE, CITY, AREA, ADDR);
         if (!b){
@@ -576,6 +588,7 @@ public class UserServlet extends WebMethodServlet {
         String SUPPORT_TYPE = qp.getString("SUPPORT_TYPE","商品");
         String MEMO = qp.getString("MEMO","");
         String USER_NAME = qp.checkGetString("USER_NAME");
+        USER_NAME = Constants.replaceErrStr(USER_NAME);
         //先检查用户名是否存在
         Record u = GlobalLogics.getUser().getUserByUserName(USER_NAME);
         if (!u.isEmpty()){
@@ -583,8 +596,21 @@ public class UserServlet extends WebMethodServlet {
             out_rec.put("message","用户名已经存在了，需要更换");
             return out_rec;
         }
+
+        GYS_NAME = Constants.replaceErrStr(GYS_NAME);
+        ADDR = Constants.replaceErrStr(ADDR);
+        GYS_NAME_SX = Constants.replaceErrStr(GYS_NAME_SX);
+        ADDR = Constants.replaceErrStr(ADDR);
+        CONTACT_USER = Constants.replaceErrStr(CONTACT_USER);
+        PHONE = Constants.replaceErrStr(PHONE);
+
+
         String DISPLAY_NAME = qp.checkGetString("DISPLAY_NAME");
         String DISPLAY_NAME_SX = qp.checkGetString("DISPLAY_NAME_SX");
+
+        DISPLAY_NAME = Constants.replaceErrStr(DISPLAY_NAME);
+        DISPLAY_NAME_SX = Constants.replaceErrStr(DISPLAY_NAME_SX);
+
         String USER_PASSWORD = qp.checkGetString("USER_PASSWORD");
         int USER_TYPE = Constants.USER_TYPE_GYS;
         String USER_ID = String.valueOf(RandomUtils.generateId());
@@ -632,6 +658,15 @@ public class UserServlet extends WebMethodServlet {
 
         String DISPLAY_NAME = qp.checkGetString("DISPLAY_NAME");
         String DISPLAY_NAME_SX = qp.checkGetString("DISPLAY_NAME_SX");
+
+        GYS_NAME = Constants.replaceErrStr(GYS_NAME);
+        ADDR = Constants.replaceErrStr(ADDR);
+        GYS_NAME_SX = Constants.replaceErrStr(GYS_NAME_SX);
+        ADDR = Constants.replaceErrStr(ADDR);
+        CONTACT_USER = Constants.replaceErrStr(CONTACT_USER);
+        PHONE = Constants.replaceErrStr(PHONE);
+        DISPLAY_NAME = Constants.replaceErrStr(DISPLAY_NAME);
+        DISPLAY_NAME_SX = Constants.replaceErrStr(DISPLAY_NAME_SX);
 
         boolean b = GlobalLogics.getUser().updateGys(GYS_ID, USER_ID, GYS_NAME, GYS_NAME_SX, ADDR, CONTACT_USER, PHONE, KEYWORD, SUPPORT_TYPE, MEMO, DISPLAY_NAME, DISPLAY_NAME_SX);
         if (!b){
@@ -710,6 +745,16 @@ public class UserServlet extends WebMethodServlet {
         String EMAIL = qp.getString("EMAIL", USER_NAME);
         String MEMO = qp.getString("MEMO", "");
 
+        SJ_NAME = Constants.replaceErrStr(SJ_NAME);
+        ADDR = Constants.replaceErrStr(ADDR);
+        SJ_NAME_SX = Constants.replaceErrStr(SJ_NAME_SX);
+        ADDR = Constants.replaceErrStr(ADDR);
+        CONTACT = Constants.replaceErrStr(CONTACT);
+        MOBILE = Constants.replaceErrStr(MOBILE);
+        DISPLAY_NAME = Constants.replaceErrStr(DISPLAY_NAME);
+        DISPLAY_NAME_SX = Constants.replaceErrStr(DISPLAY_NAME_SX);
+
+
         int USER_TYPE = Constants.USER_TYPE_SJ;
         String USER_ID = String.valueOf(RandomUtils.generateId());
         String user_id = GlobalLogics.getUser().saveUser(ctx, USER_ID, USER_NAME, DISPLAY_NAME, DISPLAY_NAME_SX, USER_PASSWORD, USER_TYPE);
@@ -756,6 +801,15 @@ public class UserServlet extends WebMethodServlet {
 
         String DISPLAY_NAME = qp.checkGetString("DISPLAY_NAME");
         String DISPLAY_NAME_SX = qp.checkGetString("DISPLAY_NAME_SX");
+
+        SJ_NAME = Constants.replaceErrStr(SJ_NAME);
+        ADDR = Constants.replaceErrStr(ADDR);
+        SJ_NAME_SX = Constants.replaceErrStr(SJ_NAME_SX);
+        ADDR = Constants.replaceErrStr(ADDR);
+        CONTACT = Constants.replaceErrStr(CONTACT);
+        MOBILE = Constants.replaceErrStr(MOBILE);
+        DISPLAY_NAME = Constants.replaceErrStr(DISPLAY_NAME);
+        DISPLAY_NAME_SX = Constants.replaceErrStr(DISPLAY_NAME_SX);
 
         boolean b = GlobalLogics.getUser().updateSj(ctx, SJ_ID, old_sj.getString("USER_ID"), SJ_NAME, SJ_NAME_SX, SJ_TYPE,
                 MOBILE, CONTACT, EMAIL, MEMO, ADDR, DISPLAY_NAME, DISPLAY_NAME_SX);

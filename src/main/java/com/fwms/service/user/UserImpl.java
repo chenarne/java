@@ -29,6 +29,7 @@ public class UserImpl implements UserLogic, Initializable {
     private String gysNewTable = "t_sys_gys";
     private String sjTable = "t_sys_sj";
     private String partnerKwTable = "t_sys_partner_kw";
+    private String productSpecTable = "t_sys_product_spec";
 
 
 
@@ -818,5 +819,25 @@ public class UserImpl implements UserLogic, Initializable {
         Record rec = se.executeRecordSet(sql, null).getFirstRecord();
         return rec;
     }
+
+
+    //==============check_import======================
+    public Record check_partner_name(String PARTNER_NAME) {
+        String sql = "SELECT * FROM " + sjPartnerTable + "  WHERE PARTNER_NAME='" + PARTNER_NAME + "' ";
+        SQLExecutor se = getSqlExecutor();
+        Record rec = se.executeRecordSet(sql, null).getFirstRecord();
+        return rec;
+    }
+    public Record check_pro_name_spec(String PRO_NAME,String PRO_SPEC) {
+        String sql = "SELECT * FROM " + productSpecTable + "  WHERE 1=1 ";
+        if (PRO_NAME.length()>0)
+            sql +=" AND PRO_NAME='" + PRO_NAME + "' ";
+        if (PRO_SPEC.length()>0)
+            sql +=" AND PRO_SPEC='" + PRO_SPEC + "' ";
+        SQLExecutor se = getSqlExecutor();
+        Record rec = se.executeRecordSet(sql, null).getFirstRecord();
+        return rec;
+    }
+
 }
 

@@ -10,6 +10,7 @@ import com.fwms.basedevss.base.util.StringUtils2;
 import com.fwms.basedevss.base.web.QueryParams;
 import com.fwms.basedevss.base.web.webmethod.WebMethod;
 import com.fwms.basedevss.base.web.webmethod.WebMethodServlet;
+import com.fwms.common.Constants;
 import com.fwms.common.GlobalLogics;
 import com.fwms.common.PortalContext;
 import jxl.Cell;
@@ -120,7 +121,9 @@ public class BaseServlet extends WebMethodServlet {
         Context ctx = PortalContext.getContext(req, qp, true, true);
         String KW_ID = String.valueOf(RandomUtils.generateId());
         String KW_NAME = qp.checkGetString("KW_NAME");
+        KW_NAME = Constants.replaceErrStr(KW_NAME);
         String KW_ADDR = qp.getString("KW_ADDR", "");
+        KW_ADDR = Constants.replaceErrStr(KW_ADDR);
         String KW_PEROID = qp.checkGetString("KW_PEROID");
         int KF_FLAG = (int)qp.getInt("KF_FLAG",1);
         int LEVEL = (int)qp.getInt("LEVEL",1);
@@ -132,6 +135,11 @@ public class BaseServlet extends WebMethodServlet {
         String CONSIGNEE_NAME = qp.getString("CONSIGNEE_NAME", "");
         String CONSIGNEE_PHONE = qp.getString("CONSIGNEE_PHONE", "");
         String CONSIGNEE_ADDR = qp.getString("CONSIGNEE_ADDR", "");
+
+        CONSIGNEE_NAME = Constants.replaceErrStr(CONSIGNEE_NAME);
+        CONSIGNEE_PHONE = Constants.replaceErrStr(CONSIGNEE_PHONE);
+        CONSIGNEE_ADDR = Constants.replaceErrStr(CONSIGNEE_ADDR);
+
         String PROVINCE = qp.getString("PROVINCE", "");
         String CITY = qp.getString("CITY", "");
         String AREA = qp.getString("AREA", "");
@@ -147,12 +155,18 @@ public class BaseServlet extends WebMethodServlet {
         String KW_ID = qp.checkGetString("KW_ID");
         String KW_NAME = qp.checkGetString("KW_NAME");
         String KW_ADDR = qp.getString("KW_ADDR", "");
+        KW_NAME = Constants.replaceErrStr(KW_NAME);
+        KW_ADDR = Constants.replaceErrStr(KW_ADDR);
+
         String KW_PEROID = qp.checkGetString("KW_PEROID");
         String USER_NAMES = qp.getString("USER_ID", "");
         int KF_FLAG = (int)qp.getInt("KF_FLAG",1);
         String CONSIGNEE_NAME = qp.getString("CONSIGNEE_NAME", "");
         String CONSIGNEE_PHONE = qp.getString("CONSIGNEE_PHONE", "");
         String CONSIGNEE_ADDR = qp.getString("CONSIGNEE_ADDR", "");
+        CONSIGNEE_NAME = Constants.replaceErrStr(CONSIGNEE_NAME);
+        CONSIGNEE_PHONE = Constants.replaceErrStr(CONSIGNEE_PHONE);
+        CONSIGNEE_ADDR = Constants.replaceErrStr(CONSIGNEE_ADDR);
         String PROVINCE = qp.getString("PROVINCE", "");
         String CITY = qp.getString("CITY", "");
         String AREA = qp.getString("AREA", "");
@@ -185,6 +199,13 @@ public class BaseServlet extends WebMethodServlet {
         String PRO_NAME_SX = qp.getString("PRO_NAME_SX", "");
         String MEMO = qp.getString("MEMO", "");
         String DW = qp.getString("DW", "");
+
+        PRO_NAME = Constants.replaceErrStr(PRO_NAME);
+        PRO_NAME_SX = Constants.replaceErrStr(PRO_NAME_SX);
+        MEMO = Constants.replaceErrStr(MEMO);
+        DW = Constants.replaceErrStr(DW);
+
+
         int TRANSPORT_TYPE = (int)qp.getInt("TRANSPORT_TYPE", 2);
         String DW_NAME = GlobalLogics.getBaseLogic().getDWBYSX(DW).getString("DW");
         boolean b= GlobalLogics.getBaseLogic().saveUserProduct(GYS_ID,PRO_ID, PRO_CODE, PRO_TYPE, PRO_TYPE_ID, PRO_NAME, PRO_NAME_SX, MEMO,TRANSPORT_TYPE,DW,DW_NAME);
@@ -203,6 +224,12 @@ public class BaseServlet extends WebMethodServlet {
         String PRO_NAME_SX = qp.getString("PRO_NAME_SX", "");
         String MEMO = qp.getString("MEMO", "");
         String DW = qp.getString("DW", "");
+
+        PRO_NAME = Constants.replaceErrStr(PRO_NAME);
+        PRO_NAME_SX = Constants.replaceErrStr(PRO_NAME_SX);
+        MEMO = Constants.replaceErrStr(MEMO);
+        DW = Constants.replaceErrStr(DW);
+
         int TRANSPORT_TYPE = (int)qp.getInt("TRANSPORT_TYPE", 2);
         String DW_NAME = GlobalLogics.getBaseLogic().getDWBYSX(DW).getString("DW");
         boolean b= GlobalLogics.getBaseLogic().updateProduct(PRO_ID, PRO_CODE, PRO_TYPE, PRO_TYPE_ID, PRO_NAME, PRO_NAME_SX, MEMO, TRANSPORT_TYPE, DW, DW_NAME);
@@ -268,6 +295,12 @@ public class BaseServlet extends WebMethodServlet {
         String BAR_CODE = qp.getString("BAR_CODE", "");
         String MEMO = qp.getString("MEMO", "");
 
+        PRO_NAME = Constants.replaceErrStr(PRO_NAME);
+        PRO_NAME_SX = Constants.replaceErrStr(PRO_NAME_SX);
+        PRO_SPEC = Constants.replaceErrStr(PRO_SPEC);
+        PRO_COLOR = Constants.replaceErrStr(PRO_COLOR);
+        MEMO = Constants.replaceErrStr(MEMO);
+
         boolean b= GlobalLogics.getBaseLogic().saveProductSpec(PRO_ID, SPEC_ID, PRO_CODE, PRO_SPEC, PRO_COLOR, PRO_PRICE, PRO_PRICE_1, PRO_NAME, PRO_NAME_SX, PERIOD, MEMO, BAR_CODE,p.getString("PRO_DW_NAME"),SINGLE_BOX);
         return b;
     }
@@ -290,6 +323,12 @@ public class BaseServlet extends WebMethodServlet {
         int SINGLE_BOX = (int)qp.getInt("SINGLE_BOX", 0);
         String BAR_CODE = qp.getString("BAR_CODE", "");
         String MEMO = qp.getString("MEMO", "");
+
+        PRO_NAME = Constants.replaceErrStr(PRO_NAME);
+        PRO_NAME_SX = Constants.replaceErrStr(PRO_NAME_SX);
+        PRO_SPEC = Constants.replaceErrStr(PRO_SPEC);
+        PRO_COLOR = Constants.replaceErrStr(PRO_COLOR);
+        MEMO = Constants.replaceErrStr(MEMO);
 
         Record old_spec = GlobalLogics.getBaseLogic().getSingleProSpec(SPEC_ID);
         if (old_spec.getInt("SINGLE_BOX") != SINGLE_BOX){
