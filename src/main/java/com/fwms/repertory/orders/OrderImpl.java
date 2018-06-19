@@ -1053,13 +1053,15 @@ public class OrderImpl implements OrderLogic, Initializable {
 
 
         sql += " ORDER BY p.PACKAGE_CODE ";
+        RecordSet allKw = GlobalLogics.getBaseLogic().getAllKW();
         RecordSet recs = se.executeRecordSet(sql, null);
         for (Record rec : recs) {
-//            String KW_ID = rec.getString("KW_ID");
-//            Record rec_kw= GlobalLogics.getBaseLogic().getSingleKwBase(KW_ID) ;
-//            rec.put("KW_NAME",rec_kw.getString("KW_NAME"));
-//            Record rec_kw_parent= GlobalLogics.getBaseLogic().getSingleKwBase(rec_kw.getString("FID")) ;
-//            rec.put("PARENT_KW_NAME", rec_kw_parent.getString("KW_NAME"));
+            String KW_ID = rec.getString("KW_ID");
+            Record rec_kw = allKw.findEq("KW_ID", KW_ID);
+            rec.put("KW_NAME", rec_kw.getString("KW_NAME"));
+            String FID = rec_kw.getString("FID");
+            Record rec_kw_parent = allKw.findEq("KW_ID", FID);
+            rec.put("PARENT_KW_NAME", rec_kw_parent.getString("KW_NAME"));
 //            Record GYS = GlobalLogics.getUser().getSingleGysBase(rec.getString("GYS_ID"));
 //            rec.put("GYS_NAME",GYS.getString("GYS_NAME"));
 //            String PARTNER_NO_ = rec.getString("PARTNER_NO");
@@ -1079,13 +1081,15 @@ public class OrderImpl implements OrderLogic, Initializable {
         sql+=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+orderOutboundTable+" WHERE OUTBOUND_ID='"+OUTBOUND_ID+"') ";
 
         sql += " ORDER BY p.PACKAGE_CODE ";
+        RecordSet allKw = GlobalLogics.getBaseLogic().getAllKW();
         RecordSet recs = se.executeRecordSet(sql, null);
-//        for (Record rec : recs) {
-//            String KW_ID = rec.getString("KW_ID");
-//            Record rec_kw= GlobalLogics.getBaseLogic().getSingleKwBase(KW_ID) ;
-//            rec.put("KW_NAME",rec_kw.getString("KW_NAME"));
-//            Record rec_kw_parent= GlobalLogics.getBaseLogic().getSingleKwBase(rec_kw.getString("FID")) ;
-//            rec.put("PARENT_KW_NAME", rec_kw_parent.getString("KW_NAME"));
+        for (Record rec : recs) {
+            String KW_ID = rec.getString("KW_ID");
+            Record rec_kw = allKw.findEq("KW_ID", KW_ID);
+            rec.put("KW_NAME", rec_kw.getString("KW_NAME"));
+            String FID = rec_kw.getString("FID");
+            Record rec_kw_parent = allKw.findEq("KW_ID", FID);
+            rec.put("PARENT_KW_NAME", rec_kw_parent.getString("KW_NAME"));
 //            Record GYS = GlobalLogics.getUser().getSingleGysBase(rec.getString("GYS_ID"));
 //            rec.put("GYS_NAME",GYS.getString("GYS_NAME"));
 //            String PARTNER_NO_ = rec.getString("PARTNER_NO");
@@ -1094,7 +1098,7 @@ public class OrderImpl implements OrderLogic, Initializable {
 //            String SJ_ID_ =  partner.getString("SJ_ID");
 //            Record sj = GlobalLogics.getUser().getSingleSjBase(SJ_ID_);
 //            rec.put("SJ_NAME",sj.getString("SJ_NAME"));
-//        }
+        }
         return recs;
     }
 
