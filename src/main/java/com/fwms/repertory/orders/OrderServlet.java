@@ -841,9 +841,6 @@ public class OrderServlet extends WebMethodServlet {
             out_rec.put("status",1);
             out_rec.put("message","全部自动装箱完毕");
         }else{
-            out_rec.put("status",0);
-            out_rec.put("message","部分货品自动装箱完毕,但仍有部分商品因未设置合箱规则,暂时未自动装箱,请手动装箱");
-
             //t 里面的,全部装一个箱子
             String newPackageCode = GlobalLogics.getOrderLogic().getNowPackageCode(ORDER_ID);
             boolean b = GlobalLogics.getOrderLogic().saveOrderPackage(ORDER_ID, newPackageCode);
@@ -854,7 +851,8 @@ public class OrderServlet extends WebMethodServlet {
                             newPackageCode, t0.getString("PRO_SPEC_ID"), pro_spec.getString("PRO_NAME"), (int)t0.getInt("PRO_COUNT"));
                 }
             }
-
+            out_rec.put("status",1);
+            out_rec.put("message","自动装箱完毕,部分货品因未设置合箱规则,也做了合箱,请注意");
         }
         return out_rec;
     }
