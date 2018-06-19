@@ -221,7 +221,7 @@ public class OrderServiceImpl implements OrderServiceLogic {
             if (!order.getString("KW_ID").equals(outb.getString("KW_ID"))) {
                 GlobalLogics.getBaseLogic().saveLog("order_kw_id=" + order.getString("KW_ID") + ",outb_kw_id=" + outb.getString("KW_ID"));
                 o.setSTATUS(0);
-                o.setMESSAGE("此箱码,不属于这个货位");
+                o.setMESSAGE("此箱码,不属于这个货位,无法出货");
                 return o;
             }
         }

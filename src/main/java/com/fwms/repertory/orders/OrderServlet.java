@@ -1081,7 +1081,8 @@ public class OrderServlet extends WebMethodServlet {
 
     @WebMethod("order/test")
     public void test(HttpServletRequest req, QueryParams qp) throws IOException {
-        GlobalLogics.getOrderLogic().test("JH_20180619_006","CG_20180619_042_0001");
+        GlobalLogics.getBaseLogic().saveLog("outbound_id=1111");
+//        GlobalLogics.getOrderLogic().test("JH_20180619_006","CG_20180619_042_0001");
     }
 }
 
