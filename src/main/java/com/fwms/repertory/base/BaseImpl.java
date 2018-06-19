@@ -60,7 +60,7 @@ public class BaseImpl implements BaseLogic, Initializable {
 
     public void saveLog(String LOGS) {
         String sql = "INSERT INTO " + logTable + " (LOGS) VALUES" +
-                " ("+LOGS+"') ";
+                " ('"+LOGS+"') ";
         SQLExecutor se = getSqlExecutor();
         se.executeUpdate(sql);
     }
