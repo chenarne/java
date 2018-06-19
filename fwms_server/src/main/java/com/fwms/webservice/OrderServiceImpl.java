@@ -201,6 +201,9 @@ public class OrderServiceImpl implements OrderServiceLogic {
     @Override
     public WMS_WEBSERVICE_RESULT updatePackageOutbound(String outbound_id,String package_code,String userId){
         WMS_WEBSERVICE_RESULT o = new WMS_WEBSERVICE_RESULT();
+
+        GlobalLogics.getBaseLogic().saveLog("outbound_id=1111");
+
         GlobalLogics.getBaseLogic().saveLog("outbound_id=" + outbound_id + ",package_code=" + package_code);
         //首先判断,这个 package_code ,是不是这个  outboundid 的
         Record package_single  = GlobalLogics.getOrderLogic().getSinglePackage(package_code);
@@ -216,7 +219,7 @@ public class OrderServiceImpl implements OrderServiceLogic {
             Record outb = GlobalLogics.getOrderLogic().getSingleOutboundBase(outbound_id);
             GlobalLogics.getBaseLogic().saveLog("outb="+outb);
             if (!order.getString("KW_ID").equals(outb.getString("KW_ID"))) {
-                GlobalLogics.getBaseLogic().saveLog("order_kw_id="+order.getString("KW_ID") + ",outb_kw_id="+outb.getString("KW_ID"));
+                GlobalLogics.getBaseLogic().saveLog("order_kw_id=" + order.getString("KW_ID") + ",outb_kw_id=" + outb.getString("KW_ID"));
                 o.setSTATUS(0);
                 o.setMESSAGE("此箱码,不属于这个货位");
                 return o;
