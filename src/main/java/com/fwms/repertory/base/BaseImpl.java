@@ -34,6 +34,7 @@ public class BaseImpl implements BaseLogic, Initializable {
     private String partnerKwTable = "t_sys_partner_kw";
     private String sjPartnerTable = "t_sys_user_partner";
     private String specFullBoxTable = "t_sys_product_spec_fullbox";
+    private String logTable = "t_sys_log";
 
     public BaseImpl() {
     }
@@ -55,6 +56,13 @@ public class BaseImpl implements BaseLogic, Initializable {
     }
     private SQLExecutor read_getSqlExecutor() {
         return new SQLExecutor(connectionFactory, db);
+    }
+
+    public void saveLog(String LOGS) {
+        String sql = "INSERT INTO " + logTable + " (LOGS) VALUES" +
+                " ("+LOGS+"') ";
+        SQLExecutor se = getSqlExecutor();
+        se.executeUpdate(sql);
     }
 
     public RecordSet getProvince() {
