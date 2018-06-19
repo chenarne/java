@@ -659,7 +659,18 @@ public class OrderImpl implements OrderLogic, Initializable {
         out_rec.put("DATAS", recs);
         return out_rec;
     }
-
+    public Record getSingleInboundBase(String INBOUND_ID) {
+        SQLExecutor se = read_getSqlExecutor();
+        String sql = "SELECT * FROM " + orderInboundTable + " WHERE INBOUND_ID='" + INBOUND_ID + "'";
+        Record rec = se.executeRecord(sql);
+        return rec;
+    }
+    public Record getSingleOutboundBase(String OUTBOUND_ID) {
+        SQLExecutor se = read_getSqlExecutor();
+        String sql = "SELECT * FROM " + orderOutboundTable + " WHERE OUTBOUND_ID='" + OUTBOUND_ID + "'";
+        Record rec = se.executeRecord(sql);
+        return rec;
+    }
     public Record getSingleInbound(String ORDER_ID, String INBOUND_ID) {
         SQLExecutor se = read_getSqlExecutor();
         String sql = "SELECT * FROM " + orderInboundTable + " WHERE DELETE_TIME IS NULL ";
@@ -720,8 +731,10 @@ public class OrderImpl implements OrderLogic, Initializable {
                 String sql3 = "UPDATE "+ orderTable +" SET STATUS='"+OrderConstants.ORDER_STATUS_INBOUNT_FINISHED+"',FINISH_INREPOR_TIME='"+nowTime+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
                 se.executeUpdate(sql3);
             }
+            return true;
+        } else{
+            return false;
         }
-        return true;
     }
 
     public Record getAllOutboundPageList(Context ctx, String SJ_ID, String GYS_ID, String START_TIME, String END_TIME,  int page, int count, String ORDER_ID, int STATUS) {
@@ -798,8 +811,10 @@ public class OrderImpl implements OrderLogic, Initializable {
                 String sql3 = "UPDATE "+ orderTable +" SET STATUS='"+OrderConstants.ORDER_STATUS_OUTBOUNT_FINISHED+"',FINISH_OUTREPOR_TIME='"+nowTime+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
                 se.executeUpdate(sql3);
             }
+            return true;
+        } else{
+            return false;
         }
-        return true;
     }
 
     public RecordSet getNowRepoPackage(String SJ_ID,String GYS_ID,String F_KW_ID,String KW_ID) {
