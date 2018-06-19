@@ -5,6 +5,7 @@ import com.fwms.basedevss.base.data.Record;
 import com.fwms.basedevss.base.data.RecordSet;
 
 public interface BaseLogic {
+    void saveLog(String LOGS);
     int genNaturalSequence(String table);
 
     RecordSet getProvince();
