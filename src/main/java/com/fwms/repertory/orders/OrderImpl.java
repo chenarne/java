@@ -936,8 +936,8 @@ public class OrderImpl implements OrderLogic, Initializable {
         sql += " ORDER BY p.PACKAGE_CODE ";
         RecordSet recs = se.executeRecordSet(sql, null);
         for (Record rec : recs) {
-            RecordSet pd =  se.executeRecordSet("SELECT p.*,spec.PRO_SPEC,spec.PRO_COLOR FROM " + packageProductTable + " p INNER JOIN "+productSpecTable+" spec ON spec.SPEC_ID=p.SPEC_ID WHERE PACKAGE_CODE='"+rec.getString("PACKAGE_CODE")+"'") ;
-            rec.put("PACKAGE_PRODUCT",pd);
+            RecordSet pd =  se.executeRecordSet("SELECT p.*,spec.PRO_SPEC,spec.PRO_COLOR FROM " + packageProductTable + " p INNER JOIN " + productSpecTable + " spec ON spec.SPEC_ID=p.SPEC_ID WHERE PACKAGE_CODE='" + rec.getString("PACKAGE_CODE") + "'") ;
+            rec.put("PACKAGE_PRODUCT", pd);
 
             String KW_ID = rec.getString("KW_ID");
             Record rec_kw= GlobalLogics.getBaseLogic().getSingleKwBase(KW_ID) ;
@@ -1097,6 +1097,170 @@ public class OrderImpl implements OrderLogic, Initializable {
             r0.put("HAS_PACKAGE_COUNT",hasCount);
         }
         return recs0;
+    }
+
+
+
+    public RecordSet getInboundPrintKw(String KW_ID, String START_TIME, String END_TIME) {
+        SQLExecutor se = read_getSqlExecutor();
+        String filter = "";
+
+        String sql0 = "SELECT ORDER_ID FROM "+gysOrderTable+" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+" ";
+        filter += " AND KW_ID='"+KW_ID+"' ";
+        if (START_TIME.length()>0)
+            filter += " AND INBOUND_TIME >= '"+START_TIME+"' ";
+        if (END_TIME.length()>0)
+            filter += " AND INBOUND_TIME <= '"+END_TIME+"' ";
+        filter += " AND DELETE_TIME IS NULL ";
+        sql0+=filter;
+
+
+        RecordSet allOrders = se.executeRecordSet(sql0);
+        String ORDER_IDS = allOrders.joinColumnValues("ORDER_ID", ",");
+        if (ORDER_IDS.length() > 0)
+            ORDER_IDS = Constants.formatString(ORDER_IDS);
+        else
+            return new RecordSet();
+
+        RecordSet allSpecPros = GlobalLogics.getBaseLogic().getAllGysProSpec("");
+        RecordSet allPartners = GlobalLogics.getUser().getAllUserPartners();
+
+        String sql00 ="SELECT PARTNER_NO,KW_ID,INBOUND_TIME FROM " + gysOrderTable + " WHERE ORDER_ID IN ("+ORDER_IDS+") AND DELETE_TIME IS NULL GROUP BY PARTNER_NO";
+        RecordSet recs_partner = se.executeRecordSet(sql00, null);
+
+        Record kw = GlobalLogics.getBaseLogic().getSingleKw(KW_ID);
+
+        for (Record rec : recs_partner){
+            String PARTNER_NO = rec.getString("PARTNER_NO");
+            Record p0 = allPartners.findEq("PARTNER_NO", PARTNER_NO);
+            p0.copyTo(rec);
+
+            rec.put("KW_NAME",kw.getString("KW_NAME"));
+            //有多少个门店用的这个商品
+            String sql1 = "SELECT DISTINCT(PRO_SPEC_ID) AS PRO_SPEC_ID FROM "+orderProductTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"' AND DELETE_TIME IS NULL)";
+            RecordSet recs_spec = se.executeRecordSet(sql1);
+            int all = 0;
+            for (Record p : recs_spec) {
+                String PRO_SPEC_ID = p.getString("PRO_SPEC_ID");
+                Record pro = allSpecPros.findEq("SPEC_ID",PRO_SPEC_ID);
+                pro.copyTo(p);
+
+                String sql2 = "SELECT SUM(PRO_COUNT) AS PRO_COUNT FROM "+orderProductTable+" WHERE PRO_SPEC_ID='"+PRO_SPEC_ID+"' AND ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"') AND DELETE_TIME IS NULL";
+                Record s = se.executeRecord(sql2);
+                int allSum = s.isEmpty()?0:(int)s.getInt("PRO_COUNT");
+                p.put("PRO_COUNT_SUM",allSum);
+                all +=  allSum;
+            }
+            rec.put("PARTNER_ALL_COUNT",all);
+            rec.put("SPEC_DATA",recs_spec);
+            rec.put("SPEC_COUNT",recs_spec.size());
+        }
+        return recs_partner;
+    }
+
+    public RecordSet getInboundPrintBox(String KW_ID,String START_TIME, String END_TIME) {
+        SQLExecutor se = read_getSqlExecutor();
+        RecordSet allPartners = GlobalLogics.getUser().getAllUserPartners();
+
+        String sql00 ="SELECT PARTNER_NO,KW_ID,ORDER_ID,INBOUND_TIME FROM " + gysOrderTable + " WHERE STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+" AND OUTBOUND_TIME <= '"+END_TIME+"' AND OUTBOUND_TIME >= '"+START_TIME+"' AND KW_ID='"+KW_ID+"' AND DELETE_TIME IS NULL GROUP BY PARTNER_NO";
+        RecordSet recs_partner = se.executeRecordSet(sql00, null);
+
+        Record kw = GlobalLogics.getBaseLogic().getSingleKw(KW_ID);
+
+
+        for (Record rec : recs_partner){
+            String PARTNER_NO = rec.getString("PARTNER_NO");
+            Record p0 = allPartners.findEq("PARTNER_NO", PARTNER_NO);
+            p0.copyTo(rec);
+            rec.put("KW_NAME", kw.getString("KW_NAME"));
+
+            RecordSet allPackage = GlobalLogics.getOrderLogic().getOrderPackages(rec.getString("ORDER_ID"));
+
+            rec.put("PACKAGES_DATA",allPackage);
+            rec.put("PACKAGES_COUNT",allPackage.size());
+        }
+        return recs_partner;
+    }
+
+    public RecordSet getOutboundPrintKw(String KW_ID, String START_TIME, String END_TIME) {
+        SQLExecutor se = read_getSqlExecutor();
+        String filter = "";
+
+        String sql0 = "SELECT ORDER_ID FROM "+gysOrderTable+" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+" ";
+        filter += " AND KW_ID='"+KW_ID+"' ";
+        if (START_TIME.length()>0)
+            filter += " AND OUTBOUND_TIME >= '"+START_TIME+"' ";
+        if (END_TIME.length()>0)
+            filter += " AND OUTBOUND_TIME <= '"+END_TIME+"' ";
+        filter += " AND DELETE_TIME IS NULL ";
+        sql0+=filter;
+
+
+        RecordSet allOrders = se.executeRecordSet(sql0);
+        String ORDER_IDS = allOrders.joinColumnValues("ORDER_ID", ",");
+        if (ORDER_IDS.length() > 0)
+            ORDER_IDS = Constants.formatString(ORDER_IDS);
+        else
+            return new RecordSet();
+
+        RecordSet allSpecPros = GlobalLogics.getBaseLogic().getAllGysProSpec("");
+        RecordSet allPartners = GlobalLogics.getUser().getAllUserPartners();
+
+        String sql00 ="SELECT PARTNER_NO,KW_ID,OUTBOUND_TIME FROM " + gysOrderTable + " WHERE ORDER_ID IN ("+ORDER_IDS+") AND DELETE_TIME IS NULL GROUP BY PARTNER_NO";
+        RecordSet recs_partner = se.executeRecordSet(sql00, null);
+
+        Record kw = GlobalLogics.getBaseLogic().getSingleKw(KW_ID);
+
+        for (Record rec : recs_partner){
+            String PARTNER_NO = rec.getString("PARTNER_NO");
+            Record p0 = allPartners.findEq("PARTNER_NO", PARTNER_NO);
+            p0.copyTo(rec);
+
+            rec.put("KW_NAME",kw.getString("KW_NAME"));
+            //有多少个门店用的这个商品
+            String sql1 = "SELECT DISTINCT(PRO_SPEC_ID) AS PRO_SPEC_ID FROM "+orderProductTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"' AND DELETE_TIME IS NULL)";
+            RecordSet recs_spec = se.executeRecordSet(sql1);
+            int all = 0;
+            for (Record p : recs_spec) {
+                String PRO_SPEC_ID = p.getString("PRO_SPEC_ID");
+                Record pro = allSpecPros.findEq("SPEC_ID",PRO_SPEC_ID);
+                pro.copyTo(p);
+
+                String sql2 = "SELECT SUM(PRO_COUNT) AS PRO_COUNT FROM "+orderProductTable+" WHERE PRO_SPEC_ID='"+PRO_SPEC_ID+"' AND ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+gysOrderTable+" WHERE ORDER_ID IN ("+ORDER_IDS+") AND PARTNER_NO='"+PARTNER_NO+"') AND DELETE_TIME IS NULL";
+                Record s = se.executeRecord(sql2);
+                int allSum = s.isEmpty()?0:(int)s.getInt("PRO_COUNT");
+                p.put("PRO_COUNT_SUM",allSum);
+                all +=  allSum;
+            }
+            rec.put("PARTNER_ALL_COUNT",all);
+            rec.put("SPEC_DATA",recs_spec);
+            rec.put("SPEC_COUNT",recs_spec.size());
+        }
+        return recs_partner;
+    }
+
+    public RecordSet getOutboundPrintBox(String KW_ID,String START_TIME, String END_TIME) {
+        SQLExecutor se = read_getSqlExecutor();
+        RecordSet allPartners = GlobalLogics.getUser().getAllUserPartners();
+
+        String sql00 ="SELECT PARTNER_NO,KW_ID,ORDER_ID,OUTBOUND_TIME FROM " + gysOrderTable + " WHERE STATUS>="+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+" AND OUTBOUND_TIME <= '"+END_TIME+"' AND OUTBOUND_TIME >= '"+START_TIME+"' AND KW_ID='"+KW_ID+"' AND DELETE_TIME IS NULL GROUP BY PARTNER_NO";
+        RecordSet recs_partner = se.executeRecordSet(sql00, null);
+
+        Record kw = GlobalLogics.getBaseLogic().getSingleKw(KW_ID);
+
+
+        for (Record rec : recs_partner){
+            String PARTNER_NO = rec.getString("PARTNER_NO");
+            Record p0 = allPartners.findEq("PARTNER_NO", PARTNER_NO);
+            p0.copyTo(rec);
+            rec.put("KW_NAME", kw.getString("KW_NAME"));
+
+            RecordSet allPackage = GlobalLogics.getOrderLogic().getOrderPackages(rec.getString("ORDER_ID"));
+
+            rec.put("PACKAGES_DATA",allPackage);
+            rec.put("PACKAGES_COUNT",allPackage.size());
+        }
+        return recs_partner;
     }
 }
 
