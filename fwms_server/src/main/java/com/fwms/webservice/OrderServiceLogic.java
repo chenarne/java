@@ -39,13 +39,17 @@ public interface OrderServiceLogic {
             String userId);
 
     @WebResult(name="updatePackageInbound")
-    WMS_WEBSERVICE_RESULT_BOOLEAN updatePackageInbound(
+    WMS_WEBSERVICE_RESULT updatePackageInbound(
+            @WebParam(name = "inbound_id", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
+            String inbound_id,
             @WebParam(name = "package_code", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
             String package_code,
             @WebParam(name = "userId", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
             String userId);
     @WebResult(name="updatePackageOutbound")
-    WMS_WEBSERVICE_RESULT_BOOLEAN updatePackageOutbound(
+    WMS_WEBSERVICE_RESULT updatePackageOutbound(
+            @WebParam(name = "outbound_id", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
+            String outbound_id,
             @WebParam(name = "package_code", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
             String package_code,
             @WebParam(name = "userId", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
