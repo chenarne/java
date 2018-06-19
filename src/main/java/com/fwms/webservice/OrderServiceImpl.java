@@ -3,6 +3,7 @@ package com.fwms.webservice;
 import com.fwms.basedevss.base.context.Context;
 import com.fwms.basedevss.base.data.Record;
 import com.fwms.basedevss.base.data.RecordSet;
+import com.fwms.basedevss.base.log.Logger;
 import com.fwms.common.GlobalLogics;
 import com.fwms.webservice.entity.*;
 import org.springframework.stereotype.Service;
@@ -15,7 +16,7 @@ import java.util.List;
 @Service
 @WebService
 public class OrderServiceImpl implements OrderServiceLogic {
-
+    private static final Logger L = Logger.getLogger(OrderServiceImpl.class);
     //===============面单打印程序==================
     @Override
     public List<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE> getInboundMdList(String userId,String PRINTED,String SJ_ID,String PARTNER_NO,String INBOUND_TIME){
@@ -200,8 +201,10 @@ public class OrderServiceImpl implements OrderServiceLogic {
     @Override
     public WMS_WEBSERVICE_RESULT updatePackageOutbound(String outbound_id,String package_code,String userId){
         WMS_WEBSERVICE_RESULT o = new WMS_WEBSERVICE_RESULT();
+        L.debug(null,"outbound_id="+outbound_id + ",package_code="+package_code);
         //首先判断,这个 package_code ,是不是这个  outboundid 的
         Record package_single  = GlobalLogics.getOrderLogic().getSinglePackage(package_code);
+        L.debug(null,"package_single="+package_single);
         if (package_single.isEmpty()){
             o.setSTATUS(0);
             o.setMESSAGE("此箱码不存在");
@@ -209,8 +212,11 @@ public class OrderServiceImpl implements OrderServiceLogic {
         }else{
             String order_id = package_single.getString("ORDER_ID");
             Record order = GlobalLogics.getOrderLogic().getSingleOrderBase(order_id);
+            L.debug(null,"order="+order);
             Record outb = GlobalLogics.getOrderLogic().getSingleOutboundBase(outbound_id);
+            L.debug(null,"outb="+outb);
             if (!order.getString("KW_ID").equals(outb.getString("KW_ID"))) {
+                L.debug(null,"order_kw_id="+order.getString("KW_ID") + ",outb_kw_id="+outb.getString("KW_ID"));
                 o.setSTATUS(0);
                 o.setMESSAGE("此箱码,不属于这个货位");
                 return o;
