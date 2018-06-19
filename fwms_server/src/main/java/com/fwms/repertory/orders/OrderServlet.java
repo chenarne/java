@@ -15,6 +15,8 @@ import com.fwms.common.GlobalLogics;
 import com.fwms.common.PortalContext;
 
 import com.fwms.common.TimeUtils;
+import com.fwms.webservice.OrderServiceImpl;
+import com.fwms.webservice.entity.WMS_WEBSERVICE_RESULT;
 import com.microsoft.schemas.office.visio.x2012.main.CellType;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.lang.StringUtils;
@@ -1078,10 +1080,8 @@ public class OrderServlet extends WebMethodServlet {
     }
 
     @WebMethod("order/test")
-    public RecordSet test(HttpServletRequest req, QueryParams qp) throws IOException {
-        RecordSet data = GlobalLogics.getOrderLogic().webService_getInboundPackage("DH_20180619_024");
-//        RecordSet data = GlobalLogics.getOrderLogic().webService_getInboundPackage("DH_20180611_001");
-        return  data;
+    public void test(HttpServletRequest req, QueryParams qp) throws IOException {
+        GlobalLogics.getOrderLogic().test("JH_20180619_006","CG_20180619_042_0001");
     }
 }
 

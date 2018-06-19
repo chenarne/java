@@ -1304,5 +1304,17 @@ public class OrderImpl implements OrderLogic, Initializable {
         RecordSet recs = se.executeRecordSet(sql);
         return recs;
     }
+
+    public void test(String outbound_id,String package_code){
+        String t = "";
+        Record package_single  = GlobalLogics.getOrderLogic().getSinglePackage(package_code);
+        String order_id = package_single.getString("ORDER_ID");
+        Record order = GlobalLogics.getOrderLogic().getSingleOrderBase(order_id);
+        Record outb = GlobalLogics.getOrderLogic().getSingleOutboundBase(outbound_id);
+        if (!order.getString("KW_ID").equals(outb.getString("KW_ID"))) {
+            t = "123";
+        }
+    }
+
 }
 
