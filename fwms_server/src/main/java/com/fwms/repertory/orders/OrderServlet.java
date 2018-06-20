@@ -878,19 +878,19 @@ public class OrderServlet extends WebMethodServlet {
                                 PRO_CODE_NUMBER,"0",PRO_TYPE, PRO_TYPE_ID,PRO_NAME,"0" , ORDER_ITEM_ID, 0+"", 0+"", "0");
                     }
                     //审核
-                    GlobalLogics.getOrderLogic().updateOrderVerify(ORDER_ID, ctx.getUser_id());
-                    //装箱
-                    orderAutoPackageProduct(ORDER_ID,GYS_ID,new Record());
-                    //入库通知
-                    String INBOUND_ID = Constants.newInboundCode();
-                    String INBOUND_TIME = partnerJhOrders.get(0).getString("INBOUND_TIME");
-                    if (INBOUND_TIME.length()<=0)  {
-                        INBOUND_TIME = tg.getOtherDaySimple(jhTime, -1);
-                    }
-                    boolean d = GlobalLogics.getOrderLogic().saveInbound(ctx, INBOUND_ID, ORDER_ID, partnerKw.getString("KW_ID"), GYS_ID, gys.getString("GYS_NAME"), INBOUND_TIME);
-                    if (d){
-                        GlobalLogics.getOrderLogic().updateOrderStatusInbound(ctx, ORDER_ID, OrderConstants.ORDER_STATUS_INBOUNT_CREATE, INBOUND_TIME);
-                    }
+//                    GlobalLogics.getOrderLogic().updateOrderVerify(ORDER_ID, ctx.getUser_id());
+//                    //装箱
+//                    orderAutoPackageProduct(ORDER_ID,GYS_ID,new Record());
+//                    //入库通知
+//                    String INBOUND_ID = Constants.newInboundCode();
+//                    String INBOUND_TIME = partnerJhOrders.get(0).getString("INBOUND_TIME");
+//                    if (INBOUND_TIME.length()<=0)  {
+//                        INBOUND_TIME = tg.getOtherDaySimple(jhTime, -1);
+//                    }
+//                    boolean d = GlobalLogics.getOrderLogic().saveInbound(ctx, INBOUND_ID, ORDER_ID, partnerKw.getString("KW_ID"), GYS_ID, gys.getString("GYS_NAME"), INBOUND_TIME);
+//                    if (d){
+//                        GlobalLogics.getOrderLogic().updateOrderStatusInbound(ctx, ORDER_ID, OrderConstants.ORDER_STATUS_INBOUNT_CREATE, INBOUND_TIME);
+//                    }
                     //删除导入的记录
                     GlobalLogics.getOrderLogic().deleteAllOrderImport(GYS_ID, ctx.getUser_id());
                 }
