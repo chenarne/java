@@ -209,8 +209,11 @@ public class OrderImpl implements OrderLogic, Initializable {
         return rec;
     }
     public Record formatGYSOrder(Record rec) {
+
         if (rec.isEmpty())
             return rec;
+        rec.put("ORDER_CREATE_TIME",rec.getString("CREATE_TIME"));
+
         Record GYS = GlobalLogics.getUser().getSingleGysBase(rec.getString("GYS_ID"));
         GYS.copyTo(rec);
         String PARTNER_NO = rec.getString("PARTNER_NO");
