@@ -9,7 +9,7 @@ public interface BaseLogic {
     int genNaturalSequence(String table);
 
     RecordSet getProvince();
-
+    Record getSingleProBaseByProCode(String PRO_CODE);
     RecordSet getCity(String PROVINCE_ID);
 
     RecordSet getArea(String CITY_ID);

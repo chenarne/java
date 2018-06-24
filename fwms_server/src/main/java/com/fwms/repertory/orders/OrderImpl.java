@@ -1293,10 +1293,10 @@ public class OrderImpl implements OrderLogic, Initializable {
         return n>0;
     }
 
-    public boolean saveOrderImport(String IMPORT_ID,String GYS_ID,String USER_ID,String OUT_ORDER_ID,String PARTNER_NAME,String PARTNER_NO,String SPEC_ID,String PRO_NAME,String PRO_SPEC,int PRO_COUNT,String INBOUND_TIME,String JH_TIME,String ERR_STR){
+    public boolean saveOrderImport(String IMPORT_ID,String GYS_ID,String USER_ID,String OUT_ORDER_ID,String PARTNER_NAME,String PARTNER_NO,String SPEC_ID,String PRO_NAME,String PRO_SPEC,int PRO_COUNT,String INBOUND_TIME,String JH_TIME,String ERR_STR,String PRO_CODE){
         SQLExecutor se = getSqlExecutor();
-        String sql = "INSERT INTO "+orderImportTable+" (IMPORT_ID,GYS_ID, USER_ID, OUT_ORDER_ID, PARTNER_NAME,PARTNER_NO, SPEC_ID, PRO_NAME, PRO_SPEC, PRO_COUNT, INBOUND_TIME, JH_TIME, ERR_STR,CREATE_TIME) ";
-        sql+=" VALUES ('"+IMPORT_ID+"','"+GYS_ID+"','"+USER_ID+"','"+OUT_ORDER_ID+"','"+PARTNER_NAME+"','"+PARTNER_NO+"','"+SPEC_ID+"','"+PRO_NAME+"','"+PRO_SPEC+"','"+PRO_COUNT+"','"+INBOUND_TIME+"','"+JH_TIME+"','"+ERR_STR+"','"+DateUtils.now()+"')";
+        String sql = "INSERT INTO "+orderImportTable+" (IMPORT_ID,GYS_ID, USER_ID, OUT_ORDER_ID, PARTNER_NAME,PARTNER_NO, SPEC_ID, PRO_NAME, PRO_SPEC, PRO_COUNT, INBOUND_TIME, JH_TIME, ERR_STR,CREATE_TIME,PRO_CODE) ";
+        sql+=" VALUES ('"+IMPORT_ID+"','"+GYS_ID+"','"+USER_ID+"','"+OUT_ORDER_ID+"','"+PARTNER_NAME+"','"+PARTNER_NO+"','"+SPEC_ID+"','"+PRO_NAME+"','"+PRO_SPEC+"','"+PRO_COUNT+"','"+INBOUND_TIME+"','"+JH_TIME+"','"+ERR_STR+"','"+DateUtils.now()+"','"+PRO_CODE+"')";
         long n = se.executeUpdate(sql);
         return n>0;
     }

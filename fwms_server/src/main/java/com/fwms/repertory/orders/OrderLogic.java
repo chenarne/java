@@ -56,7 +56,7 @@ public interface OrderLogic {
     RecordSet getOrderInbound(String ORDER_ID);
     RecordSet getOrderOutbound(String ORDER_ID);
     boolean deleteAllOrderImport(String GYS_ID,String USER_ID);
-    boolean saveOrderImport(String IMPORT_ID,String GYS_ID,String USER_ID,String OUT_ORDER_ID,String PARTNER_NAME,String PARTNER_NO,String SPEC_ID,String PRO_NAME,String PRO_SPEC,int PRO_COUNT,String INBOUND_TIME,String JH_TIME,String ERR_STR);
+    boolean saveOrderImport(String IMPORT_ID,String GYS_ID,String USER_ID,String OUT_ORDER_ID,String PARTNER_NAME,String PARTNER_NO,String SPEC_ID,String PRO_NAME,String PRO_SPEC,int PRO_COUNT,String INBOUND_TIME,String JH_TIME,String ERR_STR,String PRO_CODE);
     RecordSet getAllImportsByIDS(String IMPORT_IDS);
     Record getSingleInboundBase(String INBOUND_ID);
     Record getSingleOutboundBase(String OUTBOUND_ID);
