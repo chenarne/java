@@ -342,6 +342,13 @@ public class BaseImpl implements BaseLogic, Initializable {
 
         return rec;
     }
+    public Record getSingleProBaseByProCode(String PRO_CODE) {
+        SQLExecutor se = read_getSqlExecutor();
+        String sql = "SELECT * FROM " + productSpecTable + " WHERE PRO_CODE='"+PRO_CODE+"' ";
+        Record rec = se.executeRecord(sql, null);
+        return rec;
+    }
+
     public Record getSingleProBase(String PRO_ID) {
         SQLExecutor se = read_getSqlExecutor();
         String sql = "SELECT * FROM " + productTable + " WHERE PRO_ID='"+PRO_ID+"' ";

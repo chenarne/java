@@ -704,11 +704,22 @@ public class OrderServlet extends WebMethodServlet {
         RecordSet data_out = new RecordSet();
         int ALL_ERR_COUNT = 0;
         if (sheet != null) {
-            for (int j = 1; j <= lastRowNum; j++) {
+            for (int j = 0; j <= lastRowNum; j++) {
+                Row row = sheet.getRow(j);
+                if (row.getCell(0).getStringCellValue().equals("")
+                        || row.getCell(1).getStringCellValue().equals("")
+                        || row.getCell(2).getStringCellValue().equals("")
+
+                        || row.getCell(0).getStringCellValue().contains("项目")
+
+
+                        ){
+                    continue;
+                }
                 Record data_check = new Record();
                 String err_str = "";
                 int ERR_COUNT = 0;
-                Row row = sheet.getRow(j);
+
                 int lastCellNum = row.getLastCellNum();
                 List<String> ls_cells = new ArrayList<String>();
                 for (int k = 0; k <= lastCellNum; k++) {
@@ -720,6 +731,16 @@ public class OrderServlet extends WebMethodServlet {
                         ls_cells.add(" ");
                     }
                 }
+
+                // 0,第二项目号 -----物料编码
+                // 1,配送路线
+                // 2,售至地址名	 -----门店
+                // 3,说明1	   -------商品名称
+                // 4,说明行2  -------规格
+                // 5,单位
+                // 6,数量	   ---------
+                // 7,请求日期  ---------入库日期
+                // 8,配送日期----此项原EXCEL 表模板缺失
                 String IMPORT_ID =  RandomUtils.generateStrId();
                 data_check.put("IMPORT_ID",IMPORT_ID);
                 String PARTNER_NAME =  ls_cells.get(2);
@@ -735,21 +756,38 @@ public class OrderServlet extends WebMethodServlet {
                 data_check.put("PARTNER_NAME",PARTNER_NAME);
                 data_check.put("PARTNER_NO",PARTNER_NO);
 
-                String PRO_NAME =  ls_cells.get(3);
-                String PRO_SPEC =  ls_cells.get(4);
+                String PRO_NAME =  "";
+                String PRO_SPEC =  "";
                 String SPEC_ID =  "";
-                Record rec_pro_spec = GlobalLogics.getUser().check_pro_name_spec(PRO_NAME, PRO_SPEC);
-                if (rec_pro_spec.isEmpty()) {
-                    ERR_COUNT +=1;
-                    err_str += "货品名称或者规格-不存在,";
-                }else {
-                    SPEC_ID = rec_pro_spec.getString("SPEC_ID");
+                String PRO_CODE =  ls_cells.get(0);
+                if (!PRO_CODE.equals("")) {
+                     Record proSpec = GlobalLogics.getBaseLogic().getSingleProBaseByProCode(PRO_CODE);
+                     if (!proSpec.isEmpty()){
+                         PRO_NAME =  proSpec.getString("PRO_NAME");
+                         PRO_SPEC =  proSpec.getString("PRO_SPEC");
+                         SPEC_ID =  proSpec.getString("SPEC_ID");
+                         data_check.put("PRO_NAME", PRO_NAME);
+                         data_check.put("PRO_SPEC", PRO_SPEC);
+                         data_check.put("SPEC_ID", SPEC_ID);
+                     }
                 }
-                data_check.put("PRO_NAME",PRO_NAME);
-                data_check.put("PRO_SPEC",PRO_SPEC);
-                data_check.put("SPEC_ID",SPEC_ID);
+                data_check.put("PRO_CODE", PRO_CODE);
+                if (PRO_NAME.length() <= 0 || PRO_SPEC.length() <= 0) {
+                    PRO_NAME = ls_cells.get(3);
+                    PRO_SPEC = ls_cells.get(4);
+                    Record rec_pro_spec = GlobalLogics.getUser().check_pro_name_spec(PRO_NAME, PRO_SPEC);
+                    if (rec_pro_spec.isEmpty()) {
+                        ERR_COUNT += 1;
+                        err_str += "货品名称或者规格-不存在,";
+                    } else {
+                        SPEC_ID = rec_pro_spec.getString("SPEC_ID");
+                    }
+                    data_check.put("PRO_NAME", PRO_NAME);
+                    data_check.put("PRO_SPEC", PRO_SPEC);
+                    data_check.put("SPEC_ID", SPEC_ID);
+                }
 
-                String PRO_COUNT =  ls_cells.get(5);
+                String PRO_COUNT =  ls_cells.get(6);
                 int c = 0;
                 try {
                     c = (int)Double.parseDouble(PRO_COUNT);
@@ -757,12 +795,14 @@ public class OrderServlet extends WebMethodServlet {
                     ERR_COUNT +=1;
                     err_str += "货品数量-格式不正确,";
                 }
-                data_check.put("PRO_COUNT",c);
+                data_check.put("PRO_COUNT", c);
 
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-                String INBOUND_TIME =  ls_cells.get(6);
+
+                String INBOUND_TIME = ls_cells.get(7).toString();
                 String INBOUND_TIME_ = "";
                 try {
+                    INBOUND_TIME = numericTransDate(row.getCell(7),Double.parseDouble(ls_cells.get(7).toString()));
                     Date ddd = format.parse(INBOUND_TIME);
                     INBOUND_TIME_ = new SimpleDateFormat("yyyy-MM-dd").format(ddd);
                 }catch (Exception e){
@@ -770,9 +810,10 @@ public class OrderServlet extends WebMethodServlet {
                     err_str += "入库日期-格式不正确,";
                 }
                 data_check.put("INBOUND_TIME",INBOUND_TIME_.length()<=0?INBOUND_TIME:INBOUND_TIME_);
-                String JH_TIME =  ls_cells.get(7);
+                String JH_TIME =  ls_cells.get(8);
                 String JH_TIME_ = "";
                 try {
+                    JH_TIME = numericTransDate(row.getCell(8),Double.parseDouble(ls_cells.get(8).toString()));
                     Date ddd = format.parse(JH_TIME);
                     JH_TIME_ = new SimpleDateFormat("yyyy-MM-dd").format(ddd);
                 }catch (Exception e){
@@ -781,13 +822,8 @@ public class OrderServlet extends WebMethodServlet {
                 }
                 data_check.put("JH_TIME",JH_TIME_.length()<=0?JH_TIME:JH_TIME_);
 
-                String OUT_ORDER_ID =  ls_cells.get(1);
-                if (OUT_ORDER_ID.length()<=0){
-                    ERR_COUNT +=1;
-                    err_str += "外部订单号-不允许为空,";
-                }
+                String OUT_ORDER_ID =  ls_cells.get(9);
                 data_check.put("OUT_ORDER_ID",OUT_ORDER_ID);
-
 
                 //==========整合错误信息===========
                 if (err_str.length()>0)
@@ -806,7 +842,7 @@ public class OrderServlet extends WebMethodServlet {
         for (Record r : data_out){
              GlobalLogics.getOrderLogic().saveOrderImport(r.getString("IMPORT_ID"),GYS_ID,ctx.getUser_id(),r.getString("OUT_ORDER_ID")
                      ,r.getString("PARTNER_NAME"),r.getString("PARTNER_NO"),r.getString("SPEC_ID"),r.getString("PRO_NAME"),r.getString("PRO_SPEC"),(int)r.getInt("PRO_COUNT")
-                     ,r.getString("INBOUND_TIME"),r.getString("JH_TIME"),r.getString("ERR_STR"));
+                     ,r.getString("INBOUND_TIME"),r.getString("JH_TIME"),r.getString("ERR_STR"),r.getString("PRO_CODE"));
         }
         if (ALL_ERR_COUNT==0){
             return_rec.put("IMPORTS_STATUS", "1");
@@ -911,6 +947,23 @@ public class OrderServlet extends WebMethodServlet {
         }
         return sheet;
     }
+
+    private String numericTransDate(Cell cell,double value){
+        short format = cell.getCellStyle().getDataFormat();
+        SimpleDateFormat sdf = null;
+        if(format == 14 || format == 31 || format == 57 || format == 58){
+            //日期
+            sdf = new SimpleDateFormat("yyyy-MM-dd");
+        }else if (format == 20 || format == 32) {
+            //时间
+            sdf = new SimpleDateFormat("HH:mm");
+        }
+
+        Date date = org.apache.poi.ss.usermodel.DateUtil.getJavaDate(value);
+        String result = sdf.format(date);
+        return result;
+    }
+
     private static String getCellValueByCell(Cell cell) {
         //判断是否为null或空串
         if (cell==null || cell.toString().trim().equals("")) {
