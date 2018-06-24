@@ -64,7 +64,7 @@ public interface OrderLogic {
     Record getSingleOrderByPackageCode(String PACKAGE_CODE);
 
     void test(String outbound_id,String package_code);
-
+    RecordSet getOrderPackagesBase(String ORDER_ID);
 
     ///===========webservice 用=============
     RecordSet webService_getAllInbound(String KW_ID);
