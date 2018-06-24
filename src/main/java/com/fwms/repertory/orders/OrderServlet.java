@@ -833,6 +833,10 @@ public class OrderServlet extends WebMethodServlet {
                 data_check.put("JH_TIME",JH_TIME_.length()<=0?JH_TIME:JH_TIME_);
 
                 String OUT_ORDER_ID =  ls_cells.get(9);
+                if (OUT_ORDER_ID.length()>0 && OUT_ORDER_ID.contains("E")){
+                    ERR_COUNT +=1;
+                    err_str += "外部订单号未设置为文本格式,";
+                }
                 data_check.put("OUT_ORDER_ID",OUT_ORDER_ID);
 
                 //==========整合错误信息===========
