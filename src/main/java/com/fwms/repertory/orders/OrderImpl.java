@@ -69,7 +69,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         return n>0;
     }
     public boolean updateOrderStatusInbound(Context ctx, String ORDER_ID, int STATUS, String INBOUND_TIME) {
-        String sql = "UPDATE  " + orderTable + " SET STATUS='"+STATUS+"',INBOUND_TIME='"+INBOUND_TIME+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
+        String sql = "UPDATE  " + orderTable + " SET STATUS='"+STATUS+"',INBOUND_TIME='"+INBOUND_TIME+"',VERIFY_STATUS='1',VERIFY_USER_ID='"+ctx.getUser_id()+"',VERIFY_TIME='"+DateUtils.now()+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n>0;
@@ -176,7 +176,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         sql += " ORDER BY CREATE_TIME DESC LIMIT " + p + "," + count + " ";
         RecordSet recs = se.executeRecordSet(sql, null);
         for (Record rec : recs) {
-            rec = formatGYSOrder(rec);
+            rec = formatGYSOrderList(rec);
         }
         Record out_rec = new Record();
         out_rec.put("ROWS_COUNT", rowNum);
@@ -235,6 +235,35 @@ public class OrderImpl implements OrderLogic, Initializable {
         }
         RecordSet all_packages = getOrderPackages(rec.getString("ORDER_ID"));
         rec.put("ORDER_PACKAGES", all_packages);
+        return rec;
+    }
+    public Record formatGYSOrderList(Record rec) {
+
+        if (rec.isEmpty())
+            return rec;
+        rec.put("ORDER_CREATE_TIME",rec.getString("CREATE_TIME"));
+
+        Record GYS = GlobalLogics.getUser().getSingleGysBase(rec.getString("GYS_ID"));
+        GYS.copyTo(rec);
+        String PARTNER_NO = rec.getString("PARTNER_NO");
+        Record partner = GlobalLogics.getUser().getSinglePartnerByNoBaseOrder(PARTNER_NO);
+        partner.copyTo(rec);
+//        rec.put("ORDER_PRODUCTS", getOrderProducts(rec.getString("ORDER_ID")));
+//        rec.put("ORDER_INBOUNDS", getOrderInbound(rec.getString("ORDER_ID")));
+//        if (rec.getString("VERIFY_USER_ID").length() > 0) {
+//            Record u = GlobalLogics.getUser().getSingleUserSimple(rec.getString("VERIFY_USER_ID"));
+//            rec.put("VERIFY_USER_NAME", u.getString("DISPLAY_NAME"));
+//        } else {
+//            rec.put("VERIFY_USER_NAME", "");
+//        }
+//        if (rec.getString("CREATE_USER_ID").length() > 0) {
+//            Record u = GlobalLogics.getUser().getSingleUserSimple(rec.getString("CREATE_USER_ID"));
+//            rec.put("CREATE_USER_NAME", u.getString("DISPLAY_NAME"));
+//        } else {
+//            rec.put("CREATE_USER_NAME", "");
+//        }
+//        RecordSet all_packages = getOrderPackages(rec.getString("ORDER_ID"));
+//        rec.put("ORDER_PACKAGES", all_packages);
         return rec;
     }
 
@@ -453,7 +482,14 @@ public class OrderImpl implements OrderLogic, Initializable {
 
     public RecordSet getOrderPackagesPrint(String ORDER_ID) {
         SQLExecutor se = read_getSqlExecutor();
-        String sql00 ="select PRO_DETAIL,COUNT(*) AS COUNT  from t_sys_order_package where order_id='"+ORDER_ID+"' group by PRO_DETAIL ";
+        String sql00 ="select PRO_DETAIL,COUNT(*) AS COUNT  from "+packageTable+" where ORDER_ID='"+ORDER_ID+"' group by PRO_DETAIL ";
+        RecordSet recs = se.executeRecordSet(sql00, null);
+        return recs;
+    }
+
+    public RecordSet getOrderPackagesBase(String ORDER_ID) {
+        SQLExecutor se = read_getSqlExecutor();
+        String sql00 ="SELECT * FROM "+packageTable+" WHERE ORDER_ID='"+ORDER_ID+"' ";
         RecordSet recs = se.executeRecordSet(sql00, null);
         return recs;
     }

@@ -280,6 +280,8 @@ public class OrderServlet extends WebMethodServlet {
         String PRO_VALUES = qp.checkGetString("PRO_VALUES");
         List<String> ls_p = StringUtils2.splitList(PRO_VALUES, ",", true);
 
+        GlobalLogics.getOrderLogic().deletePackageAll(ORDER_ID);
+
         boolean b = GlobalLogics.getOrderLogic().updateGysOrder(ctx, ORDER_ID, OUT_ORDER_ID, "0", "0", "1", MEMO, JH_TIME, JH_TYPE, JH_ADDR, "0", "0", "0", "0", PARTNER_NO, partner_single.getString("PROVINCE"), partner_single.getString("CITY"), partner_single.getString("AREA"), partner_single.getString("ADDR"), partner_single.getString("PROVINCE_NAME") + partner_single.getString("CITY_NAME") + partner_single.getString("AREA_NAME") + partner_single.getString("ADDR"), partner_single.getString("CONTACT"), partner_single.getString("MOBILE"));
         if (b) {
             b = GlobalLogics.getOrderLogic().deleteGysOrderProducts(ORDER_ID);
@@ -634,6 +636,14 @@ public class OrderServlet extends WebMethodServlet {
         RecordSet recs  = GlobalLogics.getOrderLogic().getNowRepoPackage(SJ_ID, GYS_ID, F_KW_ID, KW_ID);
         return recs;
     }
+    @WebMethod("order/get_order_package_base")
+    public RecordSet get_order_package_base(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, true);
+        String ORDER_ID = qp.checkGetString("ORDER_ID");
+        RecordSet recs  = GlobalLogics.getOrderLogic().getOrderPackagesBase(ORDER_ID);
+        return recs;
+    }
+
 
     @WebMethod("order/get_now_repo_goods")
     public RecordSet get_now_repo_goods(HttpServletRequest req, QueryParams qp) throws IOException {
