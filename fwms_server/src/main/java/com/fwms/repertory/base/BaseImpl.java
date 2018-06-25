@@ -306,10 +306,13 @@ public class BaseImpl implements BaseLogic, Initializable {
         List<String> sql = new ArrayList<String>();
         String sql1 = "UPDATE " + productTable + "  SET DELETE_TIME='"+DateUtils.now()+"' WHERE PRO_ID='" + PRO_ID + "' ";
         String sql2 = "UPDATE " + productSpecTable + "  SET DELETE_TIME='"+DateUtils.now()+"' WHERE PRO_ID='" + PRO_ID + "' ";
+
         sql.add(sql1);
         sql.add(sql2);
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
+        se.executeUpdate("DELETE FROM " + specFullBoxTable + "  WHERE SPEC_ID IN (SELECT SPEC_ID FROM "+productSpecTable+" WHERE DELETE_TIME IS NOT NULL)");
+        se.executeUpdate("DELETE FROM " + specFullBoxTable + "  WHERE SPEC_ID NOT IN (SELECT SPEC_ID FROM "+productSpecTable+" )");
         return n > 0;
     }
 
@@ -332,7 +335,9 @@ public class BaseImpl implements BaseLogic, Initializable {
     public boolean deleteProductSpec(String SPEC_ID) {
         List<String> sql = new ArrayList<String>();
         String sql2 = "DELETE FROM " + productSpecTable + "  WHERE SPEC_ID='" + SPEC_ID + "' ";
+        String sql3 = "DELETE FROM " + specFullBoxTable + "  WHERE SPEC_ID='" + SPEC_ID + "' ";
         sql.add(sql2);
+        sql.add(sql3);
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n > 0;
