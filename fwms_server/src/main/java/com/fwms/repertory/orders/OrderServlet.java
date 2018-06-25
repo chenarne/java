@@ -709,7 +709,7 @@ public class OrderServlet extends WebMethodServlet {
             return return_rec;
         }
 
-        Sheet sheet = getSheetByNum(wb, 0);
+        Sheet sheet = OrderConstants.getSheetByNum(wb, 0);
         int lastRowNum = sheet.getLastRowNum();
         RecordSet data_out = new RecordSet();
         int ALL_ERR_COUNT = 0;
@@ -734,7 +734,7 @@ public class OrderServlet extends WebMethodServlet {
                 List<String> ls_cells = new ArrayList<String>();
                 for (int k = 0; k <= lastCellNum; k++) {
                     if (row.getCell(k) != null)  {
-                       String cv = getCellValueByCell(row.getCell(k));
+                       String cv = OrderConstants.getCellValueByCell(row.getCell(k));
                         ls_cells.add(Constants.replaceErrStr(cv));
                     }
                     else  {
@@ -812,7 +812,7 @@ public class OrderServlet extends WebMethodServlet {
                 String INBOUND_TIME = ls_cells.get(7).toString().trim();
                 String INBOUND_TIME_ = "";
                 try {
-                    INBOUND_TIME = numericTransDate(row.getCell(7),Double.parseDouble(ls_cells.get(7).toString()));
+                    INBOUND_TIME = OrderConstants.numericTransDate(row.getCell(7), Double.parseDouble(ls_cells.get(7).toString()));
                     Date ddd = format.parse(INBOUND_TIME);
                     INBOUND_TIME_ = new SimpleDateFormat("yyyy-MM-dd").format(ddd);
                 }catch (Exception e){
@@ -823,7 +823,7 @@ public class OrderServlet extends WebMethodServlet {
                 String JH_TIME =  ls_cells.get(8).toString().trim();
                 String JH_TIME_ = "";
                 try {
-                    JH_TIME = numericTransDate(row.getCell(8),Double.parseDouble(ls_cells.get(8).toString().trim()));
+                    JH_TIME = OrderConstants.numericTransDate(row.getCell(8), Double.parseDouble(ls_cells.get(8).toString().trim()));
                     Date ddd = format.parse(JH_TIME);
                     JH_TIME_ = new SimpleDateFormat("yyyy-MM-dd").format(ddd);
                 }catch (Exception e){
@@ -952,56 +952,7 @@ public class OrderServlet extends WebMethodServlet {
         return out_rec;
     }
 
-    public static Sheet getSheetByNum(Workbook book,int number){
-        Sheet sheet = null;
-        try {
-            sheet = book.getSheetAt(number);
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
-        }
-        return sheet;
-    }
 
-    private String numericTransDate(Cell cell,double value){
-        short format = cell.getCellStyle().getDataFormat();
-        SimpleDateFormat sdf = null;
-        if(format == 14 || format == 31 || format == 57 || format == 58){
-            //日期
-            sdf = new SimpleDateFormat("yyyy-MM-dd");
-        }else if (format == 20 || format == 32) {
-            //时间
-            sdf = new SimpleDateFormat("HH:mm");
-        }
-
-        Date date = org.apache.poi.ss.usermodel.DateUtil.getJavaDate(value);
-        String result = sdf.format(date);
-        return result;
-    }
-
-    private static String getCellValueByCell(Cell cell) {
-        //判断是否为null或空串
-        if (cell==null || cell.toString().trim().equals("")) {
-            return "";
-        }
-        String cellValue = "";
-        int cellType=cell.getCellType();
-        switch (cellType) {
-            case Cell.CELL_TYPE_STRING: //字符串类型
-                cellValue= cell.getStringCellValue().trim();
-                cellValue=StringUtils.isEmpty(cellValue) ? "" : cellValue;
-                break;
-            case Cell.CELL_TYPE_BOOLEAN:  //布尔类型
-                cellValue = String.valueOf(cell.getBooleanCellValue());
-                break;
-            case Cell.CELL_TYPE_NUMERIC: //数值类型
-                cellValue = String.valueOf(cell.getNumericCellValue());
-                break;
-            default: //其它类型，取空串吧
-                cellValue = "";
-                break;
-        }
-        return cellValue;
-    }
     @WebMethod("order/order_auto_package")
     public Record order_auto_package(HttpServletRequest req, QueryParams qp) throws IOException {
         Context ctx = PortalContext.getContext(req, qp, false, true);

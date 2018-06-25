@@ -17,9 +17,13 @@ import com.fwms.basedevss.base.web.webmethod.NoResponse;
 import com.fwms.basedevss.base.web.webmethod.WebMethod;
 import com.fwms.basedevss.base.web.webmethod.WebMethodServlet;
 import com.fwms.common.*;
+import com.fwms.repertory.orders.OrderConstants;
 import com.fwms.webservice.ServicePublish;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.IOUtils;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReadParam;
@@ -31,7 +35,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.List;
 
 
 public class UserServlet extends WebMethodServlet {
@@ -859,6 +865,123 @@ public class UserServlet extends WebMethodServlet {
         Context ctx = PortalContext.getContext(req, qp, true, true);
         String GYS_ID = qp.checkGetString("GYS_ID");
         return GlobalLogics.getUser().getAllGysSj(GYS_ID);
+    }
+
+    @WebMethod("user/sj_partner_import")
+    public Record sj_partner_import(HttpServletRequest req, QueryParams qp) throws UnsupportedEncodingException {
+        Context ctx = PortalContext.getContext(req, qp, true, false);
+        FileItem file_item = qp.getFile("Filedata");
+        String SJ_ID = qp.getString("SJ_ID", "3204993994922383998");
+
+        Record return_rec = new Record();
+
+        if (file_item != null && file_item.getSize() > 0) {
+            return_rec = importSjPartner(ctx, file_item, SJ_ID, return_rec);
+        }
+        return return_rec;
+    }
+
+    private Record importSjPartner(Context ctx,FileItem file_item,String SJ_ID,Record return_rec) {
+        org.apache.poi.ss.usermodel.Workbook wb = null;
+        try {
+            // 构造Workbook（工作薄）对象
+            wb = WorkbookFactory.create(file_item.getInputStream());
+        }  catch (IOException e) {
+            e.printStackTrace();
+        } catch (InvalidFormatException e) {
+            e.printStackTrace();
+        }
+
+        if (wb == null) {
+            return_rec.put("IMPORTS_STATUS", "0");
+            return_rec.put("ERROR_TYPE", "1");
+            return_rec.put("DATA", new RecordSet());
+            return return_rec;
+        }
+
+        org.apache.poi.ss.usermodel.Sheet sheet = OrderConstants.getSheetByNum(wb, 0);
+        int lastRowNum = sheet.getLastRowNum();
+        RecordSet data_out = new RecordSet();
+        int ALL_ERR_COUNT = 0;
+        String err_str = "";
+
+        if (sheet != null) {
+            for (int j = 0; j <= lastRowNum; j++) {
+                Row row = sheet.getRow(j);
+                if (row.getCell(0).getStringCellValue().equals("")
+                        || row.getCell(1).getStringCellValue().equals("")
+                        || row.getCell(2).getStringCellValue().equals("")
+                        || row.getCell(0).getStringCellValue().contains("门店")
+                        || row.getCell(1).getStringCellValue().contains("联系")
+                        ){
+                    continue;
+                }
+
+
+                int lastCellNum = row.getLastCellNum();
+                List<String> ls_cells = new ArrayList<String>();
+                for (int k = 0; k <= lastCellNum; k++) {
+                    if (row.getCell(k) != null)  {
+                        String cv = OrderConstants.getCellValueByCell(row.getCell(k));
+                        ls_cells.add(Constants.replaceErrStr(cv));
+                    }
+                    else  {
+                        ls_cells.add(" ");
+                    }
+                }
+
+                // 0,门店名称
+                // 1,联系人
+                // 2,联系电话
+                // 3,省
+                // 4,市
+                // 5,区
+                // 6,地址	   ---------
+                String PARTNER_NO =  RandomUtils.generateStrId();
+                String PARTNER_NAME =  ls_cells.get(0).trim();
+                String TRADE = "餐饮";
+                String TYPE = "实体店铺";
+                String MOBILE =  ls_cells.get(2).trim();
+                String CONTACT =  ls_cells.get(1).trim();
+
+                String PROVINCE_NAME =  ls_cells.get(3).trim();
+                String CITY_NAME =  ls_cells.get(4).trim();
+                String AREA_NAME =  ls_cells.get(5).trim();
+                if (AREA_NAME.toString().trim().length()<=0){
+                    err_str +=PARTNER_NAME+"-区域名称不正确,为空,后续请单独导入";
+                    ALL_ERR_COUNT +=1;
+                    continue;
+                }
+
+                String AREA_ID = "";
+                String CITY_ID = "";
+                String PROVINCE_ID = "";
+                Record area = GlobalLogics.getBaseLogic().getAreaByName(AREA_NAME).getFirstRecord();
+                if (area.isEmpty()){
+                    err_str +=PARTNER_NAME+"-区域名称不正确,不存在,后续请单独导入";
+                    ALL_ERR_COUNT +=1;
+                    continue;
+                } else{
+                    AREA_ID = area.getString("AREA_ID");
+                    CITY_ID = area.getString("CITY_ID");
+                    Record city = GlobalLogics.getBaseLogic().getCityById(CITY_ID);
+                    PROVINCE_ID = city.getString("PROVINCE_ID");
+                }
+
+                String ADDR =  ls_cells.get(6).trim();
+                boolean b = GlobalLogics.getUser().adminSavePartner(ctx, SJ_ID, PARTNER_NO, PARTNER_NAME, TRADE, TYPE, MOBILE, CONTACT, PROVINCE_ID, CITY_ID, AREA_ID, ADDR);
+            }
+
+        }
+
+        if (ALL_ERR_COUNT==0){
+            return_rec.put("IMPORTS_STATUS", "1");
+            return_rec.put("ERROR_STR", "");
+        } else {
+            return_rec.put("IMPORTS_STATUS", "0");
+            return_rec.put("ERROR_STR", err_str);
+        }
+        return return_rec;
     }
 }
 
