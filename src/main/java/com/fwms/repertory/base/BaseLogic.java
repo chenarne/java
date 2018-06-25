@@ -11,6 +11,7 @@ public interface BaseLogic {
     RecordSet getProvince();
     Record getSingleProBaseByProCode(String PRO_CODE);
     RecordSet getCity(String PROVINCE_ID);
+    RecordSet getAreaByName(String AREA_NAME);
 
     RecordSet getArea(String CITY_ID);
 

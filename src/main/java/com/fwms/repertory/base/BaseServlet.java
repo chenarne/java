@@ -13,17 +13,23 @@ import com.fwms.basedevss.base.web.webmethod.WebMethodServlet;
 import com.fwms.common.Constants;
 import com.fwms.common.GlobalLogics;
 import com.fwms.common.PortalContext;
+import com.fwms.repertory.orders.OrderConstants;
 import jxl.Cell;
 import jxl.Sheet;
 import jxl.Workbook;
 import jxl.read.biff.BiffException;
 import org.apache.commons.fileupload.FileItem;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class BaseServlet extends WebMethodServlet {
@@ -104,7 +110,7 @@ public class BaseServlet extends WebMethodServlet {
     public RecordSet get_all_son_kw(HttpServletRequest req, QueryParams qp) throws IOException {
         Context ctx = PortalContext.getContext(req, qp, true, true);
         String FID = qp.checkGetString("FID");
-        return GlobalLogics.getBaseLogic().getAllSonKw(999, 999,FID);
+        return GlobalLogics.getBaseLogic().getAllSonKw(999, 999, FID);
     }
 
     @WebMethod("base/kw_delete")
@@ -208,7 +214,7 @@ public class BaseServlet extends WebMethodServlet {
 
         int TRANSPORT_TYPE = (int)qp.getInt("TRANSPORT_TYPE", 2);
         String DW_NAME = GlobalLogics.getBaseLogic().getDWBYSX(DW).getString("DW");
-        boolean b= GlobalLogics.getBaseLogic().saveUserProduct(GYS_ID,PRO_ID, PRO_CODE, PRO_TYPE, PRO_TYPE_ID, PRO_NAME, PRO_NAME_SX, MEMO,TRANSPORT_TYPE,DW,DW_NAME);
+        boolean b= GlobalLogics.getBaseLogic().saveUserProduct(GYS_ID, PRO_ID, PRO_CODE, PRO_TYPE, PRO_TYPE_ID, PRO_NAME, PRO_NAME_SX, MEMO, TRANSPORT_TYPE, DW, DW_NAME);
         return b;
     }
 

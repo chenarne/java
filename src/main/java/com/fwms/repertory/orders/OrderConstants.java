@@ -1,5 +1,13 @@
 package com.fwms.repertory.orders;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Created by chenarne on 2018/6/5.
  */
@@ -168,5 +176,57 @@ public class OrderConstants {
             ORDER_STATUS_OUTBOUNT_PART =50, //订单部分出仓库
             ORDER_STATUS_OUTBOUNT_FINISHED =70, //订单全部出仓库
             ORDER_STATUS_FINISHED =100; //订单完成
+
+
+    public static Sheet getSheetByNum(Workbook book,int number){
+        Sheet sheet = null;
+        try {
+            sheet = book.getSheetAt(number);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        return sheet;
+    }
+
+    public static String numericTransDate(Cell cell,double value){
+        short format = cell.getCellStyle().getDataFormat();
+        SimpleDateFormat sdf = null;
+        if(format == 14 || format == 31 || format == 57 || format == 58){
+            //日期
+            sdf = new SimpleDateFormat("yyyy-MM-dd");
+        }else if (format == 20 || format == 32) {
+            //时间
+            sdf = new SimpleDateFormat("HH:mm");
+        }
+
+        Date date = org.apache.poi.ss.usermodel.DateUtil.getJavaDate(value);
+        String result = sdf.format(date);
+        return result;
+    }
+
+    public static String getCellValueByCell(Cell cell) {
+        //判断是否为null或空串
+        if (cell==null || cell.toString().trim().equals("")) {
+            return "";
+        }
+        String cellValue = "";
+        int cellType=cell.getCellType();
+        switch (cellType) {
+            case Cell.CELL_TYPE_STRING: //字符串类型
+                cellValue= cell.getStringCellValue().trim();
+                cellValue= StringUtils.isEmpty(cellValue) ? "" : cellValue;
+                break;
+            case Cell.CELL_TYPE_BOOLEAN:  //布尔类型
+                cellValue = String.valueOf(cell.getBooleanCellValue());
+                break;
+            case Cell.CELL_TYPE_NUMERIC: //数值类型
+                cellValue = String.valueOf(cell.getNumericCellValue());
+                break;
+            default: //其它类型，取空串吧
+                cellValue = "";
+                break;
+        }
+        return cellValue;
+    }
 
 }

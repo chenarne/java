@@ -81,13 +81,29 @@ public class UserImpl implements UserLogic, Initializable {
     }
 
     public boolean adminSavePartner(Context ctx, String SJ_ID, String PARTNER_NO, String PARTNER_NAME,String TRADE, String TYPE, String MOBILE, String CONTACT, String PROVINCE,String CITY,String AREA,String ADDR) {
-        String sql = "INSERT INTO " + sjPartnerTable + " (SJ_ID, PARTNER_NO, PARTNER_NAME, TRADE, TYPE,  MOBILE, CONTACT,  CREATE_TIME,PROVINCE, CITY, AREA, ADDR)" +
-                " VALUES ('"+SJ_ID+"','" + PARTNER_NO + "','" + PARTNER_NAME + "','" + TRADE + "','" + TYPE + "','" + MOBILE + "','"+CONTACT+"'," +
-                "'" + DateUtils.now() + "' ,'"+PROVINCE+"','"+CITY+"','"+AREA+"','"+ADDR+"') ";
-        SQLExecutor se = getSqlExecutor();
-        long n = se.executeUpdate(sql);
-        return n>0;
+        if (existsPartner(SJ_ID,PARTNER_NAME).isEmpty()){
+            String sql = "INSERT INTO " + sjPartnerTable + " (SJ_ID, PARTNER_NO, PARTNER_NAME, TRADE, TYPE,  MOBILE, CONTACT,  CREATE_TIME,PROVINCE, CITY, AREA, ADDR)" +
+                    " VALUES ('"+SJ_ID+"','" + PARTNER_NO + "','" + PARTNER_NAME + "','" + TRADE + "','" + TYPE + "','" + MOBILE + "','"+CONTACT+"'," +
+                    "'" + DateUtils.now() + "' ,'"+PROVINCE+"','"+CITY+"','"+AREA+"','"+ADDR+"') ";
+            SQLExecutor se = getSqlExecutor();
+            long n = se.executeUpdate(sql);
+            return n>0;
+        } else{
+            String sql = "UPDATE " + sjPartnerTable + " SET PARTNER_NAME='" + PARTNER_NAME + "',TRADE='" + TRADE + "',TYPE='"+TYPE+"',MOBILE='" + MOBILE + "',CONTACT='"+CONTACT+"'," +
+                    "PROVINCE='"+PROVINCE+"',CITY='"+CITY+"',AREA='"+AREA+"',ADDR='"+ADDR+"' WHERE PARTNER_NO='"+PARTNER_NO+"' ";
+            SQLExecutor se = getSqlExecutor();
+            long n = se.executeUpdate(sql);
+            return n > 0;
+        }
     }
+
+    public Record existsPartner(String SJ_ID, String PARTNER_NAME){
+        String sql = "SELECT * FROM " + sjPartnerTable + "  WHERE (SJ_ID='" + SJ_ID + "' AND PARTNER_NAME='"+PARTNER_NAME+"') AND DELETE_TIME IS NULL ";
+        SQLExecutor se = read_getSqlExecutor();
+        Record rec = se.executeRecord(sql, null);
+        return rec;
+    }
+
     public boolean adminUpdatePartner(String PARTNER_NO, String PARTNER_NAME,String TRADE, String TYPE, String MOBILE, String CONTACT, String PROVINCE,String CITY,String AREA,String ADDR) {
         String sql = "UPDATE " + sjPartnerTable + " SET PARTNER_NAME='" + PARTNER_NAME + "',TRADE='" + TRADE + "',TYPE='"+TYPE+"',MOBILE='" + MOBILE + "',CONTACT='"+CONTACT+"'," +
                 "PROVINCE='"+PROVINCE+"',CITY='"+CITY+"',AREA='"+AREA+"',ADDR='"+ADDR+"' WHERE PARTNER_NO='"+PARTNER_NO+"' ";
@@ -357,13 +373,6 @@ public class UserImpl implements UserLogic, Initializable {
             Record sj = allSj.findEq("SJ_ID",SJ_ID);
             r.put("SJ_INFO",sj);
         }
-        return recs;
-    }
-
-    public RecordSet getAllUserGoods(String GYS_ID) {
-        String sql = "SELECT * FROM " + gysWlTable + "  WHERE GYS_ID='" + GYS_ID + "' ";
-        SQLExecutor se = read_getSqlExecutor();
-        RecordSet recs = se.executeRecordSet(sql, null);
         return recs;
     }
 

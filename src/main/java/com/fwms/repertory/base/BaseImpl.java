@@ -92,6 +92,16 @@ public class BaseImpl implements BaseLogic, Initializable {
         Record rec = se.executeRecord(sql, null);
         return rec;
     }
+    public RecordSet getAreaByName(String AREA_NAME) {
+        String sql = "SELECT * FROM " + areaTable + "  WHERE 1=1 ";
+        if (AREA_NAME.length()>0)
+            sql += " AND AREA_NAME='"+AREA_NAME+"'";
+        sql += " ORDER BY AREA_ID ";
+        SQLExecutor se = read_getSqlExecutor();
+        RecordSet recs = se.executeRecordSet(sql, null);
+        return recs;
+    }
+
     public RecordSet getArea(String CITY_ID) {
         String sql = "SELECT * FROM " + areaTable + "  WHERE 1=1 ";
         if (CITY_ID.length()>0)
