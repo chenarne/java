@@ -908,7 +908,12 @@ public class UserServlet extends WebMethodServlet {
         if (sheet != null) {
             for (int j = 0; j <= lastRowNum; j++) {
                 Row row = sheet.getRow(j);
-                if (row.getCell(0).getStringCellValue().equals("")
+                if (row.getCell(0)==null ||
+                        row.getCell(1)==null ||
+                        row.getCell(2)==null ||
+
+
+                        row.getCell(0).getStringCellValue().equals("")
                         || row.getCell(1).getStringCellValue().equals("")
                         || row.getCell(2).getStringCellValue().equals("")
                         || row.getCell(0).getStringCellValue().contains("门店")
