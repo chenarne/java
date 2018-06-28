@@ -812,7 +812,7 @@ public class OrderServlet extends WebMethodServlet {
                 String INBOUND_TIME = ls_cells.get(7).toString().trim();
                 String INBOUND_TIME_ = "";
                 try {
-                    INBOUND_TIME = OrderConstants.numericTransDate(row.getCell(7), Double.parseDouble(ls_cells.get(7).toString()));
+//                    INBOUND_TIME = OrderConstants.numericTransDate(row.getCell(7), Double.parseDouble(ls_cells.get(7).toString()));
                     Date ddd = format.parse(INBOUND_TIME);
                     INBOUND_TIME_ = new SimpleDateFormat("yyyy-MM-dd").format(ddd);
                 }catch (Exception e){
@@ -823,7 +823,7 @@ public class OrderServlet extends WebMethodServlet {
                 String JH_TIME =  ls_cells.get(8).toString().trim();
                 String JH_TIME_ = "";
                 try {
-                    JH_TIME = OrderConstants.numericTransDate(row.getCell(8), Double.parseDouble(ls_cells.get(8).toString().trim()));
+//                    JH_TIME = OrderConstants.numericTransDate(row.getCell(8), Double.parseDouble(ls_cells.get(8).toString().trim()));
                     Date ddd = format.parse(JH_TIME);
                     JH_TIME_ = new SimpleDateFormat("yyyy-MM-dd").format(ddd);
                 }catch (Exception e){
