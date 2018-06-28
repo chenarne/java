@@ -248,6 +248,25 @@ public class OrderImpl implements OrderLogic, Initializable {
         String PARTNER_NO = rec.getString("PARTNER_NO");
         Record partner = GlobalLogics.getUser().getSinglePartnerByNoBaseOrder(PARTNER_NO);
         partner.copyTo(rec);
+
+        SQLExecutor se = read_getSqlExecutor();
+        String sql00 ="SELECT PRO_SPEC_ID,PRO_COUNT FROM " + orderProductTable + " WHERE ORDER_ID='"+rec.getString("ORDER_ID")+"' ";
+        RecordSet recs_products = se.executeRecordSet(sql00, null);
+        int all_count = 0;int all_has = 0;
+        for (Record product : recs_products){
+            //再查,已经装箱了多少了
+            String sql2 = "SELECT SUM(PRO_COUNT) AS PRO_COUNT FROM "+packageProductTable+" WHERE ORDER_ID='"+rec.getString("ORDER_ID")+"' AND SPEC_ID='"+product.getString("PRO_SPEC_ID")+"' ";
+            Record h =  se.executeRecord(sql2, null);
+            int hasCount = h.isEmpty()?0:(int)h.getInt("PRO_COUNT");
+            product.put("HAS_PACKAGE_COUNT",hasCount);
+            all_count += product.getInt("PRO_COUNT");
+            all_has += hasCount;
+        }
+        rec.put("ALL_COUNT", all_count);
+        rec.put("ALL_HAS", all_has);
+        rec.put("ALL_LESS", all_count - all_has);
+
+
 //        rec.put("ORDER_PRODUCTS", getOrderProducts(rec.getString("ORDER_ID")));
 //        rec.put("ORDER_INBOUNDS", getOrderInbound(rec.getString("ORDER_ID")));
 //        if (rec.getString("VERIFY_USER_ID").length() > 0) {
@@ -408,6 +427,13 @@ public class OrderImpl implements OrderLogic, Initializable {
     public boolean saveGysOrder(Context ctx,String USER_ID,String SJ_ID, String ORDER_ID,String OUT_ORDER_ID, String GYS_ID, String GYS_NAME, String SEND_PRICE, String OTHER_PRICE, String PAY_TYPE, String MEMO, String JH_TIME, String JH_TYPE, String JH_ADDR, String IFKP, String KP_TYPE, String TAX, String FK_YD, int isBack,int status,String PARTNER_NO,String KW_ID,String PROVINCE,String CITY,String AREA,String ADDR,String FULL_ADDR,String CONTACT,String MOBILE) {
         String sql = "INSERT INTO " + orderTable + " (USER_ID,SJ_ID,ORDER_ID, OUT_ORDER_ID,GYS_ID, GYS_NAME,   SEND_PRICE, OTHER_PRICE, PAY_TYPE, MEMO,CREATE_TIME,JH_TIME, JH_TYPE, JH_ADDR, IFKP, KP_TYPE, TAX, FK_YD,CREATE_USER_ID,IS_BACK,STATUS, VERIFY_STATUS,PARTNER_NO, KW_ID,PROVINCE, CITY, AREA, ADDR, FULL_ADDR, CONTACT, MOBILE) VALUES" +
                 " ('"+USER_ID+"','"+SJ_ID+"','" + ORDER_ID + "','"+OUT_ORDER_ID+"','" + GYS_ID +"','" + GYS_NAME + "','"+SEND_PRICE+"','"+OTHER_PRICE+"','"+PAY_TYPE+"','"+MEMO+"','"+ DateUtils.now()+"','"+JH_TIME+"','"+JH_TYPE+"','"+JH_ADDR+"','"+IFKP+"','"+KP_TYPE+"','"+TAX+"','"+FK_YD+"','"+ctx.getUser_id()+"','"+isBack+"','"+status+"','0','"+PARTNER_NO+"','"+KW_ID+"','"+PROVINCE+"','"+CITY+"','"+AREA+"','"+ADDR+"','"+FULL_ADDR+"','"+CONTACT+"','"+MOBILE+"') ";
+        SQLExecutor se = getSqlExecutor();
+        long n = se.executeUpdate(sql);
+        return n>0;
+    }
+    public boolean saveGysOrderImport(Context ctx,String USER_ID,String SJ_ID, String ORDER_ID,String OUT_ORDER_ID, String GYS_ID, String GYS_NAME, String SEND_PRICE, String OTHER_PRICE, String PAY_TYPE, String MEMO, String JH_TIME, String JH_TYPE, String JH_ADDR,String INBOUND_TIME,String OUTBOUND_TIME, String IFKP, String KP_TYPE, String TAX, String FK_YD, int isBack,int status,String PARTNER_NO,String KW_ID,String PROVINCE,String CITY,String AREA,String ADDR,String FULL_ADDR,String CONTACT,String MOBILE) {
+        String sql = "INSERT INTO " + orderTable + " (USER_ID,SJ_ID,ORDER_ID, OUT_ORDER_ID,GYS_ID, GYS_NAME,   SEND_PRICE, OTHER_PRICE, PAY_TYPE, MEMO,CREATE_TIME,JH_TIME, JH_TYPE, JH_ADDR, INBOUND_TIME,OUTBOUND_TIME,IFKP, KP_TYPE, TAX, FK_YD,CREATE_USER_ID,IS_BACK,STATUS, VERIFY_STATUS,PARTNER_NO, KW_ID,PROVINCE, CITY, AREA, ADDR, FULL_ADDR, CONTACT, MOBILE) VALUES" +
+                " ('"+USER_ID+"','"+SJ_ID+"','" + ORDER_ID + "','"+OUT_ORDER_ID+"','" + GYS_ID +"','" + GYS_NAME + "','"+SEND_PRICE+"','"+OTHER_PRICE+"','"+PAY_TYPE+"','"+MEMO+"','"+ DateUtils.now()+"','"+JH_TIME+"','"+JH_TYPE+"','"+JH_ADDR+"','"+INBOUND_TIME+"','"+OUTBOUND_TIME+"','"+IFKP+"','"+KP_TYPE+"','"+TAX+"','"+FK_YD+"','"+ctx.getUser_id()+"','"+isBack+"','"+status+"','0','"+PARTNER_NO+"','"+KW_ID+"','"+PROVINCE+"','"+CITY+"','"+AREA+"','"+ADDR+"','"+FULL_ADDR+"','"+CONTACT+"','"+MOBILE+"') ";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n>0;
@@ -989,22 +1015,27 @@ public class OrderImpl implements OrderLogic, Initializable {
 
         sql += " ORDER BY p.PACKAGE_CODE ";
         RecordSet recs = se.executeRecordSet(sql, null);
+        RecordSet allKw = GlobalLogics.getBaseLogic().getAllKW();
+        RecordSet allGys = GlobalLogics.getUser().getAllGys();
+        RecordSet allSj = GlobalLogics.getUser().getAllSj();
+        RecordSet allPartner = GlobalLogics.getUser().getAllPartners();
         for (Record rec : recs) {
-            RecordSet pd =  se.executeRecordSet("SELECT p.*,spec.PRO_SPEC,spec.PRO_COLOR FROM " + packageProductTable + " p INNER JOIN " + productSpecTable + " spec ON spec.SPEC_ID=p.SPEC_ID WHERE PACKAGE_CODE='" + rec.getString("PACKAGE_CODE") + "'") ;
-            rec.put("PACKAGE_PRODUCT", pd);
+//            RecordSet pd =  se.executeRecordSet("SELECT p.*,spec.PRO_SPEC,spec.PRO_COLOR FROM " + packageProductTable + " p INNER JOIN " + productSpecTable + " spec ON spec.SPEC_ID=p.SPEC_ID WHERE PACKAGE_CODE='" + rec.getString("PACKAGE_CODE") + "'") ;
+//            rec.put("PACKAGE_PRODUCT", pd);
 
             String KW_ID = rec.getString("KW_ID");
-            Record rec_kw= GlobalLogics.getBaseLogic().getSingleKwBase(KW_ID) ;
-            rec.put("KW_NAME",rec_kw.getString("KW_NAME"));
-            Record rec_kw_parent= GlobalLogics.getBaseLogic().getSingleKwBase(rec_kw.getString("FID")) ;
+            Record rec_kw= allKw.findEq("KW_ID",KW_ID)     ;//GlobalLogics.getBaseLogic().getSingleKwBase(KW_ID) ;
+            rec.put("KW_NAME", rec_kw.getString("KW_NAME"));
+            Record rec_kw_parent= allKw.findEq("KW_ID", rec_kw.getString("FID"));//GlobalLogics.getBaseLogic().getSingleKwBase(rec_kw.getString("FID")) ;
             rec.put("PARENT_KW_NAME", rec_kw_parent.getString("KW_NAME"));
-            Record GYS = GlobalLogics.getUser().getSingleGysBase(rec.getString("GYS_ID"));
+
+            Record GYS = allGys.findEq("GYS_ID", rec.getString("GYS_ID"));//GlobalLogics.getUser().getSingleGysBase(rec.getString("GYS_ID"));
             rec.put("GYS_NAME",GYS.getString("GYS_NAME"));
             String PARTNER_NO_ = rec.getString("PARTNER_NO");
-            Record partner = GlobalLogics.getUser().getSinglePartnerByNo(PARTNER_NO_);
+            Record partner = allPartner.findEq("PARTNER_NO",PARTNER_NO_);//GlobalLogics.getUser().getSinglePartnerByNo(PARTNER_NO_);
             rec.put("PARTNER_NAME",partner.getString("PARTNER_NAME"));
             String SJ_ID_ =  partner.getString("SJ_ID");
-            Record sj = GlobalLogics.getUser().getSingleSjBase(SJ_ID_);
+            Record sj = allSj.findEq("SJ_ID", SJ_ID_);//GlobalLogics.getUser().getSingleSjBase(SJ_ID_);
             rec.put("SJ_NAME",sj.getString("SJ_NAME"));
         }
         return recs;

@@ -903,8 +903,8 @@ public class OrderServlet extends WebMethodServlet {
             for (String jhTime : ls_jh_time){
                 RecordSet partnerJhOrders = partnerOrders.findsEq("JH_TIME", jhTime);
                 String ORDER_ID = Constants.newCgCode();
-                boolean b = GlobalLogics.getOrderLogic().saveGysOrder(ctx, ctx.getUser_id(), gys.getString("SJ_ID"), ORDER_ID,
-                        partnerJhOrders.get(0).getString("OUT_ORDER_ID"), GYS_ID, gys.getString("GYS_NAME"), "0", "0", "1", "", jhTime, "供应商送货", JH_ADDR, "0", "0", "0", "0", 0, OrderConstants.ORDER_STATUS_DEFAULT, partner_no, partnerKw.getString("KW_ID"),
+                boolean b = GlobalLogics.getOrderLogic().saveGysOrderImport(ctx, ctx.getUser_id(), gys.getString("SJ_ID"), ORDER_ID,
+                        partnerJhOrders.get(0).getString("OUT_ORDER_ID"), GYS_ID, gys.getString("GYS_NAME"), "0", "0", "1", "", jhTime, "供应商送货", JH_ADDR, partner_single.getString("INBOUND_TIME"),"", "0", "0", "0", "0", 0, OrderConstants.ORDER_STATUS_DEFAULT, partner_no, partnerKw.getString("KW_ID"),
                         partner_single.getString("PROVINCE"), partner_single.getString("CITY"), partner_single.getString("AREA"), partner_single.getString("ADDR"), partner_single.getString("PROVINCE_NAME") + partner_single.getString("CITY_NAME") + partner_single.getString("AREA_NAME") + partner_single.getString("ADDR"), partner_single.getString("CONTACT"), partner_single.getString("MOBILE"));
                 if (b) {
                     for (Record pro_str : partnerJhOrders) {
@@ -930,7 +930,7 @@ public class OrderServlet extends WebMethodServlet {
                     //审核
 //                    GlobalLogics.getOrderLogic().updateOrderVerify(ORDER_ID, ctx.getUser_id());
 //                    //装箱
-//                    orderAutoPackageProduct(ORDER_ID,GYS_ID,new Record());
+                    orderAutoPackageProduct(ORDER_ID,GYS_ID,new Record());
 //                    //入库通知
 //                    String INBOUND_ID = Constants.newInboundCode();
 //                    String INBOUND_TIME = partnerJhOrders.get(0).getString("INBOUND_TIME");
