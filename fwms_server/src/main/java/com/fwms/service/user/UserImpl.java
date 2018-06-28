@@ -688,6 +688,18 @@ public class UserImpl implements UserLogic, Initializable {
         Record rec = se.executeRecord(sql, null);
         return rec;
     }
+    public RecordSet getAllGys(){
+        String sql = "SELECT GYS_ID,GYS_NAME,GYS_NAME_SX FROM " + gysNewTable + " ";
+        SQLExecutor se = getSqlExecutor();
+        RecordSet recs = se.executeRecordSet(sql, null);
+        return recs;
+    }
+    public RecordSet getAllPartners(){
+        String sql = "SELECT PARTNER_NO,PARTNER_NAME,SJ_ID FROM " + sjPartnerTable + " ";
+        SQLExecutor se = getSqlExecutor();
+        RecordSet recs = se.executeRecordSet(sql, null);
+        return recs;
+    }
     public Record getSingleGys(String GYS_ID){
         String sql = "SELECT * FROM " + gysNewTable + "  WHERE GYS_ID='" + GYS_ID + "' ";
         SQLExecutor se = getSqlExecutor();

@@ -86,8 +86,8 @@ public interface UserLogic {
 
     Record getGysByUser(String USER_ID);
     Record getSjByUser(String USER_ID);
-
-
+    RecordSet getAllGys();
+    RecordSet getAllPartners();
 
     //===========================
     Record check_partner_name(String PARTNER_NAME);
