@@ -68,14 +68,14 @@ public class OrderImpl implements OrderLogic, Initializable {
         long n = se.executeUpdate(sql);
         return n>0;
     }
-    public boolean updateOrderStatusInbound(Context ctx, String ORDER_ID, int STATUS, String INBOUND_TIME) {
-        String sql = "UPDATE  " + orderTable + " SET STATUS='"+STATUS+"',INBOUND_TIME='"+INBOUND_TIME+"',VERIFY_STATUS='1',VERIFY_USER_ID='"+ctx.getUser_id()+"',VERIFY_TIME='"+DateUtils.now()+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
+    public boolean updateOrderStatusInbound(Context ctx, String ORDER_ID, int STATUS) {
+        String sql = "UPDATE  " + orderTable + " SET STATUS='"+STATUS+"',VERIFY_STATUS='1',VERIFY_USER_ID='"+ctx.getUser_id()+"',VERIFY_TIME='"+DateUtils.now()+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n>0;
     }
-    public boolean updateOrderStatusOutbound(Context ctx, String ORDER_ID,int STATUS,String OUTBOUND_TIME) {
-        String sql = "UPDATE  " + orderTable + " SET STATUS='"+STATUS+"',OUTBOUND_TIME='"+OUTBOUND_TIME+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
+    public boolean updateOrderStatusOutbound(Context ctx, String ORDER_ID,int STATUS) {
+        String sql = "UPDATE  " + orderTable + " SET STATUS='"+STATUS+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n>0;
@@ -400,29 +400,39 @@ public class OrderImpl implements OrderLogic, Initializable {
 
     public RecordSet getOrderInbound(String ORDER_ID) {
         SQLExecutor se = read_getSqlExecutor();
-        String sql00 ="SELECT * FROM " + orderInboundTable + " WHERE ORDER_ID='"+ORDER_ID+"' ORDER BY CREATE_TIME DESC";
+        String sql00 ="SELECT * FROM " + orderInboundTable + " WHERE ORDER_ID='"+ORDER_ID+"' AND DELETE_TIME IS NULL ORDER BY CREATE_TIME DESC";
         RecordSet recs_inbound = se.executeRecordSet(sql00, null);
         return recs_inbound;
     }
     public RecordSet getOrderOutbound(String ORDER_ID) {
         SQLExecutor se = read_getSqlExecutor();
-        String sql00 ="SELECT * FROM " + orderOutboundTable + " WHERE ORDER_ID='"+ORDER_ID+"' ORDER BY CREATE_TIME DESC";
+        String sql00 ="SELECT * FROM " + orderOutboundTable + " WHERE ORDER_ID='"+ORDER_ID+"' AND DELETE_TIME IS NULL ORDER BY CREATE_TIME DESC";
         RecordSet recs_inbound = se.executeRecordSet(sql00, null);
         return recs_inbound;
     }
     public boolean saveInbound(Context ctx,String INBOUND_ID,String ORDER_ID,String KW_ID, String GYS_ID, String GYS_NAME,String INBOUND_TIME) {
-        String sql = "INSERT INTO " + orderInboundTable + " (INBOUND_ID,CREATE_USER_ID,ORDER_ID,KW_ID, GYS_ID,GYS_NAME, CREATE_TIME,INBOUND_TIME) VALUES" +
-                " ('"+INBOUND_ID+"','"+ctx.getUser_id()+"','"+ORDER_ID+"','" + KW_ID + "','" + GYS_ID +"','" + GYS_NAME + "','"+ DateUtils.now()+"','"+INBOUND_TIME+"') ";
-        SQLExecutor se = getSqlExecutor();
-        long n = se.executeUpdate(sql);
-        return n>0;
+        RecordSet order_inbounds = getOrderInbound(ORDER_ID);
+        if (order_inbounds.size()<=0) {
+            String sql = "INSERT INTO " + orderInboundTable + " (INBOUND_ID,CREATE_USER_ID,ORDER_ID,KW_ID, GYS_ID,GYS_NAME, CREATE_TIME,INBOUND_TIME) VALUES" +
+                    " ('"+INBOUND_ID+"','"+ctx.getUser_id()+"','"+ORDER_ID+"','" + KW_ID + "','" + GYS_ID +"','" + GYS_NAME + "','"+ DateUtils.now()+"','"+INBOUND_TIME+"') ";
+            SQLExecutor se = getSqlExecutor();
+            long n = se.executeUpdate(sql);
+            return n>0;
+        }else{
+            return false;
+        }
     }
     public boolean saveOutbound(Context ctx,String OUTBOUND_ID,String ORDER_ID,String KW_ID, String GYS_ID, String GYS_NAME,String OUTBOUND_TIME) {
-        String sql = "INSERT INTO " + orderOutboundTable + " (OUTBOUND_ID,CREATE_USER_ID,ORDER_ID,KW_ID, GYS_ID,GYS_NAME, CREATE_TIME,OUTBOUND_TIME) VALUES" +
-                " ('"+OUTBOUND_ID+"','"+ctx.getUser_id()+"','"+ORDER_ID+"','" + KW_ID + "','" + GYS_ID +"','" + GYS_NAME + "','"+ DateUtils.now()+"','"+OUTBOUND_TIME+"') ";
-        SQLExecutor se = getSqlExecutor();
-        long n = se.executeUpdate(sql);
-        return n>0;
+        RecordSet order_outbounds = getOrderOutbound(ORDER_ID);
+        if (order_outbounds.size()<=0) {
+            String sql = "INSERT INTO " + orderOutboundTable + " (OUTBOUND_ID,CREATE_USER_ID,ORDER_ID,KW_ID, GYS_ID,GYS_NAME, CREATE_TIME,OUTBOUND_TIME) VALUES" +
+                    " ('"+OUTBOUND_ID+"','"+ctx.getUser_id()+"','"+ORDER_ID+"','" + KW_ID + "','" + GYS_ID +"','" + GYS_NAME + "','"+ DateUtils.now()+"','"+OUTBOUND_TIME+"') ";
+            SQLExecutor se = getSqlExecutor();
+            long n = se.executeUpdate(sql);
+            return n>0;
+        }else{
+            return false;
+        }
     }
     public boolean saveGysOrder(Context ctx,String USER_ID,String SJ_ID, String ORDER_ID,String OUT_ORDER_ID, String GYS_ID, String GYS_NAME, String SEND_PRICE, String OTHER_PRICE, String PAY_TYPE, String MEMO, String JH_TIME, String JH_TYPE, String JH_ADDR, String IFKP, String KP_TYPE, String TAX, String FK_YD, int isBack,int status,String PARTNER_NO,String KW_ID,String PROVINCE,String CITY,String AREA,String ADDR,String FULL_ADDR,String CONTACT,String MOBILE) {
         String sql = "INSERT INTO " + orderTable + " (USER_ID,SJ_ID,ORDER_ID, OUT_ORDER_ID,GYS_ID, GYS_NAME,   SEND_PRICE, OTHER_PRICE, PAY_TYPE, MEMO,CREATE_TIME,JH_TIME, JH_TYPE, JH_ADDR, IFKP, KP_TYPE, TAX, FK_YD,CREATE_USER_ID,IS_BACK,STATUS, VERIFY_STATUS,PARTNER_NO, KW_ID,PROVINCE, CITY, AREA, ADDR, FULL_ADDR, CONTACT, MOBILE) VALUES" +
@@ -439,8 +449,8 @@ public class OrderImpl implements OrderLogic, Initializable {
         return n>0;
     }
 
-    public boolean updateGysOrder(Context ctx,String ORDER_ID,String OUT_ORDER_ID, String SEND_PRICE, String OTHER_PRICE, String PAY_TYPE, String MEMO, String JH_TIME, String JH_TYPE, String JH_ADDR, String IFKP, String KP_TYPE, String TAX, String FK_YD,String PARTNER_NO,String PROVINCE,String CITY,String AREA,String ADDR,String FULL_ADDR,String CONTACT,String MOBILE) {
-        String sql = "UPDATE " + orderTable + " SET OUT_ORDER_ID='"+OUT_ORDER_ID+"',SEND_PRICE='"+SEND_PRICE+"',OTHER_PRICE='"+OTHER_PRICE+"',PAY_TYPE='"+PAY_TYPE+"',MEMO='"+MEMO+"',JH_TIME='"+JH_TIME+"',JH_TYPE='"+JH_TYPE+"',JH_ADDR='"+JH_ADDR+"',IFKP='"+IFKP+"',KP_TYPE='"+KP_TYPE+"',TAX='"+TAX+"',FK_YD='"+FK_YD+"',PARTNER_NO='"+PARTNER_NO+"',PROVINCE='"+PROVINCE+"',CITY='"+CITY+"',AREA='"+AREA+"',ADDR='"+ADDR+"',FULL_ADDR='"+FULL_ADDR+"',CONTACT='"+CONTACT+"',MOBILE='"+MOBILE+"' WHERE ORDER_ID='"+ORDER_ID+"'";
+    public boolean updateGysOrder(Context ctx,String ORDER_ID,String OUT_ORDER_ID, String SEND_PRICE, String OTHER_PRICE, String PAY_TYPE, String MEMO, String JH_TIME,String INBOUND_TIME, String JH_TYPE, String JH_ADDR, String IFKP, String KP_TYPE, String TAX, String FK_YD,String PARTNER_NO,String PROVINCE,String CITY,String AREA,String ADDR,String FULL_ADDR,String CONTACT,String MOBILE) {
+        String sql = "UPDATE " + orderTable + " SET OUT_ORDER_ID='"+OUT_ORDER_ID+"',SEND_PRICE='"+SEND_PRICE+"',OTHER_PRICE='"+OTHER_PRICE+"',PAY_TYPE='"+PAY_TYPE+"',MEMO='"+MEMO+"',JH_TIME='"+JH_TIME+"',INBOUND_TIME='"+INBOUND_TIME+"',OUTBOUND_TIME='"+JH_TIME+"',JH_TYPE='"+JH_TYPE+"',JH_ADDR='"+JH_ADDR+"',IFKP='"+IFKP+"',KP_TYPE='"+KP_TYPE+"',TAX='"+TAX+"',FK_YD='"+FK_YD+"',PARTNER_NO='"+PARTNER_NO+"',PROVINCE='"+PROVINCE+"',CITY='"+CITY+"',AREA='"+AREA+"',ADDR='"+ADDR+"',FULL_ADDR='"+FULL_ADDR+"',CONTACT='"+CONTACT+"',MOBILE='"+MOBILE+"' WHERE ORDER_ID='"+ORDER_ID+"'";
         SQLExecutor se = getSqlExecutor();
         long n = se.executeUpdate(sql);
         return n>0;
@@ -794,7 +804,21 @@ public class OrderImpl implements OrderLogic, Initializable {
                 se.executeUpdate(sql3);
             }else{
                 String sql3 = "UPDATE "+ orderTable +" SET STATUS='"+OrderConstants.ORDER_STATUS_INBOUNT_FINISHED+"',FINISH_INREPOR_TIME='"+nowTime+"' WHERE ORDER_ID='"+ORDER_ID+"' ";
-                se.executeUpdate(sql3);
+                long n1 = se.executeUpdate(sql3);
+                if (n1>0){
+                    //此时创建出库通知单
+                    Record order = GlobalLogics.getOrderLogic().getSingleOrderBase(ORDER_ID) ;
+                    String OUTBOUND_TIME = order.getString("OUTBOUND_TIME");
+                    if (OUTBOUND_TIME.length()<=0){
+                        OUTBOUND_TIME = order.getString("JH_TIME");
+                    }
+                    String OUTBOUND_ID = Constants.newOutboundCode();
+                    boolean b = GlobalLogics.getOrderLogic().saveOutbound(ctx, OUTBOUND_ID, ORDER_ID, order.getString("KW_ID"), order.getString("GYS_ID"), GlobalLogics.getUser().getSingleGysBase(order.getString("GYS_ID")).getString("GYS_NAME_SX"), OUTBOUND_TIME);
+                    if (b){
+                        //更新订单状态
+                        GlobalLogics.getOrderLogic().updateOrderStatusOutbound(ctx, ORDER_ID, OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE);
+                    }
+                }
             }
             return true;
         } else{
