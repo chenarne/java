@@ -5,6 +5,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -220,7 +221,8 @@ public class OrderConstants {
                 cellValue = String.valueOf(cell.getBooleanCellValue());
                 break;
             case Cell.CELL_TYPE_NUMERIC: //数值类型
-                cellValue = String.valueOf(cell.getNumericCellValue());
+                DecimalFormat df = new DecimalFormat("0");
+                cellValue = String.valueOf(df.format(cell.getNumericCellValue()));
                 break;
             default: //其它类型，取空串吧
                 cellValue = "";

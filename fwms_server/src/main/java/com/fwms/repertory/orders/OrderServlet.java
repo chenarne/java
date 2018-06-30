@@ -227,13 +227,14 @@ public class OrderServlet extends WebMethodServlet {
         String MEMO = qp.getString("MEMO", "");
 
         String JH_TIME = qp.getString("JH_TIME", "");
+        String INBOUND_TIME = qp.getString("INBOUND_TIME", "");
         String JH_TYPE = qp.getString("JH_TYPE", "");
         String JH_ADDR = qp.getString("JH_ADDR", "");
 
         String PRO_VALUES = qp.checkGetString("PRO_VALUES");
         List<String> ls_p = StringUtils2.splitList(PRO_VALUES, ",", true);
 
-        boolean b = GlobalLogics.getOrderLogic().saveGysOrder(ctx, USER_ID, SJ_ID, ORDER_ID, OUT_ORDER_ID, GYS_ID, GYS_NAME, "0", "0", "1", MEMO, JH_TIME, JH_TYPE, JH_ADDR, "0", "0", "0", "0", 0, OrderConstants.ORDER_STATUS_DEFAULT, PARTNER_NO, KW_ID,
+        boolean b = GlobalLogics.getOrderLogic().saveGysOrderImport(ctx, USER_ID, SJ_ID, ORDER_ID, OUT_ORDER_ID, GYS_ID, GYS_NAME, "0", "0", "1", MEMO, JH_TIME, JH_TYPE, JH_ADDR, INBOUND_TIME,JH_TIME,"0", "0", "0", "0", 0, OrderConstants.ORDER_STATUS_DEFAULT, PARTNER_NO, KW_ID,
                 partner_single.getString("PROVINCE"), partner_single.getString("CITY"), partner_single.getString("AREA"), partner_single.getString("ADDR"), partner_single.getString("PROVINCE_NAME") + partner_single.getString("CITY_NAME") + partner_single.getString("AREA_NAME") + partner_single.getString("ADDR"), partner_single.getString("CONTACT"), partner_single.getString("MOBILE"));
         if (b) {
             for (String pro_str : ls_p) {
@@ -274,6 +275,7 @@ public class OrderServlet extends WebMethodServlet {
         String MEMO = qp.getString("MEMO", "");
 
         String JH_TIME = qp.getString("JH_TIME", "");
+        String INBOUND_TIME = qp.getString("INBOUND_TIME", "");
         String JH_TYPE = qp.getString("JH_TYPE", "");
         String JH_ADDR = qp.getString("JH_ADDR", "");
 
@@ -282,7 +284,7 @@ public class OrderServlet extends WebMethodServlet {
 
         GlobalLogics.getOrderLogic().deletePackageAll(ORDER_ID);
 
-        boolean b = GlobalLogics.getOrderLogic().updateGysOrder(ctx, ORDER_ID, OUT_ORDER_ID, "0", "0", "1", MEMO, JH_TIME, JH_TYPE, JH_ADDR, "0", "0", "0", "0", PARTNER_NO, partner_single.getString("PROVINCE"), partner_single.getString("CITY"), partner_single.getString("AREA"), partner_single.getString("ADDR"), partner_single.getString("PROVINCE_NAME") + partner_single.getString("CITY_NAME") + partner_single.getString("AREA_NAME") + partner_single.getString("ADDR"), partner_single.getString("CONTACT"), partner_single.getString("MOBILE"));
+        boolean b = GlobalLogics.getOrderLogic().updateGysOrder(ctx, ORDER_ID, OUT_ORDER_ID, "0", "0", "1", MEMO, JH_TIME,INBOUND_TIME, JH_TYPE, JH_ADDR, "0", "0", "0", "0", PARTNER_NO, partner_single.getString("PROVINCE"), partner_single.getString("CITY"), partner_single.getString("AREA"), partner_single.getString("ADDR"), partner_single.getString("PROVINCE_NAME") + partner_single.getString("CITY_NAME") + partner_single.getString("AREA_NAME") + partner_single.getString("ADDR"), partner_single.getString("CONTACT"), partner_single.getString("MOBILE"));
         if (b) {
             b = GlobalLogics.getOrderLogic().deleteGysOrderProducts(ORDER_ID);
             if (b){
@@ -322,19 +324,29 @@ public class OrderServlet extends WebMethodServlet {
     public Record create_inbound_notify(HttpServletRequest req, QueryParams qp) throws IOException {
         Context ctx = PortalContext.getContext(req, qp, true, true);
         Record out_rec = new Record();
-        String ORDER_ID = qp.checkGetString("ORDER_ID");
+        String ORDER_IDS = qp.checkGetString("ORDER_ID");
 
-        Record order = GlobalLogics.getOrderLogic().getSingleOrderBase(ORDER_ID) ;
-        String INBOUND_TIME = qp.getString("INBOUND_TIME", order.getString("JH_TIME"));
-        String INBOUND_ID = Constants.newInboundCode();
-        boolean b = GlobalLogics.getOrderLogic().saveInbound(ctx, INBOUND_ID, ORDER_ID, order.getString("KW_ID"), order.getString("GYS_ID"), GlobalLogics.getUser().getSingleGysBase(order.getString("GYS_ID")).getString("GYS_NAME_SX"), INBOUND_TIME);
-        if (!b){
+        List<String> ls = StringUtils2.splitList(ORDER_IDS, ",", true);
+        int success_count = 0;
+        for (String ORDER_ID : ls){
+            Record order = GlobalLogics.getOrderLogic().getSingleOrderBase(ORDER_ID) ;
+            String INBOUND_TIME = order.getString("INBOUND_TIME");
+            if (INBOUND_TIME.length()<=0){
+                INBOUND_TIME = order.getString("JH_TIME");
+            }
+            String INBOUND_ID = Constants.newInboundCode();
+            boolean b = GlobalLogics.getOrderLogic().saveInbound(ctx, INBOUND_ID, ORDER_ID, order.getString("KW_ID"), order.getString("GYS_ID"), GlobalLogics.getUser().getSingleGysBase(order.getString("GYS_ID")).getString("GYS_NAME_SX"), INBOUND_TIME);
+            if (b){
+                //更新订单状态
+                GlobalLogics.getOrderLogic().updateOrderStatusInbound(ctx, ORDER_ID, OrderConstants.ORDER_STATUS_INBOUNT_CREATE);
+                success_count +=1;
+            }
+        }
+        if (success_count != ls.size()){
             out_rec.put("status",0);
             out_rec.put("message","入库通知单产生失败");
             return out_rec;
         }else{
-            //更新订单状态
-            GlobalLogics.getOrderLogic().updateOrderStatusInbound(ctx, ORDER_ID, OrderConstants.ORDER_STATUS_INBOUNT_CREATE, INBOUND_TIME);
             out_rec.put("status",1);
             out_rec.put("message","入库通知单产生成功");
             return out_rec;
@@ -347,7 +359,10 @@ public class OrderServlet extends WebMethodServlet {
         String ORDER_ID = qp.checkGetString("ORDER_ID");
 
         Record order = GlobalLogics.getOrderLogic().getSingleOrderBase(ORDER_ID) ;
-        String OUTBOUND_TIME = qp.getString("OUTBOUND_TIME", order.getString("JH_TIME"));
+        String OUTBOUND_TIME = order.getString("OUTBOUND_TIME");
+        if (OUTBOUND_TIME.length()<=0){
+            OUTBOUND_TIME = order.getString("JH_TIME");
+        }
         String OUTBOUND_ID = Constants.newOutboundCode();
         boolean b = GlobalLogics.getOrderLogic().saveOutbound(ctx, OUTBOUND_ID, ORDER_ID, order.getString("KW_ID"), order.getString("GYS_ID"), GlobalLogics.getUser().getSingleGysBase(order.getString("GYS_ID")).getString("GYS_NAME_SX"), OUTBOUND_TIME);
         if (!b){
@@ -356,7 +371,7 @@ public class OrderServlet extends WebMethodServlet {
             return out_rec;
         }else{
             //更新订单状态
-            GlobalLogics.getOrderLogic().updateOrderStatusOutbound(ctx, ORDER_ID, OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE, OUTBOUND_TIME);
+            GlobalLogics.getOrderLogic().updateOrderStatusOutbound(ctx, ORDER_ID, OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE);
             out_rec.put("status",1);
             out_rec.put("message","出库通知单产生成功");
             return out_rec;
@@ -830,8 +845,9 @@ public class OrderServlet extends WebMethodServlet {
                     ERR_COUNT +=1;
                     err_str += "交货日期-格式不正确,";
                 }
-                data_check.put("JH_TIME",JH_TIME_.length()<=0?JH_TIME:JH_TIME_);
 
+                data_check.put("JH_TIME",JH_TIME_.length()<=0?JH_TIME:JH_TIME_);
+                String OUTBOUND_TIME_ = JH_TIME_;
                 String OUT_ORDER_ID =  ls_cells.get(9);
                 if (OUT_ORDER_ID.length()>0 && OUT_ORDER_ID.contains("E")){
                     ERR_COUNT +=1;
@@ -904,7 +920,7 @@ public class OrderServlet extends WebMethodServlet {
                 RecordSet partnerJhOrders = partnerOrders.findsEq("JH_TIME", jhTime);
                 String ORDER_ID = Constants.newCgCode();
                 boolean b = GlobalLogics.getOrderLogic().saveGysOrderImport(ctx, ctx.getUser_id(), gys.getString("SJ_ID"), ORDER_ID,
-                        partnerJhOrders.get(0).getString("OUT_ORDER_ID"), GYS_ID, gys.getString("GYS_NAME"), "0", "0", "1", "", jhTime, "供应商送货", JH_ADDR, partner_single.getString("INBOUND_TIME"),"", "0", "0", "0", "0", 0, OrderConstants.ORDER_STATUS_DEFAULT, partner_no, partnerKw.getString("KW_ID"),
+                        partnerJhOrders.get(0).getString("OUT_ORDER_ID"), GYS_ID, gys.getString("GYS_NAME"), "0", "0", "1", "", jhTime, "供应商送货", JH_ADDR, partner_single.getString("INBOUND_TIME"),jhTime, "0", "0", "0", "0", 0, OrderConstants.ORDER_STATUS_DEFAULT, partner_no, partnerKw.getString("KW_ID"),
                         partner_single.getString("PROVINCE"), partner_single.getString("CITY"), partner_single.getString("AREA"), partner_single.getString("ADDR"), partner_single.getString("PROVINCE_NAME") + partner_single.getString("CITY_NAME") + partner_single.getString("AREA_NAME") + partner_single.getString("ADDR"), partner_single.getString("CONTACT"), partner_single.getString("MOBILE"));
                 if (b) {
                     for (Record pro_str : partnerJhOrders) {
