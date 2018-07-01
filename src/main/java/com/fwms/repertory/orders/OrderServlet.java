@@ -797,7 +797,7 @@ public class OrderServlet extends WebMethodServlet {
                      }
                 }
                 data_check.put("PRO_CODE", PRO_CODE);
-                if (PRO_NAME.length() <= 0 || PRO_SPEC.length() <= 0) {
+                if (PRO_NAME.length() <= 0 ) {
                     PRO_NAME = ls_cells.get(3).toString().trim();
                     PRO_SPEC = ls_cells.get(4).toString().trim();
                     Record rec_pro_spec = GlobalLogics.getUser().check_pro_name_spec(PRO_NAME.trim(), PRO_SPEC.trim());
