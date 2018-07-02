@@ -127,11 +127,13 @@ public class OrderImpl implements OrderLogic, Initializable {
     }
 
         //获取所有,分页
-    public Record getAllGysOrderPageList(Context ctx, String PRO_TYPE_ID, String SJ_ID,String GYS_ID, String START_TIME, String END_TIME, String STATE, int PAY_DONE, int page, int count, String ORDER_ID,String OUT_ORDER_ID, String INBOUND_STATUS_BEGIN, String INBOUND_STATUS_END) {
+    public Record getAllGysOrderPageList(Context ctx,String PARTNER_NO, String PRO_TYPE_ID, String SJ_ID,String GYS_ID, String START_TIME, String END_TIME, String STATE, int PAY_DONE, int page, int count, String ORDER_ID,String OUT_ORDER_ID, String INBOUND_STATUS_BEGIN, String INBOUND_STATUS_END) {
         SQLExecutor se = read_getSqlExecutor();
         String filter = "";
         if (GYS_ID.length()>0 && !GYS_ID.equals("0") && !GYS_ID.equals("9") && !GYS_ID.equals("999"))
             filter += " AND GYS_ID='"+GYS_ID+"' ";
+        if (PARTNER_NO.length()>0 && !PARTNER_NO.equals("0") && !PARTNER_NO.equals("9") && !PARTNER_NO.equals("999") )
+            filter += " AND PARTNER_NO='"+PARTNER_NO+"' ";
         if (SJ_ID.length()>0 && !SJ_ID.equals("0") && !SJ_ID.equals("9") && !SJ_ID.equals("999"))
             filter += " AND SJ_ID='"+SJ_ID+"' ";
         if (START_TIME.length()>0)

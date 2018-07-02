@@ -134,12 +134,24 @@ public class UserImpl implements UserLogic, Initializable {
         return rec;
     }
     public RecordSet getUserPartnerByUser(String SJ_ID) {
-        String sql = "SELECT * FROM " + sjPartnerTable + "  WHERE (SJ_ID='" + SJ_ID + "') AND DELETE_TIME IS NULL ORDER BY PARTNER_NAME ";
+        String sql = "SELECT * FROM " + sjPartnerTable + "  WHERE DELETE_TIME IS NULL";
+        if (SJ_ID.length()>0)
+           sql +=" AND SJ_ID='" + SJ_ID + "' ";
+        sql +=" ORDER BY PARTNER_NAME ";
         SQLExecutor se = read_getSqlExecutor();
         RecordSet recs = se.executeRecordSet(sql, null);
         for (Record rec : recs){
             formatUserAddr(rec);
         }
+        return recs;
+    }
+    public RecordSet getUserPartnerByUserSel(String SJ_ID) {
+        String sql = "SELECT PARTNER_NO,PARTNER_NAME,SJ_ID FROM " + sjPartnerTable + "  WHERE DELETE_TIME IS NULL";
+        if (SJ_ID.length()>0)
+            sql +=" AND SJ_ID='" + SJ_ID + "' ";
+        sql +=" ORDER BY PARTNER_NAME ";
+        SQLExecutor se = read_getSqlExecutor();
+        RecordSet recs = se.executeRecordSet(sql, null);
         return recs;
     }
     public RecordSet getSjPartnerBase(String SJ_ID) {

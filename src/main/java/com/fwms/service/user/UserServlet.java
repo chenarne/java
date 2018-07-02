@@ -521,6 +521,13 @@ public class UserServlet extends WebMethodServlet {
         RecordSet recs = GlobalLogics.getUser().getUserPartnerByUser(SJ_ID);
         return recs;
     }
+    @WebMethod("user/partner_get_all_sel")
+    public RecordSet partner_get_all_sel(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, true);
+        String SJ_ID = qp.checkGetString("SJ_ID");
+        RecordSet recs = GlobalLogics.getUser().getUserPartnerByUserSel(SJ_ID);
+        return recs;
+    }
     @WebMethod("user/sj_partner_get_all")
     public RecordSet sj_partner_get_all(HttpServletRequest req, QueryParams qp) throws IOException {
         Context ctx = PortalContext.getContext(req, qp, true, true);
