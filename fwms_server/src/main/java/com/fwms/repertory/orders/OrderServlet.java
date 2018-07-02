@@ -924,7 +924,7 @@ public class OrderServlet extends WebMethodServlet {
                 RecordSet partnerJhOrders = partnerOrders.findsEq("JH_TIME", jhTime);
                 String ORDER_ID = Constants.newCgCode();
                 boolean b = GlobalLogics.getOrderLogic().saveGysOrderImport(ctx, ctx.getUser_id(), gys.getString("SJ_ID"), ORDER_ID,
-                        partnerJhOrders.get(0).getString("OUT_ORDER_ID"), GYS_ID, gys.getString("GYS_NAME"), "0", "0", "1", "", jhTime, "供应商送货", JH_ADDR, partner_single.getString("INBOUND_TIME"),jhTime, "0", "0", "0", "0", 0, OrderConstants.ORDER_STATUS_DEFAULT, partner_no, partnerKw.getString("KW_ID"),
+                        partnerJhOrders.get(0).getString("OUT_ORDER_ID"), GYS_ID, gys.getString("GYS_NAME"), "0", "0", "1", "", jhTime, "供应商送货", JH_ADDR, partnerJhOrders.get(0).getString("INBOUND_TIME"),jhTime, "0", "0", "0", "0", 0, OrderConstants.ORDER_STATUS_DEFAULT, partner_no, partnerKw.getString("KW_ID"),
                         partner_single.getString("PROVINCE"), partner_single.getString("CITY"), partner_single.getString("AREA"), partner_single.getString("ADDR"), partner_single.getString("PROVINCE_NAME") + partner_single.getString("CITY_NAME") + partner_single.getString("AREA_NAME") + partner_single.getString("ADDR"), partner_single.getString("CONTACT"), partner_single.getString("MOBILE"));
                 if (b) {
                     for (Record pro_str : partnerJhOrders) {
@@ -1119,7 +1119,7 @@ public class OrderServlet extends WebMethodServlet {
 
     @WebMethod("order/test")
     public void test(HttpServletRequest req, QueryParams qp) throws IOException {
-        GlobalLogics.getBaseLogic().saveLog("outbound_id=1111");
+        GlobalLogics.getOrderLogic().getAllCanPrintMd(null, "3205539497448601443",0,"","","2018-07-04");
 //        GlobalLogics.getOrderLogic().test("JH_20180619_006","CG_20180619_042_0001");
     }
 }
