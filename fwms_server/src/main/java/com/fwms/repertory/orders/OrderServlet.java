@@ -60,6 +60,7 @@ public class OrderServlet extends WebMethodServlet {
         String STATE = qp.getString("STATE", "0,1,2,9");
         String ORDER_ID = qp.getString("ORDER_ID", "");
         String OUT_ORDER_ID = qp.getString("OUT_ORDER_ID", "");
+        String PARTNER_NO = qp.getString("PARTNER_NO", "999");
         String INBOUND_STATUS_BEGIN = qp.getString("INBOUND_STATUS_BEGIN", "");
         String INBOUND_STATUS_END = qp.getString("INBOUND_STATUS_END", "");
 
@@ -84,7 +85,7 @@ public class OrderServlet extends WebMethodServlet {
         } else {
             COUNT = 20;
         }
-        Record data = GlobalLogics.getOrderLogic().getAllGysOrderPageList(ctx, WL_TYPE,"999", GYS_ID, START_TIME, END_TIME, STATE, PAY_DONE, PAGE, COUNT, ORDER_ID,OUT_ORDER_ID, INBOUND_STATUS_BEGIN, INBOUND_STATUS_END);
+        Record data = GlobalLogics.getOrderLogic().getAllGysOrderPageList(ctx, PARTNER_NO,WL_TYPE,"999", GYS_ID, START_TIME, END_TIME, STATE, PAY_DONE, PAGE, COUNT, ORDER_ID,OUT_ORDER_ID, INBOUND_STATUS_BEGIN, INBOUND_STATUS_END);
 
         return data;
     }
@@ -101,6 +102,7 @@ public class OrderServlet extends WebMethodServlet {
         String STATE = qp.getString("STATE", "0,1,2,9");
         String ORDER_ID = qp.getString("ORDER_ID", "");
         String OUT_ORDER_ID = qp.getString("OUT_ORDER_ID", "");
+        String PARTNER_NO = qp.getString("PARTNER_NO", "999");
         String INBOUND_STATUS_BEGIN = qp.getString("INBOUND_STATUS_BEGIN", "");
         String INBOUND_STATUS_END = qp.getString("INBOUND_STATUS_END", "");
 
@@ -125,7 +127,7 @@ public class OrderServlet extends WebMethodServlet {
         } else {
             COUNT = 20;
         }
-        Record data = GlobalLogics.getOrderLogic().getAllGysOrderPageList(ctx,  WL_TYPE, SJ_ID,GYS_ID, START_TIME, END_TIME, STATE, PAY_DONE, PAGE, COUNT, ORDER_ID,OUT_ORDER_ID, INBOUND_STATUS_BEGIN, INBOUND_STATUS_END);
+        Record data = GlobalLogics.getOrderLogic().getAllGysOrderPageList(ctx, PARTNER_NO, WL_TYPE, SJ_ID,GYS_ID, START_TIME, END_TIME, STATE, PAY_DONE, PAGE, COUNT, ORDER_ID,OUT_ORDER_ID, INBOUND_STATUS_BEGIN, INBOUND_STATUS_END);
 
         return data;
     }
@@ -516,6 +518,8 @@ public class OrderServlet extends WebMethodServlet {
         String STATE = qp.getString("STATE", "0,1,2,9");
         String ORDER_ID = qp.getString("ORDER_ID", "");
         String OUT_ORDER_ID = qp.getString("OUT_ORDER_ID", "");
+        String PARTNER_NO = qp.getString("PARTNER_NO", "999");
+
         String INBOUND_STATUS_BEGIN = qp.getString("INBOUND_STATUS_BEGIN", "");
         String INBOUND_STATUS_END = qp.getString("INBOUND_STATUS_END", "");
 
@@ -540,7 +544,7 @@ public class OrderServlet extends WebMethodServlet {
         } else {
             COUNT = 20;
         }
-        Record data = GlobalLogics.getOrderLogic().getAllGysOrderPageList(ctx, WL_TYPE, SJ_ID, GYS_ID, START_TIME, END_TIME, STATE, PAY_DONE, PAGE, COUNT, ORDER_ID, OUT_ORDER_ID, INBOUND_STATUS_BEGIN, INBOUND_STATUS_END);
+        Record data = GlobalLogics.getOrderLogic().getAllGysOrderPageList(ctx, PARTNER_NO,WL_TYPE, SJ_ID, GYS_ID, START_TIME, END_TIME, STATE, PAY_DONE, PAGE, COUNT, ORDER_ID, OUT_ORDER_ID, INBOUND_STATUS_BEGIN, INBOUND_STATUS_END);
 
         return data;
     }

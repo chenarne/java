@@ -88,7 +88,7 @@ public interface UserLogic {
     Record getSjByUser(String USER_ID);
     RecordSet getAllGys();
     RecordSet getAllPartners();
-
+    RecordSet getUserPartnerByUserSel(String SJ_ID);
     //===========================
     Record check_partner_name(String PARTNER_NAME);
     Record check_pro_name_spec(String PRO_NAME,String PRO_SPEC);
