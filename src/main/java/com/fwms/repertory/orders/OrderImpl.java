@@ -1111,6 +1111,138 @@ public class OrderImpl implements OrderLogic, Initializable {
         return recs;
     }
 
+    //获取全部已经产生入库通知单的,这个时间段的 kw
+    //不管是哪个供应商的货,只管收
+    public RecordSet webService_getAllInboundKws(String START_TIME,String END_TIME) {
+        SQLExecutor se = read_getSqlExecutor();
+        RecordSet allKw = GlobalLogics.getBaseLogic().getAllKW();
+        String sql = "SELECT DISTINCT(KW_ID) AS KW_ID FROM " + orderInboundTable + " WHERE DELETE_TIME IS NULL ";
+        if (START_TIME.length() >= 0)
+            sql += " AND INBOUND_TIME>='" + START_TIME + "' ";
+        if (END_TIME.length() >= 0)
+            sql += " AND INBOUND_TIME<='" + END_TIME + "' ";
+        RecordSet recs = se.executeRecordSet(sql, null);
+        for (Record rec : recs) {
+            String KW_ID = rec.getString("KW_ID");
+            Record k = allKw.findEq("KW_ID", KW_ID);
+            rec.put("KW_NAME",k.getString("KW_NAME"));
+
+            String sql2 = "SELECT PACKAGE_CODE,IN_KW_TIME,OUT_KW_TIME FROM "+packageTable+" WHERE ORDER_ID IN (SELECT ORDER_ID FROM "+orderTable+" WHERE DELETE_TIME IS NULL AND STATUS>='"+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+"' AND STATUS<'"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND KW_ID='"+KW_ID+"') ";
+            sql2 +=" AND ORDER_ID IN (";
+            sql2 +=" SELECT ORDER_ID FROM "+orderInboundTable+" WHERE DELETE_TIME IS NULL AND KW_ID ='"+KW_ID+"' ";
+            if (START_TIME.length() >= 0)
+                sql2 += " AND INBOUND_TIME>='" + START_TIME + "' ";
+            if (END_TIME.length() >= 0)
+                sql2 += " AND INBOUND_TIME<='" + END_TIME + "' ";
+            sql2 +=" )";
+            RecordSet all_packages = se.executeRecordSet(sql2);
+            int HAS = 0;
+            for (Record r : all_packages) {
+                if (r.getString("IN_KW_TIME").length() > 0)
+                    HAS += 1;
+            }
+            rec.put("ALL_PACKAGE_COUNT", all_packages.size());
+            rec.put("HAS_PACKAGE_COUNT", HAS);
+            rec.put("LESS_PACKAGE_COUNT", all_packages.size() - HAS);
+        }
+
+        for (int i=recs.size()-1;i>=0;i--){
+            if (recs.get(i).getInt("ALL_PACKAGE_COUNT")>0 && recs.get(i).getInt("LESS_PACKAGE_COUNT")==0)
+                recs.remove(i);
+        }
+        return recs;
+    }
+
+    //获取全部已经产生入库通知单的,这个时间段的 kw
+    //不管是哪个供应商的货,只管收 ,
+    //所有的箱子
+    public RecordSet webService_getAllInboundKwPackages(String START_TIME,String END_TIME,String KW_ID) {
+        SQLExecutor se = read_getSqlExecutor();
+        String sql2 = "SELECT * FROM "+packageTable+" WHERE ORDER_ID IN (SELECT ORDER_ID FROM "+orderTable+" WHERE DELETE_TIME IS NULL AND STATUS>='"+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+"' AND STATUS<'"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND KW_ID='"+KW_ID+"') ";
+        sql2 +=" AND ORDER_ID IN (";
+        sql2 +=" SELECT ORDER_ID FROM "+orderInboundTable+" WHERE DELETE_TIME IS NULL AND KW_ID ='"+KW_ID+"' ";
+        if (START_TIME.length() >= 0)
+            sql2 += " AND INBOUND_TIME>='" + START_TIME + "' ";
+        if (END_TIME.length() >= 0)
+            sql2 += " AND INBOUND_TIME<='" + END_TIME + "' ";
+        sql2 +=" )";
+        RecordSet allKw = GlobalLogics.getBaseLogic().getAllKW();
+        RecordSet recs = se.executeRecordSet(sql2, null);
+        for (Record rec : recs) {
+            Record rec_kw = allKw.findEq("KW_ID", KW_ID);
+            rec.put("KW_NAME", rec_kw.getString("KW_NAME"));
+            String FID = rec_kw.getString("FID");
+            Record rec_kw_parent = allKw.findEq("KW_ID", FID);
+            rec.put("PARENT_KW_NAME", rec_kw_parent.getString("KW_NAME"));
+        }
+        return recs;
+    }
+
+    public RecordSet webService_getAllOutboundKws(String START_TIME,String END_TIME) {
+        SQLExecutor se = read_getSqlExecutor();
+        RecordSet allKw = GlobalLogics.getBaseLogic().getAllKW();
+        String sql = "SELECT DISTINCT(KW_ID) AS KW_ID FROM " + orderOutboundTable + " WHERE DELETE_TIME IS NULL ";
+        if (START_TIME.length() >= 0)
+            sql += " AND OUTBOUND_TIME>='" + START_TIME + "' ";
+        if (END_TIME.length() >= 0)
+            sql += " AND OUTBOUND_TIME<='" + END_TIME + "' ";
+        RecordSet recs = se.executeRecordSet(sql, null);
+        for (Record rec : recs) {
+            String KW_ID = rec.getString("KW_ID");
+            Record k = allKw.findEq("KW_ID", KW_ID);
+            rec.put("KW_NAME",k.getString("KW_NAME"));
+
+            String sql2 = "SELECT PACKAGE_CODE,IN_KW_TIME,OUT_KW_TIME FROM "+packageTable+" WHERE ORDER_ID IN (SELECT ORDER_ID FROM "+orderTable+" WHERE DELETE_TIME IS NULL AND STATUS>='"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_FINISHED+"' AND KW_ID='"+KW_ID+"') ";
+            sql2 +=" AND ORDER_ID IN (";
+            sql2 +=" SELECT ORDER_ID FROM "+orderOutboundTable+" WHERE DELETE_TIME IS NULL AND KW_ID ='"+KW_ID+"' ";
+            if (START_TIME.length() >= 0)
+                sql2 += " AND OUTBOUND_TIME>='" + START_TIME + "' ";
+            if (END_TIME.length() >= 0)
+                sql2 += " AND OUTBOUND_TIME<='" + END_TIME + "' ";
+            sql2 +=" )";
+            RecordSet all_packages = se.executeRecordSet(sql2);
+            int HAS = 0;
+            for (Record r : all_packages) {
+                if (r.getString("OUT_KW_TIME").length() > 0)
+                    HAS += 1;
+            }
+            rec.put("ALL_PACKAGE_COUNT", all_packages.size());
+            rec.put("HAS_PACKAGE_COUNT", HAS);
+            rec.put("LESS_PACKAGE_COUNT", all_packages.size() - HAS);
+        }
+
+        for (int i=recs.size()-1;i>=0;i--){
+            if (recs.get(i).getInt("ALL_PACKAGE_COUNT")>0 && recs.get(i).getInt("LESS_PACKAGE_COUNT")==0)
+                recs.remove(i);
+        }
+        return recs;
+    }
+
+    //获取全部已经产生入库通知单的,这个时间段的 kw
+    //不管是哪个供应商的货,只管收 ,
+    //所有的箱子
+    public RecordSet webService_getAllOutboundKwPackages(String START_TIME,String END_TIME,String KW_ID) {
+        SQLExecutor se = read_getSqlExecutor();
+        String sql2 = "SELECT * FROM "+packageTable+" WHERE ORDER_ID IN (SELECT ORDER_ID FROM "+orderTable+" WHERE DELETE_TIME IS NULL AND STATUS>='"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_OUTBOUNT_FINISHED+"' AND KW_ID='"+KW_ID+"') ";
+        sql2 +=" AND ORDER_ID IN (";
+        sql2 +=" SELECT ORDER_ID FROM "+orderOutboundTable+" WHERE DELETE_TIME IS NULL AND KW_ID ='"+KW_ID+"' ";
+        if (START_TIME.length() >= 0)
+            sql2 += " AND OUTBOUND_TIME>='" + START_TIME + "' ";
+        if (END_TIME.length() >= 0)
+            sql2 += " AND OUTBOUND_TIME<='" + END_TIME + "' ";
+        sql2 +=" )";
+        RecordSet allKw = GlobalLogics.getBaseLogic().getAllKW();
+        RecordSet recs = se.executeRecordSet(sql2, null);
+        for (Record rec : recs) {
+            Record rec_kw = allKw.findEq("KW_ID", KW_ID);
+            rec.put("KW_NAME", rec_kw.getString("KW_NAME"));
+            String FID = rec_kw.getString("FID");
+            Record rec_kw_parent = allKw.findEq("KW_ID", FID);
+            rec.put("PARENT_KW_NAME", rec_kw_parent.getString("KW_NAME"));
+        }
+        return recs;
+    }
+
     ///===========webservice 用=============
     public RecordSet webService_getAllOutbound(String KW_ID) {
         SQLExecutor se = read_getSqlExecutor();
