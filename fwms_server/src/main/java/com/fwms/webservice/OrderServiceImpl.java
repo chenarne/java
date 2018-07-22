@@ -117,6 +117,118 @@ public class OrderServiceImpl implements OrderServiceLogic {
 
     //===============PDA程序==================
 
+    //获取全部入库通知单,里面的库位,以及箱数的信息
+    /*
+    input : START_TIME,END_TIME
+     */
+    @Override
+    public List<WMS_WEBSERVICE_RESULT_ORDER_KWS> getAllInboundKws(String start_time,String end_time){
+        RecordSet data = GlobalLogics.getOrderLogic().webService_getAllInboundKws(start_time, end_time);
+        List<WMS_WEBSERVICE_RESULT_ORDER_KWS> ls = new ArrayList<WMS_WEBSERVICE_RESULT_ORDER_KWS>();
+        for (Record rec : data){
+            WMS_WEBSERVICE_RESULT_ORDER_KWS o = new WMS_WEBSERVICE_RESULT_ORDER_KWS();
+            o.setKW_ID(rec.getString("KW_ID"));
+            o.setKW_NAME(rec.getString("KW_NAME"));
+            o.setALL_PACKAGE_COUNT((int) rec.getInt("ALL_PACKAGE_COUNT"));
+            o.setLESS_PACKAGE_COUNT((int) rec.getInt("LESS_PACKAGE_COUNT"));
+            o.setHAS_PACKAGE_COUNT((int) rec.getInt("HAS_PACKAGE_COUNT"));
+            ls.add(o);
+        }
+        return ls;
+    }
+    //获取全部出库通知单,里面的库位,以及箱数的信息
+    /*
+    input : START_TIME,END_TIME
+     */
+    @Override
+    public List<WMS_WEBSERVICE_RESULT_ORDER_KWS> getAllOutboundKws(String start_time,String end_time){
+        RecordSet data = GlobalLogics.getOrderLogic().webService_getAllOutboundKws(start_time, end_time);
+        List<WMS_WEBSERVICE_RESULT_ORDER_KWS> ls = new ArrayList<WMS_WEBSERVICE_RESULT_ORDER_KWS>();
+        for (Record rec : data){
+            WMS_WEBSERVICE_RESULT_ORDER_KWS o = new WMS_WEBSERVICE_RESULT_ORDER_KWS();
+            o.setKW_ID(rec.getString("KW_ID"));
+            o.setKW_NAME(rec.getString("KW_NAME"));
+            o.setALL_PACKAGE_COUNT((int) rec.getInt("ALL_PACKAGE_COUNT"));
+            o.setLESS_PACKAGE_COUNT((int) rec.getInt("LESS_PACKAGE_COUNT"));
+            o.setHAS_PACKAGE_COUNT((int) rec.getInt("HAS_PACKAGE_COUNT"));
+            ls.add(o);
+        }
+        return ls;
+    }
+
+
+    //获取这个 KW_ID的,这个时间段的,所有需要入库的 的所有箱子
+    @Override
+    public List<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE> getScanInboundListThisKw(String start_time,String end_time,String kw_id){
+        RecordSet data = GlobalLogics.getOrderLogic().webService_getAllInboundKwPackages(start_time, end_time, kw_id);
+
+        List<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE> ls = new ArrayList<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE>();
+
+        for (Record rec : data){
+            WMS_WEBSERVICE_RESULT_ORDER_PACKAGE o = new WMS_WEBSERVICE_RESULT_ORDER_PACKAGE();
+            o.setORDER_ID(rec.getString("ORDER_ID"));
+            o.setCONTACT(rec.getString("CONTACT"));
+            o.setFULL_ADDR(rec.getString("FULL_ADDR"));
+            o.setGYS_ID(rec.getString("GYS_ID"));
+            o.setGYS_NAME(rec.getString("GYS_NAME"));
+            o.setINBOUND_TIME(rec.getString("INBOUND_TIME"));
+            o.setJH_TIME(rec.getString("JH_TIME"));
+            o.setKW_ID(rec.getString("KW_ID"));
+            o.setKW_NAME(rec.getString("KW_NAME"));
+            o.setMOBILE(rec.getString("MOBILE"));
+            o.setOUT_ORDER_ID(rec.getString("OUT_ORDER_ID"));
+            o.setPARENT_KW_NAME(rec.getString("PARENT_KW_NAME"));
+            o.setPARTNER_NAME(rec.getString("PARTNER_NAME"));
+            o.setSJ_NAME(rec.getString("SJ_NAME"));
+            o.setPARTNER_NO(rec.getString("PARTNER_NO"));
+            o.setPACKAGE_CODE(rec.getString("PACKAGE_CODE"));
+            o.setPRO_DETAIL(rec.getString("PRO_DETAIL"));
+            ls.add(o);
+        }
+
+
+        return ls;
+    }
+
+    //获取这个 KW_ID的,这个时间段的,所有需要出库的 的所有箱子
+    @Override
+    public List<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE> getScanOutboundListThisKw(String start_time,String end_time,String kw_id){
+        RecordSet data = GlobalLogics.getOrderLogic().webService_getAllOutboundKwPackages(start_time,end_time,kw_id);
+
+        List<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE> ls = new ArrayList<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE>();
+
+        for (Record rec : data){
+            WMS_WEBSERVICE_RESULT_ORDER_PACKAGE o = new WMS_WEBSERVICE_RESULT_ORDER_PACKAGE();
+            o.setORDER_ID(rec.getString("ORDER_ID"));
+            o.setCONTACT(rec.getString("CONTACT"));
+            o.setFULL_ADDR(rec.getString("FULL_ADDR"));
+            o.setGYS_ID(rec.getString("GYS_ID"));
+            o.setGYS_NAME(rec.getString("GYS_NAME"));
+            o.setINBOUND_TIME(rec.getString("INBOUND_TIME"));
+            o.setJH_TIME(rec.getString("JH_TIME"));
+            o.setKW_ID(rec.getString("KW_ID"));
+            o.setKW_NAME(rec.getString("KW_NAME"));
+            o.setMOBILE(rec.getString("MOBILE"));
+            o.setOUT_ORDER_ID(rec.getString("OUT_ORDER_ID"));
+            o.setPARENT_KW_NAME(rec.getString("PARENT_KW_NAME"));
+            o.setPARTNER_NAME(rec.getString("PARTNER_NAME"));
+            o.setSJ_NAME(rec.getString("SJ_NAME"));
+            o.setPARTNER_NO(rec.getString("PARTNER_NO"));
+            o.setPACKAGE_CODE(rec.getString("PACKAGE_CODE"));
+            o.setPRO_DETAIL(rec.getString("PRO_DETAIL"));
+            ls.add(o);
+        }
+
+
+        return ls;
+    }
+
+
+
+
+
+
+
     //获取全部入库通知单
     @Override
     public List<WMS_WEBSERVICE_RESULT_ORDER_INBOUND> getAllPackageInbound(String kwId){

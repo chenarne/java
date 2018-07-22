@@ -75,5 +75,9 @@ public interface OrderLogic {
     RecordSet webService_getOutboundPackage(String OUTBOUND_ID);
 
     RecordSet getOrderProductsSpec(String ORDER_ID);
+    RecordSet webService_getAllInboundKws(String START_TIME,String END_TIME);
+    RecordSet webService_getAllOutboundKws(String START_TIME,String END_TIME);
+    RecordSet webService_getAllInboundKwPackages(String START_TIME,String END_TIME,String KW_ID);
+    RecordSet webService_getAllOutboundKwPackages(String START_TIME,String END_TIME,String KW_ID);
 }
 

@@ -75,4 +75,29 @@ public interface OrderServiceLogic {
     @WebResult(name="getScanOutboundList")
     List<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE> getScanOutboundList(
             @WebParam(name = "user_name", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String OUTBOUND_ID);
+
+    //==============以下是改成按照库位收货的==============
+    @WebResult(name="getAllInboundKws")
+    List<WMS_WEBSERVICE_RESULT_ORDER_KWS> getAllInboundKws(
+            @WebParam(name = "start_time", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String start_time,
+            @WebParam(name = "end_time", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String end_time
+    );
+    @WebResult(name="getAllOutboundKws")
+    List<WMS_WEBSERVICE_RESULT_ORDER_KWS> getAllOutboundKws(
+            @WebParam(name = "start_time", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String start_time,
+            @WebParam(name = "end_time", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String end_time
+    );
+    @WebResult(name="getScanInboundListThisKw")
+    List<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE> getScanInboundListThisKw(
+            @WebParam(name = "start_time", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String start_time,
+            @WebParam(name = "end_time", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String end_time,
+            @WebParam(name = "kw_id", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String kw_id
+    );
+    @WebResult(name="getAllOutboundKws")
+    List<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE> getScanOutboundListThisKw(
+            @WebParam(name = "start_time", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String start_time,
+            @WebParam(name = "end_time", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String end_time,
+            @WebParam(name = "kw_id", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String kw_id
+    );
+    //==============以上是改成按照库位收货的==============
 }
