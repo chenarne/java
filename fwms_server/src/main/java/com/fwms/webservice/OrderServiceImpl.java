@@ -193,7 +193,7 @@ public class OrderServiceImpl implements OrderServiceLogic {
     //获取这个 KW_ID的,这个时间段的,所有需要出库的 的所有箱子
     @Override
     public List<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE> getScanOutboundListThisKw(String start_time,String end_time,String kw_id){
-        RecordSet data = GlobalLogics.getOrderLogic().webService_getAllOutboundKwPackages(start_time,end_time,kw_id);
+        RecordSet data = GlobalLogics.getOrderLogic().webService_getAllOutboundKwPackages(start_time, end_time, kw_id);
 
         List<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE> ls = new ArrayList<WMS_WEBSERVICE_RESULT_ORDER_PACKAGE>();
 
@@ -342,6 +342,75 @@ public class OrderServiceImpl implements OrderServiceLogic {
             return o;
         }
     }
+
+    //更新入库
+    @Override
+    public WMS_WEBSERVICE_RESULT updatePackageInboundNew(String in_kw_id,String package_code,String userId){
+        WMS_WEBSERVICE_RESULT o = new WMS_WEBSERVICE_RESULT();
+
+        Context ctx = new Context();
+        ctx.setUser_id(userId);
+
+        //首先判断,这个 package_code ,是不是这个 inboundid 的
+        Record package_single  = GlobalLogics.getOrderLogic().getSinglePackage(package_code);
+        if (package_single.isEmpty()){
+            o.setSTATUS(0);
+            o.setMESSAGE("此箱码不存在");
+            return o;
+        }else{
+            String order_id = package_single.getString("ORDER_ID");
+            Record order = GlobalLogics.getOrderLogic().getSingleOrderBase(order_id);
+            if (!order.getString("KW_ID").equals(in_kw_id)) {
+                o.setSTATUS(0);
+                o.setMESSAGE("此箱码,不属于这个货位,请选择其他货位收货");
+                return o;
+            }
+        }
+
+        boolean b = GlobalLogics.getOrderLogic().confirmInbound(ctx, package_code.replace("'", "").replace("&", "").replace(",", "").replace(" ", ""));
+        if (b){
+            o.setSTATUS(1);
+            o.setMESSAGE("入库成功");
+            return o;
+        }   else{
+            o.setSTATUS(1);
+            o.setMESSAGE("入库操作失败,请检查数据");
+            return o;
+        }
+    }
+    //更新出库
+    @Override
+    public WMS_WEBSERVICE_RESULT updatePackageOutboundNew(String in_kw_id,String package_code,String userId){
+        WMS_WEBSERVICE_RESULT o = new WMS_WEBSERVICE_RESULT();
+        //首先判断,这个 package_code ,是不是这个  outboundid 的
+        Record package_single  = GlobalLogics.getOrderLogic().getSinglePackage(package_code);
+        if (package_single.isEmpty()){
+            o.setSTATUS(0);
+            o.setMESSAGE("此箱码不存在");
+            return o;
+        }else{
+            String order_id = package_single.getString("ORDER_ID");
+            Record order = GlobalLogics.getOrderLogic().getSingleOrderBase(order_id);
+            if (!order.getString("KW_ID").equals(in_kw_id)) {
+                o.setSTATUS(0);
+                o.setMESSAGE("此箱码,不属于这个货位,无法出货");
+                return o;
+            }
+        }
+        Context ctx = new Context();
+        ctx.setUser_id(userId);
+        boolean b = GlobalLogics.getOrderLogic().confirmOutbound(ctx, package_code.replace("'", "").replace("&", "").replace(",", "").replace(" ", ""));
+        if (b){
+            o.setSTATUS(1);
+            o.setMESSAGE("出库成功");
+            return o;
+        }   else{
+            o.setSTATUS(1);
+            o.setMESSAGE("出库操作失败,请检查数据");
+            return o;
+        }
+    }
+
 
     //获取这个 INBOUND_ID 的所有箱子
     @Override

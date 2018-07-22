@@ -99,5 +99,22 @@ public interface OrderServiceLogic {
             @WebParam(name = "end_time", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String end_time,
             @WebParam(name = "kw_id", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)String kw_id
     );
+
+    @WebResult(name="updatePackageInboundNew")
+    WMS_WEBSERVICE_RESULT updatePackageInboundNew(
+            @WebParam(name = "in_kw_id", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
+            String in_kw_id,
+            @WebParam(name = "package_code", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
+            String package_code,
+            @WebParam(name = "userId", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
+            String userId);
+    @WebResult(name="updatePackageOutboundNew")
+    WMS_WEBSERVICE_RESULT updatePackageOutboundNew(
+            @WebParam(name = "in_kw_id", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
+            String in_kw_id,
+            @WebParam(name = "package_code", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
+            String package_code,
+            @WebParam(name = "userId", targetNamespace = "http://39.107.86.181/", mode = WebParam.Mode.IN)
+            String userId);
     //==============以上是改成按照库位收货的==============
 }
