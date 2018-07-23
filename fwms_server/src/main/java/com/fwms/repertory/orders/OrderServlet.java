@@ -1085,7 +1085,8 @@ public class OrderServlet extends WebMethodServlet {
         String KW_ID = qp.checkGetString("KW_ID");
         String START_TIME = qp.getString("T1", "");
         String END_TIME = qp.getString("T2", "");
-        RecordSet data = GlobalLogics.getOrderLogic().getInboundPrintKw(KW_ID, START_TIME, END_TIME);
+        String GYS_ID = qp.getString("GYS_ID", "999");
+        RecordSet data = GlobalLogics.getOrderLogic().getInboundPrintKw(GYS_ID,KW_ID, START_TIME, END_TIME);
         return data;
     }
     @WebMethod("order/get_inbound_print_box")
@@ -1094,7 +1095,8 @@ public class OrderServlet extends WebMethodServlet {
         String KW_ID = qp.checkGetString("KW_ID");
         String START_TIME = qp.getString("T1", "");
         String END_TIME = qp.getString("T2", "");
-        RecordSet data = GlobalLogics.getOrderLogic().getInboundPrintBox(KW_ID, START_TIME, END_TIME);
+        String GYS_ID = qp.getString("GYS_ID", "999");
+        RecordSet data = GlobalLogics.getOrderLogic().getInboundPrintBox(GYS_ID,KW_ID, START_TIME, END_TIME);
         return data;
     }
 
@@ -1104,7 +1106,8 @@ public class OrderServlet extends WebMethodServlet {
         String KW_ID = qp.checkGetString("KW_ID");
         String START_TIME = qp.getString("T1", "");
         String END_TIME = qp.getString("T2", "");
-        RecordSet data = GlobalLogics.getOrderLogic().getOutboundPrintKw(KW_ID, START_TIME, END_TIME);
+        String GYS_ID = qp.getString("GYS_ID", "999");
+        RecordSet data = GlobalLogics.getOrderLogic().getOutboundPrintKw(GYS_ID,KW_ID, START_TIME, END_TIME);
         return data;
     }
     @WebMethod("order/get_outbound_print_box")
@@ -1113,7 +1116,8 @@ public class OrderServlet extends WebMethodServlet {
         String KW_ID = qp.checkGetString("KW_ID");
         String START_TIME = qp.getString("T1", "");
         String END_TIME = qp.getString("T2", "");
-        RecordSet data = GlobalLogics.getOrderLogic().getOutboundPrintBox(KW_ID, START_TIME, END_TIME);
+        String GYS_ID = qp.getString("GYS_ID", "999");
+        RecordSet data = GlobalLogics.getOrderLogic().getOutboundPrintBox(GYS_ID,KW_ID, START_TIME, END_TIME);
         return data;
     }
 
