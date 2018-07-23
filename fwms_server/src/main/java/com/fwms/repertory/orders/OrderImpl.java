@@ -1158,14 +1158,15 @@ public class OrderImpl implements OrderLogic, Initializable {
     //所有的箱子
     public RecordSet webService_getAllInboundKwPackages(String START_TIME,String END_TIME,String KW_ID) {
         SQLExecutor se = read_getSqlExecutor();
-        String sql2 = "SELECT * FROM "+packageTable+" WHERE ORDER_ID IN (SELECT ORDER_ID FROM "+orderTable+" WHERE DELETE_TIME IS NULL AND STATUS>='"+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+"' AND STATUS<'"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND KW_ID='"+KW_ID+"') ";
-        sql2 +=" AND ORDER_ID IN (";
+        String sql2 = "SELECT p.*,o.PARTNER_NO FROM "+packageTable+" p INNER JOIN "+orderTable+" o ON o.ORDER_ID=p.ORDER_ID WHERE o.DELETE_TIME IS NULL AND o.STATUS>='"+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+"' AND o.STATUS<'"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND o.KW_ID='"+KW_ID+"' ";
+        sql2 +=" AND p.ORDER_ID IN (";
         sql2 +=" SELECT ORDER_ID FROM "+orderInboundTable+" WHERE DELETE_TIME IS NULL AND KW_ID ='"+KW_ID+"' ";
         if (START_TIME.length() >= 0)
             sql2 += " AND INBOUND_TIME>='" + START_TIME + "' ";
         if (END_TIME.length() >= 0)
             sql2 += " AND INBOUND_TIME<='" + END_TIME + "' ";
         sql2 +=" )";
+        sql2 += " AND p.IN_KW_TIME='' ";
         RecordSet allKw = GlobalLogics.getBaseLogic().getAllKW();
         RecordSet recs = se.executeRecordSet(sql2, null);
         for (Record rec : recs) {
@@ -1174,6 +1175,8 @@ public class OrderImpl implements OrderLogic, Initializable {
             String FID = rec_kw.getString("FID");
             Record rec_kw_parent = allKw.findEq("KW_ID", FID);
             rec.put("PARENT_KW_NAME", rec_kw_parent.getString("KW_NAME"));
+            Record p = GlobalLogics.getUser().getSinglePartnerByNoBase(rec.getString("PARTNER_NO"));
+            rec.put("PARTNER_NAME", p.getString("PARTNER_NAME"));
         }
         return recs;
     }
@@ -1223,14 +1226,15 @@ public class OrderImpl implements OrderLogic, Initializable {
     //所有的箱子
     public RecordSet webService_getAllOutboundKwPackages(String START_TIME,String END_TIME,String KW_ID) {
         SQLExecutor se = read_getSqlExecutor();
-        String sql2 = "SELECT * FROM "+packageTable+" WHERE ORDER_ID IN (SELECT ORDER_ID FROM "+orderTable+" WHERE DELETE_TIME IS NULL AND STATUS>='"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND STATUS<='"+OrderConstants.ORDER_STATUS_OUTBOUNT_FINISHED+"' AND KW_ID='"+KW_ID+"') ";
-        sql2 +=" AND ORDER_ID IN (";
+        String sql2 = "SELECT p.*,o.PARTNER_NO FROM "+packageTable+" p INNER JOIN "+orderTable+" o ON o.ORDER_ID=p.ORDER_ID WHERE o.DELETE_TIME IS NULL AND o.STATUS>='"+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+"' AND o.STATUS<='"+OrderConstants.ORDER_STATUS_OUTBOUNT_FINISHED+"' AND o.KW_ID='"+KW_ID+"' ";
+        sql2 +=" AND p.ORDER_ID IN (";
         sql2 +=" SELECT ORDER_ID FROM "+orderOutboundTable+" WHERE DELETE_TIME IS NULL AND KW_ID ='"+KW_ID+"' ";
         if (START_TIME.length() >= 0)
-            sql2 += " AND OUTBOUND_TIME>='" + START_TIME + "' ";
+            sql2 += " AND INBOUND_TIME>='" + START_TIME + "' ";
         if (END_TIME.length() >= 0)
-            sql2 += " AND OUTBOUND_TIME<='" + END_TIME + "' ";
+            sql2 += " AND INBOUND_TIME<='" + END_TIME + "' ";
         sql2 +=" )";
+        sql2 += " AND p.OUT_KW_TIME='' ";
         RecordSet allKw = GlobalLogics.getBaseLogic().getAllKW();
         RecordSet recs = se.executeRecordSet(sql2, null);
         for (Record rec : recs) {
@@ -1239,6 +1243,8 @@ public class OrderImpl implements OrderLogic, Initializable {
             String FID = rec_kw.getString("FID");
             Record rec_kw_parent = allKw.findEq("KW_ID", FID);
             rec.put("PARENT_KW_NAME", rec_kw_parent.getString("KW_NAME"));
+            Record p = GlobalLogics.getUser().getSinglePartnerByNoBase(rec.getString("PARTNER_NO"));
+            rec.put("PARTNER_NAME", p.getString("PARTNER_NAME"));
         }
         return recs;
     }

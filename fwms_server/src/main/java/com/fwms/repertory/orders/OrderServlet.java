@@ -1119,7 +1119,7 @@ public class OrderServlet extends WebMethodServlet {
 
     @WebMethod("order/test")
     public void test(HttpServletRequest req, QueryParams qp) throws IOException {
-        GlobalLogics.getOrderLogic().webService_getAllOutboundKws("2018-07-12", "2018-07-13");
+        GlobalLogics.getOrderLogic().webService_getAllInboundKwPackages("2018-07-12", "2018-07-14", "3203959557465792485");
 //        GlobalLogics.getOrderLogic().test("JH_20180619_006","CG_20180619_042_0001");
     }
 }
