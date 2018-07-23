@@ -1354,12 +1354,14 @@ public class OrderImpl implements OrderLogic, Initializable {
 
 
 
-    public RecordSet getInboundPrintKw(String KW_ID, String START_TIME, String END_TIME) {
+    public RecordSet getInboundPrintKw(String GYS_ID,String KW_ID, String START_TIME, String END_TIME) {
         SQLExecutor se = read_getSqlExecutor();
         String filter = "";
 
         String sql0 = "SELECT ORDER_ID FROM "+ orderTable +" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+" ";
         filter += " AND KW_ID='"+KW_ID+"' ";
+        if (GYS_ID.length() > 0 && !GYS_ID.equals("9") && !GYS_ID.equals("999"))
+            filter += " AND GYS_ID='" + GYS_ID + "' ";
         if (START_TIME.length()>0)
             filter += " AND INBOUND_TIME >= '"+START_TIME+"' ";
         if (END_TIME.length()>0)
@@ -1411,11 +1413,15 @@ public class OrderImpl implements OrderLogic, Initializable {
         return recs_partner;
     }
 
-    public RecordSet getInboundPrintBox(String KW_ID,String START_TIME, String END_TIME) {
+    public RecordSet getInboundPrintBox(String GYS_ID,String KW_ID,String START_TIME, String END_TIME) {
         SQLExecutor se = read_getSqlExecutor();
         RecordSet allPartners = GlobalLogics.getUser().getAllUserPartners();
 
-        String sql00 ="SELECT PARTNER_NO,KW_ID,ORDER_ID,INBOUND_TIME FROM " + orderTable + " WHERE STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_CREATE+" AND OUTBOUND_TIME <= '"+END_TIME+"' AND OUTBOUND_TIME >= '"+START_TIME+"' AND KW_ID='"+KW_ID+"' AND DELETE_TIME IS NULL GROUP BY PARTNER_NO";
+        String sql00 = "SELECT PARTNER_NO,KW_ID,ORDER_ID,INBOUND_TIME FROM " + orderTable + " WHERE STATUS>=" + OrderConstants.ORDER_STATUS_INBOUNT_CREATE + " AND OUTBOUND_TIME <= '" + END_TIME + "' AND OUTBOUND_TIME >= '" + START_TIME + "' AND KW_ID='" + KW_ID + "' AND DELETE_TIME IS NULL";
+        if (GYS_ID.length() > 0 && !GYS_ID.equals("9") && !GYS_ID.equals("999"))
+            sql00 += " AND GYS_ID='" + GYS_ID + "' ";
+        sql00 += " GROUP BY PARTNER_NO";
+
         RecordSet recs_partner = se.executeRecordSet(sql00, null);
 
         Record kw = GlobalLogics.getBaseLogic().getSingleKw(KW_ID);
@@ -1435,12 +1441,14 @@ public class OrderImpl implements OrderLogic, Initializable {
         return recs_partner;
     }
 
-    public RecordSet getOutboundPrintKw(String KW_ID, String START_TIME, String END_TIME) {
+    public RecordSet getOutboundPrintKw(String GYS_ID,String KW_ID, String START_TIME, String END_TIME) {
         SQLExecutor se = read_getSqlExecutor();
         String filter = "";
 
         String sql0 = "SELECT ORDER_ID FROM "+ orderTable +" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+" ";
         filter += " AND KW_ID='"+KW_ID+"' ";
+        if (GYS_ID.length() > 0 && !GYS_ID.equals("9") && !GYS_ID.equals("999"))
+            filter += " AND GYS_ID='" + GYS_ID + "' ";
         if (START_TIME.length()>0)
             filter += " AND OUTBOUND_TIME >= '"+START_TIME+"' ";
         if (END_TIME.length()>0)
@@ -1492,11 +1500,14 @@ public class OrderImpl implements OrderLogic, Initializable {
         return recs_partner;
     }
 
-    public RecordSet getOutboundPrintBox(String KW_ID,String START_TIME, String END_TIME) {
+    public RecordSet getOutboundPrintBox(String GYS_ID,String KW_ID,String START_TIME, String END_TIME) {
         SQLExecutor se = read_getSqlExecutor();
         RecordSet allPartners = GlobalLogics.getUser().getAllUserPartners();
 
-        String sql00 ="SELECT PARTNER_NO,KW_ID,ORDER_ID,OUTBOUND_TIME FROM " + orderTable + " WHERE STATUS>="+OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE+" AND OUTBOUND_TIME <= '"+END_TIME+"' AND OUTBOUND_TIME >= '"+START_TIME+"' AND KW_ID='"+KW_ID+"' AND DELETE_TIME IS NULL GROUP BY PARTNER_NO";
+        String sql00 = "SELECT PARTNER_NO,KW_ID,ORDER_ID,OUTBOUND_TIME FROM " + orderTable + " WHERE STATUS>=" + OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE + " AND OUTBOUND_TIME <= '" + END_TIME + "' AND OUTBOUND_TIME >= '" + START_TIME + "' AND KW_ID='" + KW_ID + "' AND DELETE_TIME IS NULL ";
+        if (GYS_ID.length() > 0 && !GYS_ID.equals("9") && !GYS_ID.equals("999"))
+            sql00 += " AND GYS_ID='" + GYS_ID + "' ";
+        sql00 += " GROUP BY PARTNER_NO";
         RecordSet recs_partner = se.executeRecordSet(sql00, null);
 
         Record kw = GlobalLogics.getBaseLogic().getSingleKw(KW_ID);
