@@ -1,10 +1,16 @@
 package com.fwms.repertory.orders;
 
+import com.fwms.basedevss.ServerException;
+import com.fwms.basedevss.base.BaseErrors;
 import com.fwms.basedevss.base.conf.Configuration;
 import com.fwms.basedevss.base.conf.GlobalConfig;
 import com.fwms.basedevss.base.context.Context;
 import com.fwms.basedevss.base.data.Record;
 import com.fwms.basedevss.base.data.RecordSet;
+import com.fwms.basedevss.base.excel.InnovExcel;
+import com.fwms.basedevss.base.sfs.StaticFileStorage;
+import com.fwms.basedevss.base.util.ClassUtils2;
+import com.fwms.basedevss.base.util.DateUtils;
 import com.fwms.basedevss.base.util.RandomUtils;
 import com.fwms.basedevss.base.util.StringUtils2;
 import com.fwms.basedevss.base.web.QueryParams;
@@ -33,12 +39,12 @@ import org.apache.solr.common.util.DateUtil;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -286,7 +292,7 @@ public class OrderServlet extends WebMethodServlet {
 
         GlobalLogics.getOrderLogic().deletePackageAll(ORDER_ID);
 
-        boolean b = GlobalLogics.getOrderLogic().updateGysOrder(ctx, ORDER_ID, OUT_ORDER_ID, "0", "0", "1", MEMO, JH_TIME,INBOUND_TIME, JH_TYPE, JH_ADDR, "0", "0", "0", "0", PARTNER_NO, partner_single.getString("PROVINCE"), partner_single.getString("CITY"), partner_single.getString("AREA"), partner_single.getString("ADDR"), partner_single.getString("PROVINCE_NAME") + partner_single.getString("CITY_NAME") + partner_single.getString("AREA_NAME") + partner_single.getString("ADDR"), partner_single.getString("CONTACT"), partner_single.getString("MOBILE"));
+        boolean b = GlobalLogics.getOrderLogic().updateGysOrder(ctx, ORDER_ID, OUT_ORDER_ID, "0", "0", "1", MEMO, JH_TIME, INBOUND_TIME, JH_TYPE, JH_ADDR, "0", "0", "0", "0", PARTNER_NO, partner_single.getString("PROVINCE"), partner_single.getString("CITY"), partner_single.getString("AREA"), partner_single.getString("ADDR"), partner_single.getString("PROVINCE_NAME") + partner_single.getString("CITY_NAME") + partner_single.getString("AREA_NAME") + partner_single.getString("ADDR"), partner_single.getString("CONTACT"), partner_single.getString("MOBILE"));
         if (b) {
             b = GlobalLogics.getOrderLogic().deleteGysOrderProducts(ORDER_ID);
             if (b){
@@ -1096,7 +1102,7 @@ public class OrderServlet extends WebMethodServlet {
         String START_TIME = qp.getString("T1", "");
         String END_TIME = qp.getString("T2", "");
         String GYS_ID = qp.getString("GYS_ID", "999");
-        RecordSet data = GlobalLogics.getOrderLogic().getInboundPrintBox(GYS_ID,KW_ID, START_TIME, END_TIME);
+        RecordSet data = GlobalLogics.getOrderLogic().getInboundPrintBox(GYS_ID, KW_ID, START_TIME, END_TIME);
         return data;
     }
 
@@ -1107,7 +1113,7 @@ public class OrderServlet extends WebMethodServlet {
         String START_TIME = qp.getString("T1", "");
         String END_TIME = qp.getString("T2", "");
         String GYS_ID = qp.getString("GYS_ID", "999");
-        RecordSet data = GlobalLogics.getOrderLogic().getOutboundPrintKw(GYS_ID,KW_ID, START_TIME, END_TIME);
+        RecordSet data = GlobalLogics.getOrderLogic().getOutboundPrintKw(GYS_ID, KW_ID, START_TIME, END_TIME);
         return data;
     }
     @WebMethod("order/get_outbound_print_box")
@@ -1117,8 +1123,107 @@ public class OrderServlet extends WebMethodServlet {
         String START_TIME = qp.getString("T1", "");
         String END_TIME = qp.getString("T2", "");
         String GYS_ID = qp.getString("GYS_ID", "999");
-        RecordSet data = GlobalLogics.getOrderLogic().getOutboundPrintBox(GYS_ID,KW_ID, START_TIME, END_TIME);
+        RecordSet data = GlobalLogics.getOrderLogic().getOutboundPrintBox(GYS_ID, KW_ID, START_TIME, END_TIME);
         return data;
+    }
+
+    //==============
+    @WebMethod("order/expert_excel_inbound_box")
+    public String expert_excel_inbound_box(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, false, true);
+        String START_TIME = qp.checkGetString("START_TIME");
+        String END_TIME = qp.checkGetString("END_TIME");
+        String GYS_ID = qp.getString("GYS_ID", "999");
+        String GYS_NAME = qp.getString("GYS_NAME", "999");
+        String KW_ID = qp.getString("KW_ID", "999");
+        String KW_NAME = qp.getString("KW_NAME", "999");
+        if (GYS_ID.length()<=0 || GYS_ID.equals("9") || GYS_ID.equals("999")){
+            GYS_NAME = "全部";
+        }
+        RecordSet recs = GlobalLogics.getOrderLogic().getInboundPrintBoxForExcel(GYS_ID, KW_ID, KW_NAME, START_TIME, END_TIME);
+        if (recs.size() <= 0)
+            return "NO DATA";
+        return makeExcelInboundPackages(ctx, recs, KW_NAME+ " " + GYS_NAME + " 入库通知单");
+    }
+    public static String makeExcelInboundPackages(Context ctx, RecordSet recs, String title) throws IOException {
+        InnovExcel ie = new InnovExcel();
+        List<List<String>> dataList = new ArrayList<List<String>>();
+        dataList.add(Arrays.asList(
+                "入库所在线路",  "收货店铺", "每箱【箱内货品】", "入库日期"
+        ));
+
+        for (Record us : recs) {
+            dataList.add(Arrays.asList(
+                    us.getString("KW_NAME"), us.getString("PARTNER_NAME"), us.getString("PRO_DETAIL"), us.getString("INBOUND_TIME")
+            ));
+        }
+        String sheetName = DateUtils.now().replaceAll("-", "").replaceAll(":", "").replaceAll(" ", "");
+        byte[] buff = ie.makeInboundPackage(title, dataList, sheetName);
+        Configuration conf = GlobalConfig.get();
+        StaticFileStorage sfs = (StaticFileStorage) ClassUtils2.newInstance(conf.getString("service.export.excel.fileStorage", ""));
+        String file = "exp_" + sheetName + ".xls";
+        OutputStream out = null;
+        try {
+            out = new BufferedOutputStream(sfs.create(file), 1024 * 16);
+            org.apache.commons.io.IOUtils.copy(new ByteArrayInputStream(buff), out);
+            out.flush();
+        } catch (IOException e) {
+            throw new ServerException(BaseErrors.PLATFORM_SFS_IO_ERROR, e);
+        } finally {
+            org.apache.commons.io.IOUtils.closeQuietly(out);
+        }
+        String url0 = String.format(conf.getString("service.export.excelPattern", "/exportFileStorage/%s"), file);
+        ie = null;
+        return url0;
+    }
+
+    @WebMethod("order/expert_excel_outbound_box")
+    public String expert_excel_outbound_box(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, false, true);
+        String START_TIME = qp.checkGetString("START_TIME");
+        String END_TIME = qp.checkGetString("END_TIME");
+        String GYS_ID = qp.getString("GYS_ID", "999");
+        String GYS_NAME = qp.getString("GYS_NAME", "999");
+        String KW_ID = qp.getString("KW_ID", "999");
+        String KW_NAME = qp.getString("KW_NAME", "999");
+        if (GYS_ID.length()<=0 || GYS_ID.equals("9") || GYS_ID.equals("999")){
+            GYS_NAME = "全部";
+        }
+        RecordSet recs = GlobalLogics.getOrderLogic().getOutboundPrintBoxForExcel(GYS_ID, KW_ID, KW_NAME, START_TIME, END_TIME);
+        if (recs.size() <= 0)
+            return "NO DATA";
+        return makeExcelOutboundPackages(ctx, recs, KW_NAME + " " + GYS_NAME + "  出库拣货单");
+    }
+    public static String makeExcelOutboundPackages(Context ctx, RecordSet recs, String title) throws IOException {
+        InnovExcel ie = new InnovExcel();
+        List<List<String>> dataList = new ArrayList<List<String>>();
+        dataList.add(Arrays.asList(
+                "入库所在线路",  "收货店铺", "每箱【箱内货品】", "出库日期"
+        ));
+
+        for (Record us : recs) {
+            dataList.add(Arrays.asList(
+                    us.getString("KW_NAME"), us.getString("PARTNER_NAME"), us.getString("PRO_DETAIL"), us.getString("OUTBOUND_TIME")
+            ));
+        }
+        String sheetName = DateUtils.now().replaceAll("-", "").replaceAll(":", "").replaceAll(" ", "");
+        byte[] buff = ie.makeInboundPackage(title, dataList,sheetName);
+        Configuration conf = GlobalConfig.get();
+        StaticFileStorage sfs = (StaticFileStorage) ClassUtils2.newInstance(conf.getString("service.export.excel.fileStorage", ""));
+        String file = "exp_" + sheetName + ".xls";
+        OutputStream out = null;
+        try {
+            out = new BufferedOutputStream(sfs.create(file), 1024 * 16);
+            org.apache.commons.io.IOUtils.copy(new ByteArrayInputStream(buff), out);
+            out.flush();
+        } catch (IOException e) {
+            throw new ServerException(BaseErrors.PLATFORM_SFS_IO_ERROR, e);
+        } finally {
+            org.apache.commons.io.IOUtils.closeQuietly(out);
+        }
+        String url0 = String.format(conf.getString("service.export.excelPattern", "/exportFileStorage/%s"), file);
+        ie = null;
+        return url0;
     }
 
     @WebMethod("order/test")

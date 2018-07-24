@@ -1230,9 +1230,9 @@ public class OrderImpl implements OrderLogic, Initializable {
         sql2 +=" AND p.ORDER_ID IN (";
         sql2 +=" SELECT ORDER_ID FROM "+orderOutboundTable+" WHERE DELETE_TIME IS NULL AND KW_ID ='"+KW_ID+"' ";
         if (START_TIME.length() >= 0)
-            sql2 += " AND INBOUND_TIME>='" + START_TIME + "' ";
+            sql2 += " AND OUTBOUND_TIME>='" + START_TIME + "' ";
         if (END_TIME.length() >= 0)
-            sql2 += " AND INBOUND_TIME<='" + END_TIME + "' ";
+            sql2 += " AND OUTBOUND_TIME<='" + END_TIME + "' ";
         sql2 +=" )";
         sql2 += " AND p.OUT_KW_TIME='' ";
         RecordSet allKw = GlobalLogics.getBaseLogic().getAllKW();
@@ -1417,10 +1417,9 @@ public class OrderImpl implements OrderLogic, Initializable {
         SQLExecutor se = read_getSqlExecutor();
         RecordSet allPartners = GlobalLogics.getUser().getAllUserPartners();
 
-        String sql00 = "SELECT PARTNER_NO,KW_ID,ORDER_ID,INBOUND_TIME FROM " + orderTable + " WHERE STATUS>=" + OrderConstants.ORDER_STATUS_INBOUNT_CREATE + " AND OUTBOUND_TIME <= '" + END_TIME + "' AND OUTBOUND_TIME >= '" + START_TIME + "' AND KW_ID='" + KW_ID + "' AND DELETE_TIME IS NULL";
+        String sql00 = "SELECT DISTINCT(PARTNER_NO) AS PARTNER_NO FROM " + orderTable + " WHERE STATUS>=" + OrderConstants.ORDER_STATUS_INBOUNT_CREATE + " AND INBOUND_TIME <= '" + END_TIME + "' AND INBOUND_TIME >= '" + START_TIME + "' AND KW_ID='" + KW_ID + "' AND DELETE_TIME IS NULL";
         if (GYS_ID.length() > 0 && !GYS_ID.equals("9") && !GYS_ID.equals("999"))
             sql00 += " AND GYS_ID='" + GYS_ID + "' ";
-        sql00 += " GROUP BY PARTNER_NO";
 
         RecordSet recs_partner = se.executeRecordSet(sql00, null);
 
@@ -1433,10 +1432,52 @@ public class OrderImpl implements OrderLogic, Initializable {
             p0.copyTo(rec);
             rec.put("KW_NAME", kw.getString("KW_NAME"));
 
-            RecordSet allPackage = GlobalLogics.getOrderLogic().getOrderPackages(rec.getString("ORDER_ID"));
+
+            String sql01 = "SELECT p.*,o.KW_ID,o.INBOUND_TIME,o.OUTBOUND_TIME,o.PARTNER_NO FROM " + packageTable + " p INNER JOIN " + orderTable + " o ON o.ORDER_ID=p.ORDER_ID WHERE 1=1 ";
+            sql01 += " AND o.PARTNER_NO='" + PARTNER_NO + "' AND o.STATUS>=" + OrderConstants.ORDER_STATUS_INBOUNT_CREATE + " AND o.INBOUND_TIME <= '" + END_TIME + "' AND o.INBOUND_TIME >= '" + START_TIME + "' AND o.KW_ID='" + KW_ID + "' AND o.DELETE_TIME IS NULL ";
+            if (GYS_ID.length() > 0 && !GYS_ID.equals("9") && !GYS_ID.equals("999"))
+                sql01 += " AND o.GYS_ID='" + GYS_ID + "' ";
+
+            RecordSet allPackage = se.executeRecordSet(sql01, null);
 
             rec.put("PACKAGES_DATA",allPackage);
             rec.put("PACKAGES_COUNT",allPackage.size());
+        }
+        return recs_partner;
+    }
+
+    public RecordSet getInboundPrintBoxForExcel(String GYS_ID,String KW_ID,String KW_NAME,String START_TIME, String END_TIME) {
+        SQLExecutor se = read_getSqlExecutor();
+        RecordSet allPartners = GlobalLogics.getUser().getAllUserPartners();
+
+        String sql00 = "SELECT p.*,o.KW_ID,o.INBOUND_TIME,o.OUTBOUND_TIME,o.PARTNER_NO FROM " + packageTable + " p INNER JOIN "+orderTable+" o ON o.ORDER_ID = p.ORDER_ID WHERE o.STATUS>=" + OrderConstants.ORDER_STATUS_INBOUNT_CREATE + " AND o.INBOUND_TIME <= '" + END_TIME + "' AND o.INBOUND_TIME >= '" + START_TIME + "' AND o.KW_ID='" + KW_ID + "' AND o.DELETE_TIME IS NULL";
+        if (GYS_ID.length() > 0 && !GYS_ID.equals("9") && !GYS_ID.equals("999"))
+            sql00 += " AND o.GYS_ID='" + GYS_ID + "' ";
+        sql00 +=" ORDER BY o.PARTNER_NO";
+        RecordSet recs_partner = se.executeRecordSet(sql00, null);
+        for (Record rec : recs_partner){
+            String PARTNER_NO = rec.getString("PARTNER_NO");
+            Record p0 = allPartners.findEq("PARTNER_NO", PARTNER_NO);
+            rec.put("PARTNER_NAME", p0.getString("PARTNER_NAME"));
+            rec.put("KW_NAME", KW_NAME);
+        }
+        return recs_partner;
+    }
+
+    public RecordSet getOutboundPrintBoxForExcel(String GYS_ID,String KW_ID,String KW_NAME,String START_TIME, String END_TIME) {
+        SQLExecutor se = read_getSqlExecutor();
+        RecordSet allPartners = GlobalLogics.getUser().getAllUserPartners();
+
+        String sql00 = "SELECT p.*,o.KW_ID,o.INBOUND_TIME,o.OUTBOUND_TIME,o.PARTNER_NO FROM " + packageTable + " p INNER JOIN "+orderTable+" o ON o.ORDER_ID = p.ORDER_ID WHERE o.STATUS>=" + OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE + " AND o.OUTBOUND_TIME <= '" + END_TIME + "' AND o.OUTBOUND_TIME >= '" + START_TIME + "' AND o.KW_ID='" + KW_ID + "' AND o.DELETE_TIME IS NULL";
+        if (GYS_ID.length() > 0 && !GYS_ID.equals("9") && !GYS_ID.equals("999"))
+            sql00 += " AND o.GYS_ID='" + GYS_ID + "' ";
+        sql00 +=" ORDER BY o.PARTNER_NO";
+        RecordSet recs_partner = se.executeRecordSet(sql00, null);
+        for (Record rec : recs_partner){
+            String PARTNER_NO = rec.getString("PARTNER_NO");
+            Record p0 = allPartners.findEq("PARTNER_NO", PARTNER_NO);
+            rec.put("PARTNER_NAME", p0.getString("PARTNER_NAME"));
+            rec.put("KW_NAME", KW_NAME);
         }
         return recs_partner;
     }
@@ -1504,10 +1545,10 @@ public class OrderImpl implements OrderLogic, Initializable {
         SQLExecutor se = read_getSqlExecutor();
         RecordSet allPartners = GlobalLogics.getUser().getAllUserPartners();
 
-        String sql00 = "SELECT PARTNER_NO,KW_ID,ORDER_ID,OUTBOUND_TIME FROM " + orderTable + " WHERE STATUS>=" + OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE + " AND OUTBOUND_TIME <= '" + END_TIME + "' AND OUTBOUND_TIME >= '" + START_TIME + "' AND KW_ID='" + KW_ID + "' AND DELETE_TIME IS NULL ";
+        String sql00 = "SELECT DISTINCT(PARTNER_NO) AS PARTNER_NO FROM " + orderTable + " WHERE STATUS>=" + OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE + " AND OUTBOUND_TIME <= '" + END_TIME + "' AND OUTBOUND_TIME >= '" + START_TIME + "' AND KW_ID='" + KW_ID + "' AND DELETE_TIME IS NULL";
         if (GYS_ID.length() > 0 && !GYS_ID.equals("9") && !GYS_ID.equals("999"))
             sql00 += " AND GYS_ID='" + GYS_ID + "' ";
-        sql00 += " GROUP BY PARTNER_NO";
+
         RecordSet recs_partner = se.executeRecordSet(sql00, null);
 
         Record kw = GlobalLogics.getBaseLogic().getSingleKw(KW_ID);
@@ -1519,7 +1560,13 @@ public class OrderImpl implements OrderLogic, Initializable {
             p0.copyTo(rec);
             rec.put("KW_NAME", kw.getString("KW_NAME"));
 
-            RecordSet allPackage = GlobalLogics.getOrderLogic().getOrderPackages(rec.getString("ORDER_ID"));
+
+            String sql01 = "SELECT p.*,o.KW_ID,o.INBOUND_TIME,o.OUTBOUND_TIME,o.PARTNER_NO FROM " + packageTable + " p INNER JOIN " + orderTable + " o ON o.ORDER_ID=p.ORDER_ID WHERE 1=1 ";
+            sql01 += " AND o.PARTNER_NO='" + PARTNER_NO + "' AND o.STATUS>=" + OrderConstants.ORDER_STATUS_OUTBOUNT_CREATE + " AND o.OUTBOUND_TIME <= '" + END_TIME + "' AND o.OUTBOUND_TIME >= '" + START_TIME + "' AND o.KW_ID='" + KW_ID + "' AND o.DELETE_TIME IS NULL ";
+            if (GYS_ID.length() > 0 && !GYS_ID.equals("9") && !GYS_ID.equals("999"))
+                sql01 += " AND o.GYS_ID='" + GYS_ID + "' ";
+
+            RecordSet allPackage = se.executeRecordSet(sql01, null);
 
             rec.put("PACKAGES_DATA",allPackage);
             rec.put("PACKAGES_COUNT",allPackage.size());

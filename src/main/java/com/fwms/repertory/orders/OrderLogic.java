@@ -61,6 +61,9 @@ public interface OrderLogic {
     RecordSet getAllImportsByIDS(String IMPORT_IDS);
     Record getSingleInboundBase(String INBOUND_ID);
     Record getSingleOutboundBase(String OUTBOUND_ID);
+
+    RecordSet getInboundPrintBoxForExcel(String GYS_ID,String KW_ID,String KW_NAME,String START_TIME, String END_TIME);
+    RecordSet getOutboundPrintBoxForExcel(String GYS_ID,String KW_ID,String KW_NAME,String START_TIME, String END_TIME);
     //========================
     Record getSingleOrderByPackageCode(String PACKAGE_CODE);
 
