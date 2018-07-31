@@ -908,7 +908,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         }
     }
 
-    public RecordSet getNowRepoPackage(String SJ_ID,String GYS_ID,String F_KW_ID,String KW_ID) {
+    public RecordSet getNowRepoPackage(String SJ_ID,String GYS_ID,String F_KW_ID,String KW_ID,String START_TIME,String END_TIME) {
         String sql ="SELECT p.*,g.KW_ID FROM " + packageTable + " p INNER JOIN "+ orderTable +" g ON g.ORDER_ID=p.ORDER_ID WHERE p.IN_KW_TIME!='' AND p.OUT_KW_TIME='' AND g.DELETE_TIME IS NULL ";
         if (SJ_ID.length()>0 && !SJ_ID.equals("999") && !SJ_ID.equals("9") && !SJ_ID.equals("0"))
             sql +=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE SJ_ID='"+SJ_ID+"' AND DELETE_TIME IS NULL)";
@@ -918,7 +918,10 @@ public class OrderImpl implements OrderLogic, Initializable {
             sql +=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE KW_ID='"+KW_ID+"' AND DELETE_TIME IS NULL)";
         if (F_KW_ID.length()>0 && !F_KW_ID.equals("999") && !F_KW_ID.equals("9") && !F_KW_ID.equals("0"))
             sql +=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE KW_ID IN (SELECT KW_ID FROM "+kwTable+" WHERE FID='"+F_KW_ID+"') AND DELETE_TIME IS NULL)";
-
+        if (START_TIME.length()>0)
+            sql +=" AND INBOUND_TIME>='"+START_TIME+"' ";
+        if (END_TIME.length()>0)
+            sql +=" AND END_TIME<='"+END_TIME+"' ";
         SQLExecutor se = getSqlExecutor();
         RecordSet recs = se.executeRecordSet(sql, null);
         RecordSet allKw = GlobalLogics.getBaseLogic().getAllKW();
@@ -935,7 +938,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         return recs;
     }
 
-    public RecordSet getGysOrderDailyGoods(String SJ_ID,String GYS_ID,String F_KW_ID,String KW_ID) {
+    public RecordSet getGysOrderDailyGoods(String SJ_ID,String GYS_ID,String F_KW_ID,String KW_ID,String START_TIME,String END_TIME) {
         SQLExecutor se = getSqlExecutor();
         String orders_sql = "SELECT ORDER_ID,PARTNER_NO FROM "+ orderTable +" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_PART+" AND STATUS<"+OrderConstants.ORDER_STATUS_OUTBOUNT_PART+" ";
 
@@ -948,8 +951,10 @@ public class OrderImpl implements OrderLogic, Initializable {
             orderFilter +=" AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE KW_ID='"+KW_ID+"' AND DELETE_TIME IS NULL)";
         if (F_KW_ID.length()>0 && !F_KW_ID.equals("999") && !F_KW_ID.equals("9") && !F_KW_ID.equals("0"))
             orderFilter +=" AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE KW_ID IN (SELECT KW_ID FROM "+kwTable+" WHERE FID='"+F_KW_ID+"') AND DELETE_TIME IS NULL)";
-
-
+        if (START_TIME.length()>0)
+            orderFilter +=" AND INBOUND_TIME>='"+START_TIME+"' ";
+        if (END_TIME.length()>0)
+            orderFilter +=" AND END_TIME<='"+END_TIME+"' ";
         RecordSet allOrders = se.executeRecordSet(orders_sql+orderFilter);
         String ORDER_IDS = allOrders.joinColumnValues("ORDER_ID", ",");
         if (ORDER_IDS.length() > 0)

@@ -658,7 +658,9 @@ public class OrderServlet extends WebMethodServlet {
         String GYS_ID = qp.getString("GYS_ID", "999");
         String F_KW_ID = qp.getString("F_KW_ID", "999");
         String KW_ID = qp.getString("KW_ID", "999");
-        RecordSet recs  = GlobalLogics.getOrderLogic().getNowRepoPackage(SJ_ID, GYS_ID, F_KW_ID, KW_ID);
+        String START_TIME = qp.getString("START_TIME", "");
+        String END_TIME = qp.getString("END_TIME", "");
+        RecordSet recs  = GlobalLogics.getOrderLogic().getNowRepoPackage(SJ_ID, GYS_ID, F_KW_ID, KW_ID,START_TIME,END_TIME);
         return recs;
     }
     @WebMethod("order/get_order_package_base")
@@ -677,7 +679,9 @@ public class OrderServlet extends WebMethodServlet {
         String GYS_ID = qp.getString("GYS_ID", "999");
         String F_KW_ID = qp.getString("F_KW_ID", "999");
         String KW_ID = qp.getString("KW_ID", "999");
-        RecordSet recs  = GlobalLogics.getOrderLogic().getGysOrderDailyGoods(SJ_ID, GYS_ID, F_KW_ID, KW_ID);
+        String START_TIME = qp.getString("START_TIME", "");
+        String END_TIME = qp.getString("END_TIME", "");
+        RecordSet recs  = GlobalLogics.getOrderLogic().getGysOrderDailyGoods(SJ_ID, GYS_ID, F_KW_ID, KW_ID,START_TIME,END_TIME);
         return recs;
     }
 
