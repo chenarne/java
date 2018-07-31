@@ -938,6 +938,74 @@ public class OrderImpl implements OrderLogic, Initializable {
         return recs;
     }
 
+    public RecordSet getGysOrderDailyGoodsNew(String SJ_ID,String GYS_ID,String F_KW_ID,String KW_ID,String START_TIME,String END_TIME) {
+        SQLExecutor se = getSqlExecutor();
+        String orders_sql = "SELECT ORDER_ID,PARTNER_NO FROM "+ orderTable +" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_PART+" AND STATUS<"+OrderConstants.ORDER_STATUS_OUTBOUNT_PART+" ";
+
+        String orderFilter = "";
+        if (SJ_ID.length()>0 && !SJ_ID.equals("999") && !SJ_ID.equals("9") && !SJ_ID.equals("0"))
+            orderFilter +=" AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE SJ_ID='"+SJ_ID+"' AND DELETE_TIME IS NULL)";
+        if (GYS_ID.length()>0 && !GYS_ID.equals("999") && !GYS_ID.equals("9") && !GYS_ID.equals("0"))
+            orderFilter +=" AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE GYS_ID='"+GYS_ID+"' AND DELETE_TIME IS NULL)";
+        if (KW_ID.length()>0 && !KW_ID.equals("999") && !KW_ID.equals("9") && !KW_ID.equals("0"))
+            orderFilter +=" AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE KW_ID='"+KW_ID+"' AND DELETE_TIME IS NULL)";
+        if (F_KW_ID.length()>0 && !F_KW_ID.equals("999") && !F_KW_ID.equals("9") && !F_KW_ID.equals("0"))
+            orderFilter +=" AND ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE KW_ID IN (SELECT KW_ID FROM "+kwTable+" WHERE FID='"+F_KW_ID+"') AND DELETE_TIME IS NULL)";
+
+        RecordSet allOrders = se.executeRecordSet(orders_sql+orderFilter);
+        String ORDER_IDS = allOrders.joinColumnValues("ORDER_ID", ",");
+        if (ORDER_IDS.length() > 0)
+            ORDER_IDS = Constants.formatString(ORDER_IDS);
+        else
+            return new RecordSet();
+
+
+
+        String sql00 ="SELECT DISTINCT(SPEC_ID) AS SPEC_ID FROM " + packageProductTable + " WHERE 1=1 ";
+        sql00 += " AND PACKAGE_CODE IN (SELECT PACKAGE_CODE FROM "+packageTable+" WHERE IN_KW_TIME!='' AND OUT_KW_TIME='' ";
+        if (START_TIME.length()>0)
+            sql00 +=" AND IN_KW_TIME>='"+START_TIME+" 00:00:00' ";
+        if (END_TIME.length()>0)
+            sql00 +=" AND IN_KW_TIME<='"+END_TIME+" 23:59:59' ";
+        sql00 += " )";
+        sql00+=" AND ORDER_ID IN ("+ORDER_IDS+")";
+
+
+
+        RecordSet recs_spec = se.executeRecordSet(sql00, null);
+        RecordSet allSpecPros = GlobalLogics.getBaseLogic().getAllGysProSpec(GYS_ID);
+        RecordSet allKw = GlobalLogics.getBaseLogic().getAllKW();
+        for (Record rec : recs_spec){
+            String SPEC_ID = rec.getString("SPEC_ID");
+            Record pro = allSpecPros.findEq("SPEC_ID",SPEC_ID);
+            pro.copyTo(rec);
+
+            String sql2 = "SELECT SUM(PRO_COUNT) AS PRO_COUNT FROM "+packageProductTable+" WHERE SPEC_ID='"+SPEC_ID+"'  AND ORDER_ID IN ("+ORDER_IDS+") AND PACKAGE_CODE IN (SELECT PACKAGE_CODE FROM "+packageTable+" WHERE IN_KW_TIME!='' AND OUT_KW_TIME='' AND IN_KW_TIME>='"+START_TIME+" 00:00:00'  AND IN_KW_TIME<='"+END_TIME+" 23:59:59'  ) ";
+            Record s = se.executeRecord(sql2);
+            int allSum = s.isEmpty()?0:(int)s.getInt("PRO_COUNT");
+
+            rec.put("ALL_COUNT",allSum);
+            //还要看,这些货,存在那些库存的
+            String sql3 = "SELECT KW_ID FROM "+ orderTable +" WHERE ORDER_ID IN ("+ORDER_IDS+") AND ORDER_ID IN (SELECT ORDER_ID FROM "+packageTable+" WHERE IN_KW_TIME!='' AND OUT_KW_TIME='' AND IN_KW_TIME>='"+START_TIME+" 00:00:00'  AND IN_KW_TIME<='"+END_TIME+" 23:59:59'  ) ";
+            sql3 += " AND ORDER_ID IN (SELECT ORDER_ID FROM "+packageProductTable+" WHERE SPEC_ID='"+SPEC_ID+"')";
+            sql3 += "  GROUP BY KW_ID";
+
+            RecordSet recs_kw = se.executeRecordSet(sql3);
+            for (Record r : recs_kw){
+                Record thisKw = allKw.findEq("KW_ID",r.getString("KW_ID"));
+                r.put("KW_NAME",thisKw.getString("KW_NAME"));
+                Record fatherKw = allKw.findEq("KW_ID", thisKw.getString("FID"));
+                r.put("PARENT_KW_NAME", fatherKw.getString("KW_NAME"));
+
+            }
+            rec.put("ALL_KWS",recs_kw);
+        }
+
+
+        return recs_spec;
+    }
+
+
     public RecordSet getGysOrderDailyGoods(String SJ_ID,String GYS_ID,String F_KW_ID,String KW_ID,String START_TIME,String END_TIME) {
         SQLExecutor se = getSqlExecutor();
         String orders_sql = "SELECT ORDER_ID,PARTNER_NO FROM "+ orderTable +" WHERE DELETE_TIME IS NULL AND STATUS>="+OrderConstants.ORDER_STATUS_INBOUNT_PART+" AND STATUS<"+OrderConstants.ORDER_STATUS_OUTBOUNT_PART+" ";
