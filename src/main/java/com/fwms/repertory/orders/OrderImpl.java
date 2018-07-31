@@ -919,9 +919,9 @@ public class OrderImpl implements OrderLogic, Initializable {
         if (F_KW_ID.length()>0 && !F_KW_ID.equals("999") && !F_KW_ID.equals("9") && !F_KW_ID.equals("0"))
             sql +=" AND p.ORDER_ID IN (SELECT ORDER_ID FROM "+ orderTable +" WHERE KW_ID IN (SELECT KW_ID FROM "+kwTable+" WHERE FID='"+F_KW_ID+"') AND DELETE_TIME IS NULL)";
         if (START_TIME.length()>0)
-            sql +=" AND INBOUND_TIME>='"+START_TIME+"' ";
+            sql +=" AND IN_KW_TIME>='"+START_TIME+" 00:00:00' ";
         if (END_TIME.length()>0)
-            sql +=" AND INBOUND_TIME<='"+END_TIME+"' ";
+            sql +=" AND IN_KW_TIME<='"+END_TIME+" 23:59:59' ";
         SQLExecutor se = getSqlExecutor();
         RecordSet recs = se.executeRecordSet(sql, null);
         RecordSet allKw = GlobalLogics.getBaseLogic().getAllKW();
