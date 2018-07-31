@@ -365,6 +365,8 @@ public class OrderImpl implements OrderLogic, Initializable {
                 String sql2 = "SELECT SUM(PRO_COUNT) AS PRO_COUNT FROM "+packageProductTable+" WHERE ORDER_ID='"+ORDER_ID+"' AND SPEC_ID='"+product.getString("PRO_SPEC_ID")+"' ";
                 Record h =  se.executeRecord(sql2, null);
                 int hasCount = h.isEmpty()?0:(int)h.getInt("PRO_COUNT");
+                if (hasCount>product.getInt("PRO_COUNT"))
+                    hasCount = (int)product.getInt("PRO_COUNT");
                 product.put("HAS_PACKAGE_COUNT",hasCount);
                 all_count += product.getInt("PRO_COUNT");
                 all_has += hasCount;
