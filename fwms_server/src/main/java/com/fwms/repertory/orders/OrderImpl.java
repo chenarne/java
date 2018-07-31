@@ -921,7 +921,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         if (START_TIME.length()>0)
             sql +=" AND INBOUND_TIME>='"+START_TIME+"' ";
         if (END_TIME.length()>0)
-            sql +=" AND END_TIME<='"+END_TIME+"' ";
+            sql +=" AND INBOUND_TIME<='"+END_TIME+"' ";
         SQLExecutor se = getSqlExecutor();
         RecordSet recs = se.executeRecordSet(sql, null);
         RecordSet allKw = GlobalLogics.getBaseLogic().getAllKW();
@@ -954,7 +954,7 @@ public class OrderImpl implements OrderLogic, Initializable {
         if (START_TIME.length()>0)
             orderFilter +=" AND INBOUND_TIME>='"+START_TIME+"' ";
         if (END_TIME.length()>0)
-            orderFilter +=" AND END_TIME<='"+END_TIME+"' ";
+            orderFilter +=" AND INBOUND_TIME<='"+END_TIME+"' ";
         RecordSet allOrders = se.executeRecordSet(orders_sql+orderFilter);
         String ORDER_IDS = allOrders.joinColumnValues("ORDER_ID", ",");
         if (ORDER_IDS.length() > 0)
