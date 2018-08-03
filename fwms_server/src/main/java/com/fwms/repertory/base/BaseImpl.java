@@ -9,6 +9,7 @@ import com.fwms.basedevss.base.sql.ConnectionFactory;
 import com.fwms.basedevss.base.sql.SQLExecutor;
 import com.fwms.basedevss.base.util.DateUtils;
 import com.fwms.basedevss.base.util.Initializable;
+import com.fwms.basedevss.base.util.RandomUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,7 @@ public class BaseImpl implements BaseLogic, Initializable {
     private String partnerKwTable = "t_sys_partner_kw";
     private String sjPartnerTable = "t_sys_user_partner";
     private String specFullBoxTable = "t_sys_product_spec_fullbox";
+    private String specMaxBoxTable = "t_sys_product_spec_maxbox";
     private String logTable = "t_sys_log";
 
     public BaseImpl() {
@@ -586,6 +588,62 @@ public class BaseImpl implements BaseLogic, Initializable {
             r.put("ALL_FULL_BOX",full_box);
         }
         return recs;
+    }
+
+    public RecordSet getAllSpecMaxBox(String GYS_ID) {
+        SQLExecutor se = read_getSqlExecutor();
+        String sql = "SELECT p.*,pro.GYS_ID FROM " + productSpecTable + " p INNER JOIN "+productTable+" pro ON pro.PRO_ID=p.PRO_ID WHERE pro.GYS_ID='"+GYS_ID+"' AND p.DELETE_TIME IS NULL AND pro.DELETE_TIME IS NULL AND p.SINGLE_BOX=0 ";
+        sql += " AND p.SPEC_ID NOT IN (SELECT SPEC_ID FROM "+specFullBoxTable+")";
+        sql += " ORDER BY SORT,PRO_NAME";
+        RecordSet recs = se.executeRecordSet(sql, null);
+        RecordSet max_recs = getSingleSpecMaxBox(GYS_ID);
+        for (Record r : recs){
+             Record record = max_recs.findEq("SPEC_ID",r.getString("SPEC_ID"));
+             if (record.isEmpty()){
+                 r.put("MAX_COUNT",0);r.put("CREATE_TIME","");
+             }else{
+                 r.put("MAX_COUNT",record.getInt("COUNT"));r.put("CREATE_TIME",record.getString("CREATE_TIME"));
+             }
+        }
+        return recs;
+    }
+    public RecordSet getSingleSpecMaxBox(String GYS_ID) {
+        String sql = "SELECT * FROM " + specMaxBoxTable + "  WHERE GYS_ID='"+GYS_ID+"' ";
+        SQLExecutor se = read_getSqlExecutor();
+        RecordSet recs = se.executeRecordSet(sql, null);
+        return recs;
+    }
+    public boolean deleteAllSpecMaxBox(String MAX_ID) {
+        String sql = "DELETE FROM " + specMaxBoxTable + "  WHERE MAX_ID='" + MAX_ID + "' ";
+        SQLExecutor se = getSqlExecutor();
+        long n = se.executeUpdate(sql);
+        return n > 0;
+    }
+    public boolean deleteAllSpecMaxBox(String GYS_ID,String SPEC_ID) {
+        String sql = "DELETE FROM " + specMaxBoxTable + "  WHERE GYS_ID='" + GYS_ID + "' AND SPEC_ID='"+SPEC_ID+"' ";
+        SQLExecutor se = getSqlExecutor();
+        long n = se.executeUpdate(sql);
+        return n > 0;
+    }
+
+    public boolean saveAllSpecMaxBox(String GYS_ID, String SPEC_ID, String PRO_NAME, int COUNT) {
+        if (COUNT <= 0) {
+            return deleteAllSpecMaxBox(GYS_ID, SPEC_ID);
+        }
+
+        String sql0 = "SELECT * FROM " + specMaxBoxTable + "  WHERE GYS_ID='"+GYS_ID+"' AND SPEC_ID='"+SPEC_ID+"' ";
+        SQLExecutor se = getSqlExecutor();
+        Record rec = se.executeRecord(sql0, null);
+        if (rec.isEmpty()){
+            String sql = "INSERT INTO " + specMaxBoxTable + " (MAX_ID,GYS_ID,SPEC_ID,PRO_NAME,COUNT,CREATE_TIME) " +
+                    "VALUES ('" + String.valueOf(RandomUtils.generateId()) + "','" + GYS_ID + "','" + SPEC_ID + "','" + PRO_NAME + "','" + COUNT + "','" + DateUtils.now() + "') ";
+            long n = se.executeUpdate(sql);
+            return n > 0;
+        }else{
+            String sql = "UPDATE " + specMaxBoxTable + " SET COUNT='"+COUNT+"',CREATE_TIME='"+DateUtils.now()+"' WHERE GYS_ID='" + GYS_ID + "' AND SPEC_ID='" + SPEC_ID + "' ";
+            long n = se.executeUpdate(sql);
+            return n > 0;
+        }
     }
 
     public boolean saveSpecFullBox2( String BOX_ID,String GYS_ID, String SPEC_ID,String PRO_NAME,String PRO_SPEC) {

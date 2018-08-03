@@ -12,8 +12,10 @@ public interface BaseLogic {
     Record getSingleProBaseByProCode(String PRO_CODE);
     RecordSet getCity(String PROVINCE_ID);
     RecordSet getAreaByName(String AREA_NAME);
-
+    RecordSet getAllSpecMaxBox(String GYS_ID);
     RecordSet getArea(String CITY_ID);
+    boolean deleteAllSpecMaxBox(String MAX_ID);
+    boolean saveAllSpecMaxBox(String GYS_ID,String SPEC_ID,String PRO_NAME,int COUNT);
 
     Record getProvinceById(String PROVINCE_ID);
 
