@@ -398,6 +398,23 @@ public class BaseServlet extends WebMethodServlet {
         return recs;
     }
 
+    @WebMethod("base/get_all_max_box")
+    public RecordSet get_all_max_box(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, true);
+        String GYS_ID = qp.checkGetString("GYS_ID");
+        RecordSet recs= GlobalLogics.getBaseLogic().getAllSpecMaxBox(GYS_ID);
+        return recs;
+    }
+    @WebMethod("base/save_max_box")
+    public boolean save_max_box(HttpServletRequest req, QueryParams qp) throws IOException {
+        Context ctx = PortalContext.getContext(req, qp, true, true);
+        String GYS_ID = qp.checkGetString("GYS_ID");
+        String SPEC_ID = qp.checkGetString("SPEC_ID");
+        int COUNT = (int)qp.checkGetInt("COUNT");
+        Record r = GlobalLogics.getBaseLogic().getSingleProSpec(SPEC_ID);
+        boolean b = GlobalLogics.getBaseLogic().saveAllSpecMaxBox(GYS_ID, SPEC_ID, r.getString("PRO_NAME"),COUNT);
+        return b;
+    }
     @WebMethod("base/full_box_delete")
     public boolean full_box_delete(HttpServletRequest req, QueryParams qp) throws IOException {
         Context ctx = PortalContext.getContext(req, qp, true, true);
