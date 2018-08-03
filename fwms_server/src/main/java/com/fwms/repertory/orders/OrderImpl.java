@@ -397,7 +397,7 @@ public class OrderImpl implements OrderLogic, Initializable {
 
     public RecordSet getOrderProductsSpec(String ORDER_ID) {
         SQLExecutor se = getSqlExecutor();
-        String sql00 ="SELECT pro.PRO_SPEC_ID,pro.PRO_COUNT,p.SPEC_ID,p.SINGLE_BOX FROM " + orderProductTable + " pro INNER JOIN "+productSpecTable+" p ON p.SPEC_ID=pro.PRO_SPEC_ID WHERE pro.ORDER_ID='"+ORDER_ID+"' and pro.DELETE_TIME IS NULL ";
+        String sql00 ="SELECT pro.PRO_SPEC_ID,pro.PRO_COUNT,p.SPEC_ID,p.SINGLE_BOX,p.PRO_NAME,p.PRO_DW_NAME FROM " + orderProductTable + " pro INNER JOIN "+productSpecTable+" p ON p.SPEC_ID=pro.PRO_SPEC_ID WHERE pro.ORDER_ID='"+ORDER_ID+"' and pro.DELETE_TIME IS NULL ";
         RecordSet recs_products = se.executeRecordSet(sql00, null);
         return recs_products;
     }

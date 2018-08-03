@@ -598,7 +598,7 @@ public class BaseImpl implements BaseLogic, Initializable {
         RecordSet recs = se.executeRecordSet(sql, null);
         RecordSet max_recs = getSingleSpecMaxBox(GYS_ID);
         for (Record r : recs){
-             Record record = max_recs.findEq("SPEC_ID",r.getString("SPEC_ID"));
+             Record record = max_recs.findEq("SPEC_ID", r.getString("SPEC_ID"));
              if (record.isEmpty()){
                  r.put("MAX_COUNT",0);r.put("CREATE_TIME","");
              }else{
@@ -626,14 +626,19 @@ public class BaseImpl implements BaseLogic, Initializable {
         return n > 0;
     }
 
+    public Record existsMaxCountSet(String GYS_ID,String SPEC_ID){
+        String sql0 = "SELECT * FROM " + specMaxBoxTable + "  WHERE GYS_ID='"+GYS_ID+"' AND SPEC_ID='"+SPEC_ID+"' ";
+        SQLExecutor se = getSqlExecutor();
+        Record rec = se.executeRecord(sql0, null);
+        return rec;
+    }
+
     public boolean saveAllSpecMaxBox(String GYS_ID, String SPEC_ID, String PRO_NAME, int COUNT) {
         if (COUNT <= 0) {
             return deleteAllSpecMaxBox(GYS_ID, SPEC_ID);
         }
-
-        String sql0 = "SELECT * FROM " + specMaxBoxTable + "  WHERE GYS_ID='"+GYS_ID+"' AND SPEC_ID='"+SPEC_ID+"' ";
         SQLExecutor se = getSqlExecutor();
-        Record rec = se.executeRecord(sql0, null);
+        Record rec = existsMaxCountSet(GYS_ID,SPEC_ID);
         if (rec.isEmpty()){
             String sql = "INSERT INTO " + specMaxBoxTable + " (MAX_ID,GYS_ID,SPEC_ID,PRO_NAME,COUNT,CREATE_TIME) " +
                     "VALUES ('" + String.valueOf(RandomUtils.generateId()) + "','" + GYS_ID + "','" + SPEC_ID + "','" + PRO_NAME + "','" + COUNT + "','" + DateUtils.now() + "') ";

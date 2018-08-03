@@ -474,7 +474,7 @@ public class OrderServlet extends WebMethodServlet {
             }
         }
         out_rec.put("status",1);
-        out_rec.put("message","装箱完毕");
+        out_rec.put("message", "装箱完毕");
         return out_rec;
     }
 
@@ -660,7 +660,7 @@ public class OrderServlet extends WebMethodServlet {
         String KW_ID = qp.getString("KW_ID", "999");
         String START_TIME = qp.getString("START_TIME", "");
         String END_TIME = qp.getString("END_TIME", "");
-        RecordSet recs  = GlobalLogics.getOrderLogic().getNowRepoPackage(SJ_ID, GYS_ID, F_KW_ID, KW_ID,START_TIME,END_TIME);
+        RecordSet recs  = GlobalLogics.getOrderLogic().getNowRepoPackage(SJ_ID, GYS_ID, F_KW_ID, KW_ID, START_TIME, END_TIME);
         return recs;
     }
     @WebMethod("order/get_order_package_base")
@@ -681,7 +681,7 @@ public class OrderServlet extends WebMethodServlet {
         String KW_ID = qp.getString("KW_ID", "999");
         String START_TIME = qp.getString("START_TIME", "");
         String END_TIME = qp.getString("END_TIME", "");
-        RecordSet recs  = GlobalLogics.getOrderLogic().getGysOrderDailyGoods(SJ_ID, GYS_ID, F_KW_ID, KW_ID,START_TIME,END_TIME);
+        RecordSet recs  = GlobalLogics.getOrderLogic().getGysOrderDailyGoods(SJ_ID, GYS_ID, F_KW_ID, KW_ID, START_TIME, END_TIME);
         return recs;
     }
 
@@ -904,7 +904,6 @@ public class OrderServlet extends WebMethodServlet {
         Context ctx = PortalContext.getContext(req, qp, true, false);
         String GYS_ID = qp.checkGetString("GYS_ID");
         Record gys = GlobalLogics.getUser().getSingleGysBase(GYS_ID);
-        TimeUtils tg = new TimeUtils();
 
         String IMPORT_IDS = qp.checkGetString("IMPORT_IDS");
 
@@ -998,8 +997,8 @@ public class OrderServlet extends WebMethodServlet {
 
         RecordSet orderProduct = GlobalLogics.getOrderLogic().getOrderProductsSpec(ORDER_ID);
 
-        RecordSet singleBoxPro = new RecordSet();
-        RecordSet fullBoxPro = new RecordSet();
+        RecordSet singleBoxPro = new RecordSet(); //单独成箱
+        RecordSet fullBoxPro = new RecordSet();   //非单独成箱
 
         for (Record p : orderProduct){
             if (p.getInt("SINGLE_BOX")==1){
@@ -1016,9 +1015,8 @@ public class OrderServlet extends WebMethodServlet {
                 String newPackageCode = GlobalLogics.getOrderLogic().getNowPackageCode(ORDER_ID);
                 boolean b = GlobalLogics.getOrderLogic().saveOrderPackage(ORDER_ID, newPackageCode);
                 if (b) {
-                    Record pro_spec = GlobalLogics.getBaseLogic().getSingleProSpec(SPEC_ID);
                     boolean c = GlobalLogics.getOrderLogic().saveOrderPackageProduct(ORDER_ID, String.valueOf(RandomUtils.generateId()),
-                            newPackageCode, SPEC_ID, pro_spec.getString("PRO_NAME"), 1);
+                            newPackageCode, SPEC_ID, r.getString("PRO_NAME"), 1);
                 }else{
                     out_rec.put("status",0);
                     out_rec.put("message","自动装箱数据失败,或者不完整,请手动装箱");
@@ -1026,34 +1024,81 @@ public class OrderServlet extends WebMethodServlet {
                 }
             }
         }
-        if (fullBoxPro.size()>0){
-            //获取这个供应商所有的规则
-            RecordSet recs_rules= GlobalLogics.getBaseLogic().getAllSpecFullBox(GYS_ID);
+        if (fullBoxPro.size()>0){     //非单独成箱的操作
+            //1,首先再看,这些商品里面,有哪些是设置了最大数量的
 
-            //再找,这些商品,哪些可以合一个箱子的
-            for (Record rule : recs_rules){
-                RecordSet ALL_FULL_BOX = RecordSet.fromJson(rule.getString("ALL_FULL_BOX"));
-                RecordSet t =  new RecordSet();
-                for (Record f : fullBoxPro){
-                    Record find = ALL_FULL_BOX.findEq("SPEC_ID",f.getString("SPEC_ID"));
-                    if (!find.isEmpty()){
-                        t.add(f);
-                    }
+            RecordSet hasSetMaxCount = new RecordSet();   //设置了每箱最大数量
+            RecordSet notSetMaxCount = new RecordSet();   //没有设置每箱最大数量
+            for (Record rec : fullBoxPro){
+                Record m = GlobalLogics.getBaseLogic().existsMaxCountSet(GYS_ID,rec.getString("SPEC_ID"));
+                if (m.isEmpty()){
+                    notSetMaxCount.add(rec);
+                }else{
+                    rec.put("MAX_COUNT",m.getInt("COUNT"));
+                    hasSetMaxCount.add(rec);
                 }
-                if (t.size()>0){
-                    //t 里面的,全部装一个箱子
-                    String newPackageCode = GlobalLogics.getOrderLogic().getNowPackageCode(ORDER_ID);
-                    boolean b = GlobalLogics.getOrderLogic().saveOrderPackage(ORDER_ID, newPackageCode);
-                    if (b) {
-                        for (Record t0 : t) {
+            }
 
-                            Record pro_spec = GlobalLogics.getBaseLogic().getSingleProSpec(t0.getString("SPEC_ID"));
-                            boolean c = GlobalLogics.getOrderLogic().saveOrderPackageProduct(ORDER_ID, String.valueOf(RandomUtils.generateId()),
-                                    newPackageCode, t0.getString("SPEC_ID"), pro_spec.getString("PRO_NAME"), (int)t0.getInt("PRO_COUNT"));
+            if (hasSetMaxCount.size()>0){
+                 for (Record has : hasSetMaxCount){
+                     int MAX_COUNT = (int)has.getInt("MAX_COUNT");
+                     int PRO_COUNT = (int)has.getInt("PRO_COUNT");
+                     double PACKAGE_COUNT = Math.ceil(Double.parseDouble(String.valueOf(PRO_COUNT)) / Double.parseDouble(String.valueOf(MAX_COUNT)));
+                     if (PACKAGE_COUNT<=1){
+                         String newPackageCode = GlobalLogics.getOrderLogic().getNowPackageCode(ORDER_ID);
+                         boolean b = GlobalLogics.getOrderLogic().saveOrderPackage(ORDER_ID, newPackageCode);
+                         if (b){
+                             boolean c = GlobalLogics.getOrderLogic().saveOrderPackageProduct(ORDER_ID, String.valueOf(RandomUtils.generateId()),
+                                     newPackageCode, has.getString("SPEC_ID"), has.getString("PRO_NAME"), PRO_COUNT);
+                         }
+                     }else{
+                         for (int i=1;i<PACKAGE_COUNT;i++){
+                             String newPackageCode = GlobalLogics.getOrderLogic().getNowPackageCode(ORDER_ID);
+                             boolean b = GlobalLogics.getOrderLogic().saveOrderPackage(ORDER_ID, newPackageCode);
+                             if (b){
+                                 boolean c = GlobalLogics.getOrderLogic().saveOrderPackageProduct(ORDER_ID, String.valueOf(RandomUtils.generateId()),
+                                         newPackageCode, has.getString("SPEC_ID"), has.getString("PRO_NAME"), MAX_COUNT);
+                             }
+                         }
+                         //最后一个箱子,按照总数相减的来装
+                         int lessCount = PRO_COUNT- ((int)PACKAGE_COUNT-1)* MAX_COUNT;
+                         String newPackageCode1 = GlobalLogics.getOrderLogic().getNowPackageCode(ORDER_ID);
+                         boolean b = GlobalLogics.getOrderLogic().saveOrderPackage(ORDER_ID, newPackageCode1);
+                         if (b){
+                             boolean c = GlobalLogics.getOrderLogic().saveOrderPackageProduct(ORDER_ID, String.valueOf(RandomUtils.generateId()),
+                                     newPackageCode1, has.getString("SPEC_ID"), has.getString("PRO_NAME"), lessCount);
+                         }
+                     }
+                 }
+            }
+            if (notSetMaxCount.size()>0){
+                //获取这个供应商所有的规则
+                RecordSet recs_rules= GlobalLogics.getBaseLogic().getAllSpecFullBox(GYS_ID);
+
+                //再找,这些商品,哪些可以合一个箱子的
+                for (Record rule : recs_rules){
+                    RecordSet ALL_FULL_BOX = RecordSet.fromJson(rule.getString("ALL_FULL_BOX"));
+                    RecordSet t =  new RecordSet();
+                    for (Record f : notSetMaxCount){
+                        Record find = ALL_FULL_BOX.findEq("SPEC_ID",f.getString("SPEC_ID"));
+                        if (!find.isEmpty()){
+                            t.add(f);
+                        }
+                    }
+                    if (t.size()>0){
+                        //t 里面的,全部装一个箱子
+                        String newPackageCode = GlobalLogics.getOrderLogic().getNowPackageCode(ORDER_ID);
+                        boolean b = GlobalLogics.getOrderLogic().saveOrderPackage(ORDER_ID, newPackageCode);
+                        if (b) {
+                            for (Record t0 : t) {
+                                boolean c = GlobalLogics.getOrderLogic().saveOrderPackageProduct(ORDER_ID, String.valueOf(RandomUtils.generateId()),
+                                        newPackageCode, t0.getString("SPEC_ID"), t0.getString("PRO_NAME"), (int)t0.getInt("PRO_COUNT"));
+                            }
                         }
                     }
                 }
             }
+
         }
 
         //最后看,还剩哪些没有自动装箱的,就全部放在一个箱子里面
@@ -1078,9 +1123,8 @@ public class OrderServlet extends WebMethodServlet {
             boolean b = GlobalLogics.getOrderLogic().saveOrderPackage(ORDER_ID, newPackageCode);
             if (b) {
                 for (Record t0 : final_recs) {
-                    Record pro_spec = GlobalLogics.getBaseLogic().getSingleProSpec(t0.getString("PRO_SPEC_ID"));
                     boolean c = GlobalLogics.getOrderLogic().saveOrderPackageProduct(ORDER_ID, String.valueOf(RandomUtils.generateId()),
-                            newPackageCode, t0.getString("PRO_SPEC_ID"), pro_spec.getString("PRO_NAME"), (int)t0.getInt("PRO_COUNT"));
+                            newPackageCode, t0.getString("PRO_SPEC_ID"), t0.getString("PRO_NAME"), (int)t0.getInt("PRO_COUNT"));
                 }
             }
             out_rec.put("status",1);
